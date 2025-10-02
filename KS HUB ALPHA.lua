@@ -1,8 +1,7 @@
--- KSHUB - KS HUB ALPHA (reconstruido, v0.004)
+-- KSHUB - KS HUB ALPHA (v0.005) - FIX: quitar "capa azul" / botones opacos
 -- Ejecutable por: loadstring(game:HttpGet("https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/KS%20HUB%20ALPHA.lua"))()
--- Notas: usa PlayerGui (visible). Drag robusto + clamp. Cada pestaña es ScrollingFrame.
 
--- ========== BLOQUE: PREVENIR DUPLICADOS ==========
+-- ========== PREVENIR DUPLICADOS ==========
 pcall(function()
     local Players = game:GetService("Players")
     local pl = Players.LocalPlayer
@@ -16,7 +15,7 @@ pcall(function()
     end
 end)
 
--- ========== BLOQUE: SERVICES Y PLAYER ==========
+-- ========== SERVICES & PLAYER ==========
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -26,28 +25,26 @@ if not LocalPlayer then
     LocalPlayer = Players.LocalPlayer
 end
 
--- ========== BLOQUE: CONFIG ==========
+-- ========== CONFIG ==========
 local DEFAULT_BLUE = Color3.fromRGB(0,85,170)
-local DEFAULT_TRANSPARENCY = 0.25
+local DEFAULT_TRANSPARENCY = 0.25 -- aplica a paneles grandes
+local BUTTON_TRANSPARENCY = 0     -- botones ahora opacos para evitar tintes
 local UI_PADDING = 8
 
--- ========== BLOQUE: GUI PARENT (FORZAR PlayerGui VISIBLE) ==========
+-- ========== GUI PARENT (PlayerGui seguro) ==========
 local guiParent = nil
--- Preferir PlayerGui (siempre visible)
 if LocalPlayer then
     guiParent = LocalPlayer:WaitForChild("PlayerGui")
 end
 if not guiParent then
-    guiParent = game:GetService("CoreGui") -- fallback (no debería pasar)
+    guiParent = game:GetService("CoreGui")
 end
--- print para debug (puedes comentar luego)
 pcall(function() print("[KSHUB] guiParent elegido:", tostring(guiParent)) end)
 
--- ========== BLOQUE: CREAR SCREENGUI Y PROTECCIÓN ==========
+-- ========== CREAR SCREENGUI ==========
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHUB"
 ScreenGui.ResetOnSpawn = false
--- proteger si executor soporta
 if syn and syn.protect_gui and type(syn.protect_gui) == "function" then
     pcall(function() syn.protect_gui(ScreenGui) end)
     pcall(function() print("[KSHUB] syn.protect_gui aplicado.") end)
@@ -55,19 +52,19 @@ end
 ScreenGui.Parent = guiParent
 pcall(function() print("[KSHUB] ScreenGui.parent = "..tostring(guiParent)) end)
 
--- ========== BLOQUE: MAIN FRAME (CENTRADO CORRECTO) ==========
+-- ========== MAIN FRAME (CENTRADO) ==========
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 520, 0, 380)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.Position = UDim2.fromScale(0.5, 0.5) -- centrado real
+MainFrame.Position = UDim2.fromScale(0.5, 0.5)
 MainFrame.BackgroundColor3 = DEFAULT_BLUE
 MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
 MainFrame.BorderSizePixel = 0
 MainFrame.ZIndex = 2
 MainFrame.Parent = ScreenGui
 
--- Título (barra superior — handle para drag)
+-- Barra superior (handle)
 local Title = Instance.new("TextButton")
 Title.Name = "Title"
 Title.Size = UDim2.new(1, 0, 0, 40)
@@ -82,7 +79,7 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 20
 Title.Parent = MainFrame
 
--- Contenedor left tabs
+-- TabFrame (lado izquierdo) - conserva transparencia
 local TabFrame = Instance.new("Frame")
 TabFrame.Name = "TabFrame"
 TabFrame.Size = UDim2.new(0, 140, 1, -40)
@@ -97,7 +94,7 @@ TabListLayout.Parent = TabFrame
 TabListLayout.Padding = UDim.new(0, 8)
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Pages container (Derecha)
+-- Pages container (derecha) - oscuro y semitransparente independiente
 local Pages = Instance.new("Frame")
 Pages.Name = "Pages"
 Pages.Size = UDim2.new(1, -140, 1, -40)
@@ -107,7 +104,7 @@ Pages.BackgroundTransparency = 0.35
 Pages.BorderSizePixel = 0
 Pages.Parent = MainFrame
 
--- Botón cerrar
+-- Botones Close/Open
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Name = "CloseBtn"
 CloseBtn.Size = UDim2.new(0, 28, 0, 28)
@@ -121,7 +118,6 @@ CloseBtn.Font = Enum.Font.SourceSansBold
 CloseBtn.TextSize = 18
 CloseBtn.Parent = MainFrame
 
--- Botón Open (cuando está cerrado)
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Name = "OpenBtn"
 OpenBtn.Size = UDim2.new(0, 90, 0, 32)
@@ -136,7 +132,7 @@ OpenBtn.TextSize = 14
 OpenBtn.Parent = ScreenGui
 OpenBtn.Visible = false
 
--- ========== BLOQUE: UTILIDADES (tabs/pagina con scroll) ==========
+-- ========== UTIL: crear tabs/paginas con scroll ==========
 local tabs = {}
 local pages = {}
 
@@ -154,8 +150,9 @@ local function CreateTab(name)
     btn.Name = name.."TabBtn"
     btn.Size = UDim2.new(1, -12, 0, 34)
     btn.Position = UDim2.new(0, 6, 0, 0)
-    btn.BackgroundColor3 = DEFAULT_BLUE
-    btn.BackgroundTransparency = DEFAULT_TRANSPARENCY
+    -- IMPORTANTE: los botones usan BACKGROUND_OPACO para evitar tintes
+    btn.BackgroundColor3 = Color3.fromRGB(12, 70, 140) -- azul más oscuro y contrastante
+    btn.BackgroundTransparency = BUTTON_TRANSPARENCY
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = Color3.new(1,1,1)
@@ -198,7 +195,7 @@ local function CreateTab(name)
     return pages[name]
 end
 
--- Crear pestañas
+-- crear pestañas
 local Principal = CreateTab("Principal")
 local Teleport = CreateTab("Teleport")
 local Player = CreateTab("Player")
@@ -243,7 +240,7 @@ local function CreateGrid(parent, cellX, cellY, pad)
     return grid
 end
 
--- ========== BLOQUE: DRAG (robusto, con clamp) ==========
+-- ========== DRAG (robusto con clamp) ==========
 do
     local dragging = false
     local dragStartMouse = Vector2.new(0,0)
@@ -286,16 +283,14 @@ do
             local clampedX = math.clamp(newCenter.X, halfW, viewport.X - halfW)
             local clampedY = math.clamp(newCenter.Y, halfH, viewport.Y - halfH)
 
-            -- con AnchorPoint 0.5,0.5 usamos fromOffset para que center vaya a (clampedX, clampedY)
             MainFrame.Position = UDim2.fromOffset(math.floor(clampedX), math.floor(clampedY))
         end
     end)
 end
 
--- ========== BLOQUE: PLAYER TAB ==========
+-- ========== PLAYER TAB ==========
 do
     local content = Player.Content
-
     local header = Instance.new("TextLabel")
     header.Size = UDim2.new(1, 0, 0, 22)
     header.BackgroundTransparency = 1
@@ -324,8 +319,8 @@ do
     for _, v in ipairs(speeds) do
         local b = Instance.new("TextButton")
         b.Size = UDim2.new(0, 92, 0, 28)
-        b.BackgroundColor3 = DEFAULT_BLUE
-        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BackgroundColor3 = Color3.fromRGB(10,90,180) -- botón más oscuro y opaco
+        b.BackgroundTransparency = BUTTON_TRANSPARENCY
         b.BorderSizePixel = 0
         b.Text = v[1]
         b.Font = Enum.Font.Gotham
@@ -357,8 +352,8 @@ do
     for _, v in ipairs(jumps) do
         local b = Instance.new("TextButton")
         b.Size = UDim2.new(0, 120, 0, 28)
-        b.BackgroundColor3 = DEFAULT_BLUE
-        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BackgroundColor3 = Color3.fromRGB(10,90,180)
+        b.BackgroundTransparency = BUTTON_TRANSPARENCY
         b.BorderSizePixel = 0
         b.Text = v[1]
         b.Font = Enum.Font.Gotham
@@ -379,8 +374,8 @@ do
     local secN, bodyN = CreateSection(content, "Noclip:", 46)
     local noclipBtn = Instance.new("TextButton")
     noclipBtn.Size = UDim2.new(0, 160, 0, 28)
-    noclipBtn.BackgroundColor3 = DEFAULT_BLUE
-    noclipBtn.BackgroundTransparency = DEFAULT_TRANSPARENCY
+    noclipBtn.BackgroundColor3 = Color3.fromRGB(10,90,180)
+    noclipBtn.BackgroundTransparency = BUTTON_TRANSPARENCY
     noclipBtn.BorderSizePixel = 0
     noclipBtn.Text = "Noclip: OFF"
     noclipBtn.Font = Enum.Font.Gotham
@@ -414,20 +409,11 @@ do
     noclipBtn.MouseButton1Click:Connect(function()
         if noclipState then disableNoclip() else enableNoclip() end
     end)
-
-    -- al respawnear reaplicar defaults
-    LocalPlayer.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        defaultWalkSpeed = getDefaultWalkSpeed()
-        defaultJump = getDefaultJumpPower()
-        if noclipState then enableNoclip() end
-    end)
 end
 
--- ========== BLOQUE: TELEPORT TAB ==========
+-- ========== TELEPORT TAB ==========
 do
     local content = Teleport.Content
-
     local hdr = Instance.new("TextLabel")
     hdr.Size = UDim2.new(1,0,0,22)
     hdr.BackgroundTransparency = 1
@@ -437,7 +423,7 @@ do
     hdr.TextColor3 = Color3.new(1,1,1)
     hdr.Parent = content
 
-    -- Save
+    -- Save buttons
     local secSave, bodySave = CreateSection(content, "Tp - Save (guarda tu posición):", 60)
     CreateGrid(bodySave, 96, 28, 6)
     local saved = {}
@@ -446,8 +432,8 @@ do
         local idx = i
         local b = Instance.new("TextButton")
         b.Size = UDim2.new(0,96,0,28)
-        b.BackgroundColor3 = DEFAULT_BLUE
-        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BackgroundColor3 = Color3.fromRGB(10,90,180)
+        b.BackgroundTransparency = BUTTON_TRANSPARENCY
         b.BorderSizePixel = 0
         b.Text = "Save"..idx
         b.Font = Enum.Font.Gotham
@@ -463,15 +449,15 @@ do
         end)
     end
 
-    -- Load
+    -- Load buttons
     local secLoad, bodyLoad = CreateSection(content, "Tp - Load (carga posición):", 60)
     CreateGrid(bodyLoad, 96, 28, 6)
     for i=1,4 do
         local idx = i
         local b = Instance.new("TextButton")
         b.Size = UDim2.new(0,96,0,28)
-        b.BackgroundColor3 = DEFAULT_BLUE
-        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BackgroundColor3 = Color3.fromRGB(10,90,180)
+        b.BackgroundTransparency = BUTTON_TRANSPARENCY
         b.BorderSizePixel = 0
         b.Text = "Load"..idx
         b.Font = Enum.Font.Gotham
@@ -517,8 +503,8 @@ do
             if pl ~= LocalPlayer then
                 local b = Instance.new("TextButton")
                 b.Size = UDim2.new(1,0,0,28)
-                b.BackgroundColor3 = DEFAULT_BLUE
-                b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+                b.BackgroundColor3 = Color3.fromRGB(10,90,180)
+                b.BackgroundTransparency = BUTTON_TRANSPARENCY
                 b.BorderSizePixel = 0
                 b.Text = pl.Name
                 b.Font = Enum.Font.Gotham
@@ -543,10 +529,9 @@ do
     Players.PlayerRemoving:Connect(refreshPlayers)
 end
 
--- ========== BLOQUE: AJUSTES TAB ==========
+-- ========== AJUSTES TAB ==========
 do
     local content = Ajustes.Content
-
     local header = Instance.new("TextLabel")
     header.Size = UDim2.new(1,0,0,22)
     header.BackgroundTransparency = 1
@@ -567,34 +552,24 @@ do
         {"90%", 0.9},
     }
 
+    -- IMPORTANT: ahora SOLO cambiamos la transparencia de paneles principales,
+    -- NO cambiamos la transparencia de botones (evita la "capa azul").
     local function applyTransparency(t)
         pcall(function()
             MainFrame.BackgroundTransparency = t
             Title.BackgroundTransparency = t
             TabFrame.BackgroundTransparency = t
+            OpenBtn.BackgroundTransparency = t
             Pages.BackgroundTransparency = math.clamp(t + 0.1, 0, 1)
-            -- ajustar botones en TabFrame
-            for _, v in pairs(TabFrame:GetDescendants()) do
-                if v:IsA("TextButton") then
-                    if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end
-                end
-            end
-            -- ajustar botones en páginas
-            for _, pg in pairs(pages) do
-                for _, v in pairs(pg.Page:GetDescendants()) do
-                    if v:IsA("TextButton") then
-                        if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end
-                    end
-                end
-            end
+            -- NO alteramos BackgroundTransparency de TextButton -> mantienen su opacidad
         end)
     end
 
     for _, opt in ipairs(options) do
         local b = Instance.new("TextButton")
         b.Size = UDim2.new(0,84,0,28)
-        b.BackgroundColor3 = DEFAULT_BLUE
-        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BackgroundColor3 = Color3.fromRGB(12,70,140) -- botón contrastante
+        b.BackgroundTransparency = BUTTON_TRANSPARENCY
         b.BorderSizePixel = 0
         b.Text = opt[1]
         b.Font = Enum.Font.Gotham
@@ -605,21 +580,21 @@ do
     end
 end
 
--- ========== BLOQUE: INFO TAB ==========
+-- ========== INFO TAB ==========
 do
     local content = Info.Content
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1,0,0,80)
     label.BackgroundTransparency = 1
     label.TextWrapped = true
-    label.Text = "KSHUB - KS HUB ALPHA (v0.004)\nInterfaz azul con transparencia ajustable.\nPestañas: Principal, Teleport, Player, Ajustes, Info"
+    label.Text = "KSHUB - KS HUB ALPHA (v0.005)\nInterfaz azul (paneles) + botones opacos para contraste."
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
     label.TextColor3 = Color3.new(1,1,1)
     label.Parent = content
 end
 
--- ========== BLOQUE: PRINCIPAL (contenido mínimo visible) ==========
+-- ========== PRINCIPAL (contenido visible) ==========
 do
     local content = Principal.Content
     local welcome = Instance.new("TextLabel")
@@ -642,7 +617,7 @@ do
     info.Parent = content
 end
 
--- ========== BLOQUE: OPEN/CLOSE ==========
+-- ========== OPEN/CLOSE ==========
 CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     OpenBtn.Visible = true
@@ -652,7 +627,7 @@ OpenBtn.MouseButton1Click:Connect(function()
     OpenBtn.Visible = false
 end)
 
--- ========== BLOQUE: INICIALIZAR ==========
+-- ========== INICIAL ==========
 do
     MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
     Title.BackgroundTransparency = DEFAULT_TRANSPARENCY
@@ -661,4 +636,4 @@ do
     Pages.BackgroundTransparency = math.clamp(DEFAULT_TRANSPARENCY + 0.1, 0, 1)
 end
 
-pcall(function() print("[KSHUB v0.004] cargado correctamente.") end)
+pcall(function() print("[KSHUB v0.005] cargado correctamente.") end)
