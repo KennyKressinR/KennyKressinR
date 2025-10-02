@@ -1,16 +1,18 @@
--- KS HUB ALPHA v0.003 (fix: drag, visible content, scrolls)
--- Ejecutable por loadstring
--- Mantiene bloques para edición futura
+-- KSHUB - KS HUB ALPHA (reconstruido, v0.004)
+-- Ejecutable por: loadstring(game:HttpGet("https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/KS%20HUB%20ALPHA.lua"))()
+-- Notas: usa PlayerGui (visible). Drag robusto + clamp. Cada pestaña es ScrollingFrame.
 
 -- ========== BLOQUE: PREVENIR DUPLICADOS ==========
 pcall(function()
-    local core = game:GetService("CoreGui")
-    if core:FindFirstChild("KSHUB") then
-        core:FindFirstChild("KSHUB"):Destroy()
+    local Players = game:GetService("Players")
+    local pl = Players.LocalPlayer
+    if pl and pl:FindFirstChild("PlayerGui") then
+        local old = pl.PlayerGui:FindFirstChild("KSHUB")
+        if old then old:Destroy() end
     end
-    local pl = game:GetService("Players").LocalPlayer
-    if pl and pl:FindFirstChild("PlayerGui") and pl.PlayerGui:FindFirstChild("KSHUB") then
-        pl.PlayerGui:FindFirstChild("KSHUB"):Destroy()
+    local core = game:GetService("CoreGui")
+    if core and core:FindFirstChild("KSHUB") then
+        core:FindFirstChild("KSHUB"):Destroy()
     end
 end)
 
@@ -24,57 +26,67 @@ if not LocalPlayer then
     LocalPlayer = Players.LocalPlayer
 end
 
--- ========== BLOQUE: CONFIG / CONSTANTES ==========
+-- ========== BLOQUE: CONFIG ==========
 local DEFAULT_BLUE = Color3.fromRGB(0,85,170)
 local DEFAULT_TRANSPARENCY = 0.25
 local UI_PADDING = 8
 
--- ========== BLOQUE: GUI PARENT (corregido) ==========
-local guiParent = LocalPlayer:WaitForChild("PlayerGui")  -- siempre visible
-print("[KSHUB] ScreenGui.parent = PlayerGui")
+-- ========== BLOQUE: GUI PARENT (FORZAR PlayerGui VISIBLE) ==========
+local guiParent = nil
+-- Preferir PlayerGui (siempre visible)
+if LocalPlayer then
+    guiParent = LocalPlayer:WaitForChild("PlayerGui")
+end
+if not guiParent then
+    guiParent = game:GetService("CoreGui") -- fallback (no debería pasar)
+end
+-- print para debug (puedes comentar luego)
+pcall(function() print("[KSHUB] guiParent elegido:", tostring(guiParent)) end)
 
--- ========== BLOQUE: CREAR SCREENGUI ==========
+-- ========== BLOQUE: CREAR SCREENGUI Y PROTECCIÓN ==========
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHUB"
 ScreenGui.ResetOnSpawn = false
+-- proteger si executor soporta
 if syn and syn.protect_gui and type(syn.protect_gui) == "function" then
     pcall(function() syn.protect_gui(ScreenGui) end)
-    print("[KSHUB] syn.protect_gui aplicado.")
+    pcall(function() print("[KSHUB] syn.protect_gui aplicado.") end)
 end
 ScreenGui.Parent = guiParent
-print("[KSHUB] ScreenGui.parent = ".. tostring(guiParent))
+pcall(function() print("[KSHUB] ScreenGui.parent = "..tostring(guiParent)) end)
 
--- ========== BLOQUE: MAIN FRAME ==========
+-- ========== BLOQUE: MAIN FRAME (CENTRADO CORRECTO) ==========
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0,520,0,380)
-MainFrame.Position = UDim2.new(0.5,-260,0.5,-190) -- inicial centrado por offset
-MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+MainFrame.Size = UDim2.new(0, 520, 0, 380)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.Position = UDim2.fromScale(0.5, 0.5) -- centrado real
 MainFrame.BackgroundColor3 = DEFAULT_BLUE
 MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
 MainFrame.BorderSizePixel = 0
+MainFrame.ZIndex = 2
 MainFrame.Parent = ScreenGui
 
--- Title (usado como handle para drag)
+-- Título (barra superior — handle para drag)
 local Title = Instance.new("TextButton")
 Title.Name = "Title"
-Title.Size = UDim2.new(1,0,0,40)
-Title.Position = UDim2.new(0,0,0,0)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundColor3 = DEFAULT_BLUE
 Title.BackgroundTransparency = DEFAULT_TRANSPARENCY
 Title.BorderSizePixel = 0
+Title.AutoButtonColor = false
 Title.Text = "KSHUB"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 20
-Title.AutoButtonColor = false
 Title.Parent = MainFrame
 
--- Left tabs
+-- Contenedor left tabs
 local TabFrame = Instance.new("Frame")
 TabFrame.Name = "TabFrame"
-TabFrame.Size = UDim2.new(0,140,1,-40)
-TabFrame.Position = UDim2.new(0,0,0,40)
+TabFrame.Size = UDim2.new(0, 140, 1, -40)
+TabFrame.Position = UDim2.new(0, 0, 0, 40)
 TabFrame.BackgroundColor3 = DEFAULT_BLUE
 TabFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
 TabFrame.BorderSizePixel = 0
@@ -82,24 +94,24 @@ TabFrame.Parent = MainFrame
 
 local TabListLayout = Instance.new("UIListLayout")
 TabListLayout.Parent = TabFrame
-TabListLayout.Padding = UDim.new(0,8)
+TabListLayout.Padding = UDim.new(0, 8)
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Pages container (derecha)
+-- Pages container (Derecha)
 local Pages = Instance.new("Frame")
 Pages.Name = "Pages"
-Pages.Size = UDim2.new(1,-140,1,-40)
-Pages.Position = UDim2.new(0,140,0,40)
+Pages.Size = UDim2.new(1, -140, 1, -40)
+Pages.Position = UDim2.new(0, 140, 0, 40)
 Pages.BackgroundColor3 = Color3.fromRGB(20,20,40)
 Pages.BackgroundTransparency = 0.35
 Pages.BorderSizePixel = 0
 Pages.Parent = MainFrame
 
--- Close / Open
+-- Botón cerrar
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Name = "CloseBtn"
-CloseBtn.Size = UDim2.new(0,28,0,28)
-CloseBtn.Position = UDim2.new(1,-34,0,6)
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -34, 0, 6)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
 CloseBtn.BackgroundTransparency = 0.1
 CloseBtn.BorderSizePixel = 0
@@ -109,10 +121,11 @@ CloseBtn.Font = Enum.Font.SourceSansBold
 CloseBtn.TextSize = 18
 CloseBtn.Parent = MainFrame
 
+-- Botón Open (cuando está cerrado)
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Name = "OpenBtn"
-OpenBtn.Size = UDim2.new(0,90,0,32)
-OpenBtn.Position = UDim2.new(1,-110,1,-70)
+OpenBtn.Size = UDim2.new(0, 90, 0, 32)
+OpenBtn.Position = UDim2.new(1, -110, 1, -70)
 OpenBtn.BackgroundColor3 = DEFAULT_BLUE
 OpenBtn.BackgroundTransparency = DEFAULT_TRANSPARENCY
 OpenBtn.BorderSizePixel = 0
@@ -123,53 +136,14 @@ OpenBtn.TextSize = 14
 OpenBtn.Parent = ScreenGui
 OpenBtn.Visible = false
 
--- ========== Bloque DRSG
-    local dragging = false
-    local dragging = false
-local dragStart = Vector2.new(0, 0)
-local startPos = Vector2.new(0, 0)
-
-MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-    end
-end)
-
-MainFrame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        local newPos = startPos + UDim2.new(0, delta.X, 0, delta.Y)
-
-        -- Limitar la posición para que el HUB no se salga de la pantalla
-        local screenSize = workspace.CurrentCamera.ViewportSize
-        local hubSize = MainFrame.Size
-        newPos = UDim2.new(
-            math.clamp(newPos.X.Scale, 0, 1),
-            math.clamp(newPos.X.Offset, 0, screenSize.X - hubSize.X.Offset),
-            math.clamp(newPos.Y.Scale, 0, 1),
-            math.clamp(newPos.Y.Offset, 0, screenSize.Y - hubSize.Y.Offset)
-        )
-
-        MainFrame.Position = newPos
-    end
-end)
-
--- ========== BLOQUE: TAB CREATOR (cada página es ScrollingFrame) ==========
+-- ========== BLOQUE: UTILIDADES (tabs/pagina con scroll) ==========
 local tabs = {}
 local pages = {}
 
 local function makeAutoCanvas(scrollFrame, contentLayout)
     local function update()
-        local y = contentLayout.AbsoluteContentSize.Y
-        scrollFrame.CanvasSize = UDim2.new(0,0,0, y + UI_PADDING)
+        local sizeY = contentLayout.AbsoluteContentSize.Y
+        scrollFrame.CanvasSize = UDim2.new(0, 0, 0, sizeY + UI_PADDING)
     end
     contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(update)
     update()
@@ -177,9 +151,9 @@ end
 
 local function CreateTab(name)
     local btn = Instance.new("TextButton")
-    btn.Name = name .. "TabBtn"
-    btn.Size = UDim2.new(1,-12,0,34)
-    btn.Position = UDim2.new(0,6,0,0)
+    btn.Name = name.."TabBtn"
+    btn.Size = UDim2.new(1, -12, 0, 34)
+    btn.Position = UDim2.new(0, 6, 0, 0)
     btn.BackgroundColor3 = DEFAULT_BLUE
     btn.BackgroundTransparency = DEFAULT_TRANSPARENCY
     btn.BorderSizePixel = 0
@@ -190,9 +164,9 @@ local function CreateTab(name)
     btn.Parent = TabFrame
 
     local page = Instance.new("ScrollingFrame")
-    page.Name = name .. "Page"
-    page.Size = UDim2.new(1,0,1,0)
-    page.Position = UDim2.new(0,0,0,0)
+    page.Name = name.."Page"
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.Position = UDim2.new(0, 0, 0, 0)
     page.BackgroundTransparency = 1
     page.BorderSizePixel = 0
     page.ScrollBarThickness = 6
@@ -201,29 +175,30 @@ local function CreateTab(name)
 
     local content = Instance.new("Frame")
     content.Name = "Content"
-    content.Size = UDim2.new(1,-16,0,0)
-    content.Position = UDim2.new(0,8,0,8)
+    content.Size = UDim2.new(1, -16, 0, 0)
+    content.Position = UDim2.new(0, 8, 0, 8)
     content.BackgroundTransparency = 1
     content.Parent = page
 
     local contentLayout = Instance.new("UIListLayout")
     contentLayout.Parent = content
     contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Padding = UDim.new(0,8)
+    contentLayout.Padding = UDim.new(0, 8)
 
     makeAutoCanvas(page, contentLayout)
 
     tabs[name] = btn
-    pages[name] = {Page = page, Content = content, Layout = contentLayout}
+    pages[name] = { Page = page, Content = content, Layout = contentLayout }
 
     btn.MouseButton1Click:Connect(function()
-        for _, v in pairs(pages) do v.Page.Visible = false end
+        for k,v in pairs(pages) do v.Page.Visible = false end
         page.Visible = true
     end)
 
     return pages[name]
 end
 
+-- Crear pestañas
 local Principal = CreateTab("Principal")
 local Teleport = CreateTab("Teleport")
 local Player = CreateTab("Player")
@@ -231,18 +206,18 @@ local Ajustes = CreateTab("Ajustes")
 local Info = CreateTab("Info")
 pages["Principal"].Page.Visible = true
 
--- ========== BLOQUE: UTILIDADES UI ==========
-local function CreateSection(contentParent, title)
+-- Helpers UI
+local function CreateSection(parent, title, height)
     local sec = Instance.new("Frame")
-    sec.Size = UDim2.new(1,0,0,60)
+    sec.Size = UDim2.new(1, 0, 0, height or 60)
     sec.BackgroundTransparency = 1
-    sec.Parent = contentParent
+    sec.Parent = parent
 
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1,0,0,18)
-    lbl.Position = UDim2.new(0,0,0,0)
+    lbl.Size = UDim2.new(1, 0, 0, 18)
+    lbl.Position = UDim2.new(0, 0, 0, 0)
     lbl.BackgroundTransparency = 1
-    lbl.Text = title
+    lbl.Text = title or ""
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Font = Enum.Font.GothamBold
     lbl.TextSize = 14
@@ -250,29 +225,79 @@ local function CreateSection(contentParent, title)
     lbl.Parent = sec
 
     local body = Instance.new("Frame")
-    body.Size = UDim2.new(1,0,0,36)
-    body.Position = UDim2.new(0,0,0,22)
+    body.Size = UDim2.new(1, 0, 0, (height and (height - 22) or 36))
+    body.Position = UDim2.new(0, 0, 0, 22)
     body.BackgroundTransparency = 1
     body.Parent = sec
 
     return sec, body
 end
 
-local function CreateGridButtons(parentFrame, cellSize, spacing)
+local function CreateGrid(parent, cellX, cellY, pad)
     local grid = Instance.new("UIGridLayout")
-    grid.CellSize = cellSize or UDim2.new(0,100,0,28)
-    grid.CellPadding = spacing or UDim2.new(0,6,0,6)
+    grid.CellSize = UDim2.new(0, cellX or 100, 0, cellY or 28)
+    grid.CellPadding = UDim2.new(0, pad or 6, 0, pad or 6)
     grid.FillDirection = Enum.FillDirection.Horizontal
     grid.SortOrder = Enum.SortOrder.LayoutOrder
-    grid.Parent = parentFrame
+    grid.Parent = parent
     return grid
+end
+
+-- ========== BLOQUE: DRAG (robusto, con clamp) ==========
+do
+    local dragging = false
+    local dragStartMouse = Vector2.new(0,0)
+    local frameStartCenter = Vector2.new(0,0)
+
+    Title.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStartMouse = UserInputService:GetMouseLocation()
+            frameStartCenter = Vector2.new(
+                MainFrame.AbsolutePosition.X + MainFrame.AbsoluteSize.X/2,
+                MainFrame.AbsolutePosition.Y + MainFrame.AbsoluteSize.Y/2
+            )
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    Title.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if dragging then
+            local now = UserInputService:GetMouseLocation()
+            local delta = now - dragStartMouse
+            local newCenter = frameStartCenter + delta
+
+            local cam = workspace.CurrentCamera
+            local viewport = (cam and cam.ViewportSize) or Vector2.new(1280, 720)
+
+            local halfW = MainFrame.AbsoluteSize.X/2
+            local halfH = MainFrame.AbsoluteSize.Y/2
+
+            local clampedX = math.clamp(newCenter.X, halfW, viewport.X - halfW)
+            local clampedY = math.clamp(newCenter.Y, halfH, viewport.Y - halfH)
+
+            -- con AnchorPoint 0.5,0.5 usamos fromOffset para que center vaya a (clampedX, clampedY)
+            MainFrame.Position = UDim2.fromOffset(math.floor(clampedX), math.floor(clampedY))
+        end
+    end)
 end
 
 -- ========== BLOQUE: PLAYER TAB ==========
 do
     local content = Player.Content
+
     local header = Instance.new("TextLabel")
-    header.Size = UDim2.new(1,0,0,22)
+    header.Size = UDim2.new(1, 0, 0, 22)
     header.BackgroundTransparency = 1
     header.Text = "Player - Ajustes"
     header.Font = Enum.Font.GothamBold
@@ -281,15 +306,11 @@ do
     header.Parent = content
 
     -- WalkSpeed
-    local sec, body = CreateSection(content, "Velocidad (WalkSpeed):")
-    sec.Size = UDim2.new(1,0,0,64)
-    CreateGridButtons(body, UDim2.new(0,92,0,28), UDim2.new(0,6,0,6))
+    local sec, body = CreateSection(content, "Velocidad (WalkSpeed):", 64)
+    CreateGrid(body, 92, 28, 6)
     local function getDefaultWalkSpeed()
         local ch = LocalPlayer.Character
-        if ch then
-            local h = ch:FindFirstChildWhichIsA("Humanoid")
-            if h and h.WalkSpeed then return h.WalkSpeed end
-        end
+        if ch then local h = ch:FindFirstChildWhichIsA("Humanoid") if h and h.WalkSpeed then return h.WalkSpeed end end
         return 16
     end
     local defaultWalkSpeed = getDefaultWalkSpeed()
@@ -302,7 +323,7 @@ do
     }
     for _, v in ipairs(speeds) do
         local b = Instance.new("TextButton")
-        b.Size = UDim2.new(0,92,0,28)
+        b.Size = UDim2.new(0, 92, 0, 28)
         b.BackgroundColor3 = DEFAULT_BLUE
         b.BackgroundTransparency = DEFAULT_TRANSPARENCY
         b.BorderSizePixel = 0
@@ -319,15 +340,11 @@ do
     end
 
     -- JumpPower
-    local secJ, bodyJ = CreateSection(content, "Impulso de salto (JumpPower):")
-    secJ.Size = UDim2.new(1,0,0,64)
-    CreateGridButtons(bodyJ, UDim2.new(0,120,0,28), UDim2.new(0,6,0,6))
+    local secJ, bodyJ = CreateSection(content, "Impulso de salto (JumpPower):", 64)
+    CreateGrid(bodyJ, 120, 28, 6)
     local function getDefaultJumpPower()
         local ch = LocalPlayer.Character
-        if ch then
-            local h = ch:FindFirstChildWhichIsA("Humanoid")
-            if h and h.JumpPower then return h.JumpPower end
-        end
+        if ch then local h = ch:FindFirstChildWhichIsA("Humanoid") if h and h.JumpPower then return h.JumpPower end end
         return 50
     end
     local defaultJump = getDefaultJumpPower()
@@ -339,7 +356,7 @@ do
     }
     for _, v in ipairs(jumps) do
         local b = Instance.new("TextButton")
-        b.Size = UDim2.new(0,120,0,28)
+        b.Size = UDim2.new(0, 120, 0, 28)
         b.BackgroundColor3 = DEFAULT_BLUE
         b.BackgroundTransparency = DEFAULT_TRANSPARENCY
         b.BorderSizePixel = 0
@@ -359,10 +376,9 @@ do
     end
 
     -- Noclip
-    local secN, bodyN = CreateSection(content, "Noclip:")
-    secN.Size = UDim2.new(1,0,0,46)
+    local secN, bodyN = CreateSection(content, "Noclip:", 46)
     local noclipBtn = Instance.new("TextButton")
-    noclipBtn.Size = UDim2.new(0,160,0,28)
+    noclipBtn.Size = UDim2.new(0, 160, 0, 28)
     noclipBtn.BackgroundColor3 = DEFAULT_BLUE
     noclipBtn.BackgroundTransparency = DEFAULT_TRANSPARENCY
     noclipBtn.BorderSizePixel = 0
@@ -398,24 +414,32 @@ do
     noclipBtn.MouseButton1Click:Connect(function()
         if noclipState then disableNoclip() else enableNoclip() end
     end)
+
+    -- al respawnear reaplicar defaults
+    LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        defaultWalkSpeed = getDefaultWalkSpeed()
+        defaultJump = getDefaultJumpPower()
+        if noclipState then enableNoclip() end
+    end)
 end
 
 -- ========== BLOQUE: TELEPORT TAB ==========
 do
     local content = Teleport.Content
-    local header = Instance.new("TextLabel")
-    header.Size = UDim2.new(1,0,0,22)
-    header.BackgroundTransparency = 1
-    header.Text = "Teleport - Save / Load"
-    header.Font = Enum.Font.GothamBold
-    header.TextSize = 16
-    header.TextColor3 = Color3.new(1,1,1)
-    header.Parent = content
 
-    -- Save / Load
-    local secSave, bodySave = CreateSection(content, "Tp - Save (Guarda tu posición actual):")
-    secSave.Size = UDim2.new(1,0,0,60)
-    CreateGridButtons(bodySave, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
+    local hdr = Instance.new("TextLabel")
+    hdr.Size = UDim2.new(1,0,0,22)
+    hdr.BackgroundTransparency = 1
+    hdr.Text = "Teleport - Save / Load"
+    hdr.Font = Enum.Font.GothamBold
+    hdr.TextSize = 16
+    hdr.TextColor3 = Color3.new(1,1,1)
+    hdr.Parent = content
+
+    -- Save
+    local secSave, bodySave = CreateSection(content, "Tp - Save (guarda tu posición):", 60)
+    CreateGrid(bodySave, 96, 28, 6)
     local saved = {}
 
     for i=1,4 do
@@ -434,15 +458,14 @@ do
             local ch = LocalPlayer.Character
             if ch then
                 local hrp = ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChildWhichIsA("BasePart")
-                if hrp then saved[idx] = hrp.CFrame; pcall(function() print("[KSHUB] Guardado Save"..idx) end) end
+                if hrp then saved[idx] = hrp.CFrame; pcall(function() print("[KSHUB] Save"..idx.." guardada.") end) end
             end
         end)
     end
 
-    local secLoad, bodyLoad = CreateSection(content, "Tp - Load (Carga la posición):")
-    secLoad.Size = UDim2.new(1,0,0,60)
-    CreateGridButtons(bodyLoad, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
-
+    -- Load
+    local secLoad, bodyLoad = CreateSection(content, "Tp - Load (carga posición):", 60)
+    CreateGrid(bodyLoad, 96, 28, 6)
     for i=1,4 do
         local idx = i
         local b = Instance.new("TextButton")
@@ -466,15 +489,13 @@ do
     end
 
     -- Players list
-    local secPlayers, bodyPlayers = CreateSection(content, "Teleport to Player:")
-    secPlayers.Size = UDim2.new(1,0,0,170)
-
+    local secPlayers, bodyPlayers = CreateSection(content, "Teleport to Player:", 170)
     local playersScroll = Instance.new("ScrollingFrame")
     playersScroll.Size = UDim2.new(1,0,0,132)
     playersScroll.Position = UDim2.new(0,0,0,24)
     playersScroll.BackgroundTransparency = 1
-    playersScroll.CanvasSize = UDim2.new(0,0,0,0)
     playersScroll.ScrollBarThickness = 6
+    playersScroll.CanvasSize = UDim2.new(0,0,0,0)
     playersScroll.Parent = secPlayers
 
     local playersContent = Instance.new("Frame")
@@ -485,12 +506,12 @@ do
 
     local playersLayout = Instance.new("UIListLayout")
     playersLayout.Parent = playersContent
-    playersLayout.SortOrder = Enum.SortOrder.LayoutOrder
     playersLayout.Padding = UDim.new(0,6)
+    playersLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     makeAutoCanvas(playersScroll, playersLayout)
 
-    local function refreshPlayersList()
+    local function refreshPlayers()
         for _,c in ipairs(playersContent:GetChildren()) do if not c:IsA("UIListLayout") then c:Destroy() end end
         for _, pl in ipairs(Players:GetPlayers()) do
             if pl ~= LocalPlayer then
@@ -517,14 +538,15 @@ do
         end
     end
 
-    refreshPlayersList()
-    Players.PlayerAdded:Connect(refreshPlayersList)
-    Players.PlayerRemoving:Connect(refreshPlayersList)
+    refreshPlayers()
+    Players.PlayerAdded:Connect(refreshPlayers)
+    Players.PlayerRemoving:Connect(refreshPlayers)
 end
 
 -- ========== BLOQUE: AJUSTES TAB ==========
 do
     local content = Ajustes.Content
+
     local header = Instance.new("TextLabel")
     header.Size = UDim2.new(1,0,0,22)
     header.BackgroundTransparency = 1
@@ -534,10 +556,9 @@ do
     header.TextColor3 = Color3.new(1,1,1)
     header.Parent = content
 
-    local sec, body = CreateSection(content, "Transparencia de interfaz:")
-    sec.Size = UDim2.new(1,0,0,48)
+    local sec, body = CreateSection(content, "Transparencia de interfaz:", 48)
+    CreateGrid(body, 84, 28, 6)
 
-    CreateGridButtons(body, UDim2.new(0,84,0,28), UDim2.new(0,6,0,6))
     local options = {
         {"0%", 0},
         {"25%", 0.25},
@@ -545,19 +566,25 @@ do
         {"75%", 0.75},
         {"90%", 0.9},
     }
+
     local function applyTransparency(t)
         pcall(function()
             MainFrame.BackgroundTransparency = t
             Title.BackgroundTransparency = t
             TabFrame.BackgroundTransparency = t
-            OpenBtn.BackgroundTransparency = t
             Pages.BackgroundTransparency = math.clamp(t + 0.1, 0, 1)
+            -- ajustar botones en TabFrame
             for _, v in pairs(TabFrame:GetDescendants()) do
-                if v:IsA("TextButton") then if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end end
+                if v:IsA("TextButton") then
+                    if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end
+                end
             end
+            -- ajustar botones en páginas
             for _, pg in pairs(pages) do
                 for _, v in pairs(pg.Page:GetDescendants()) do
-                    if v:IsA("TextButton") then if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end end
+                    if v:IsA("TextButton") then
+                        if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end
+                    end
                 end
             end
         end)
@@ -585,14 +612,14 @@ do
     label.Size = UDim2.new(1,0,0,80)
     label.BackgroundTransparency = 1
     label.TextWrapped = true
-    label.Text = "KSHUB - KS HUB ALPHA (v0.003)\nInterfaz azul con transparencia ajustable.\nPestañas: Principal, Teleport, Player, Ajustes, Info"
+    label.Text = "KSHUB - KS HUB ALPHA (v0.004)\nInterfaz azul con transparencia ajustable.\nPestañas: Principal, Teleport, Player, Ajustes, Info"
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
     label.TextColor3 = Color3.new(1,1,1)
     label.Parent = content
 end
 
--- ========== BLOQUE: PRINCIPAL TAB (contenido visible) ==========
+-- ========== BLOQUE: PRINCIPAL (contenido mínimo visible) ==========
 do
     local content = Principal.Content
     local welcome = Instance.new("TextLabel")
@@ -608,14 +635,14 @@ do
     info.Size = UDim2.new(1,0,0,60)
     info.BackgroundTransparency = 1
     info.TextWrapped = true
-    info.Text = "Consejo: arrastra desde la barra superior (KSHUB). Usa Ajustes -> Transparencia para cambiar apariencia."
+    info.Text = "Arrastra desde la barra superior (KSHUB). Usa Ajustes -> Transparencia para cambiar la apariencia."
     info.Font = Enum.Font.Gotham
     info.TextSize = 14
     info.TextColor3 = Color3.new(1,1,1)
     info.Parent = content
 end
 
--- ========== BLOQUE: OPEN / CLOSE ==========
+-- ========== BLOQUE: OPEN/CLOSE ==========
 CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     OpenBtn.Visible = true
@@ -625,7 +652,7 @@ OpenBtn.MouseButton1Click:Connect(function()
     OpenBtn.Visible = false
 end)
 
--- ========== BLOQUE: INICIAL ==========
+-- ========== BLOQUE: INICIALIZAR ==========
 do
     MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
     Title.BackgroundTransparency = DEFAULT_TRANSPARENCY
@@ -634,4 +661,4 @@ do
     Pages.BackgroundTransparency = math.clamp(DEFAULT_TRANSPARENCY + 0.1, 0, 1)
 end
 
-pcall(function() print("[KSHUB v0.003] cargado correctamente.") end)
+pcall(function() print("[KSHUB v0.004] cargado correctamente.") end)
