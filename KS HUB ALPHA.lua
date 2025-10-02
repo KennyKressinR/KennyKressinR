@@ -210,22 +210,35 @@ local function CreateSection(parent, title, height)
     sec.BackgroundTransparency = 1
     sec.Parent = parent
 
+    -- Contenedor interno que tendrá layout
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = sec
+
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 4)
+    layout.Parent = container
+
+    -- Título de la sección
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, 0, 0, 18)
-    lbl.Position = UDim2.new(0, 0, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.Text = title or ""
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Font = Enum.Font.GothamBold
     lbl.TextSize = 14
     lbl.TextColor3 = Color3.new(1,1,1)
-    lbl.Parent = sec
+    lbl.LayoutOrder = 0 -- siempre arriba en el layout
+    lbl.Parent = container
 
+    -- Body para botones / controles
     local body = Instance.new("Frame")
-    body.Size = UDim2.new(1, 0, 0, (height and (height - 22) or 36))
-    body.Position = UDim2.new(0, 0, 0, 22)
+    body.Size = UDim2.new(1, 0, 0, (height and (height - 18) or 36))
     body.BackgroundTransparency = 1
-    body.Parent = sec
+    body.LayoutOrder = 1 -- justo después del título
+    body.Parent = container
 
     return sec, body
 end
