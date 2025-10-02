@@ -1,15 +1,13 @@
--- KS HUB v2.3 - Script completo final (copia y pega)
--- Incluye: prevención duplicados, fade, drag, tabs sin solapamiento, recolor completo,
--- players clickable TP, noclip, fly básico, infinite jump, save/load positions, walkspeed/jump presets.
-
--- ===== SERVICES & PREVENT DUPLICATES =====
+-- BLOQUE 1: SERVICIOS, PREVENIR DUPLICADOS Y CONFIG
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+
 local LocalPlayer = Players.LocalPlayer
 if not LocalPlayer then Players.PlayerAdded:Wait(); LocalPlayer = Players.LocalPlayer end
 
+-- Prevención de GUIs duplicadas
 pcall(function()
     if LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui") then
         local old = LocalPlayer.PlayerGui:FindFirstChild("KSHUB")
@@ -19,7 +17,7 @@ pcall(function()
     if core and core:FindFirstChild("KSHUB") then core:FindFirstChild("KSHUB"):Destroy() end
 end)
 
--- ===== CONFIG =====
+-- Config
 local HUB_COLORS = {
     Azul = Color3.fromRGB(0,85,170),
     Verde = Color3.fromRGB(50,205,50),
@@ -27,11 +25,14 @@ local HUB_COLORS = {
     Amarillo = Color3.fromRGB(240,220,40),
 }
 local DEFAULT_COLOR_NAME = "Azul"
+local DEFAULT_HUB_COLOR = HUB_COLORS[DEFAULT_COLOR_NAME]
+local BTN_BASE = Color3.fromRGB(10,90,180) -- color fijo para tabs y base de botones
+local ACTIVE_TAB_COLOR = Color3.fromRGB(30,130,220) -- color fijo para tab activo (no cambia con el picker)
 local FADE_TIME = 0.18
 local DEFAULT_LEFT_TRANSP = 0.25
 local UI_PADDING = 8
 
--- ===== CREATE GUI =====
+-- BLOQUE 2: CREAR GUI (estructura principal)
 local guiParent = LocalPlayer:FindFirstChild("PlayerGui") or game:GetService("CoreGui")
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -53,11 +54,11 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 local MainCorner = Instance.new("UICorner"); MainCorner.Parent = MainFrame; MainCorner.CornerRadius = UDim.new(0,12)
 
--- Title bar (contains title text and clock)
+-- TitleBar
 local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1,0,0,48)
 TitleBar.Position = UDim2.new(0,0,0,0)
-TitleBar.BackgroundColor3 = HUB_COLORS[DEFAULT_COLOR_NAME]
+TitleBar.BackgroundColor3 = DEFAULT_HUB_COLOR
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
 
@@ -100,11 +101,11 @@ CloseBtn.TextColor3 = Color3.new(1,1,1)
 CloseBtn.Parent = TitleBar
 local CloseCorner = Instance.new("UICorner"); CloseCorner.Parent = CloseBtn
 
--- Panels
+-- Left & Right panels
 local LeftPanel = Instance.new("Frame")
 LeftPanel.Size = UDim2.new(0,180,1,-48)
 LeftPanel.Position = UDim2.new(0,0,0,48)
-LeftPanel.BackgroundColor3 = HUB_COLORS[DEFAULT_COLOR_NAME]
+LeftPanel.BackgroundColor3 = DEFAULT_HUB_COLOR
 LeftPanel.BackgroundTransparency = DEFAULT_LEFT_TRANSP
 LeftPanel.BorderSizePixel = 0
 LeftPanel.Parent = MainFrame
@@ -124,11 +125,10 @@ RightPanel.BorderSizePixel = 0
 RightPanel.Parent = MainFrame
 local RightCorner = Instance.new("UICorner"); RightCorner.Parent = RightPanel; RightCorner.CornerRadius = UDim.new(0,10)
 
--- Open button
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Size = UDim2.new(0,110,0,36)
 OpenBtn.Position = UDim2.new(1,-170,1,-100)
-OpenBtn.BackgroundColor3 = HUB_COLORS[DEFAULT_COLOR_NAME]
+OpenBtn.BackgroundColor3 = DEFAULT_HUB_COLOR
 OpenBtn.BorderSizePixel = 0
 OpenBtn.Text = "KSHUB"
 OpenBtn.Font = Enum.Font.Gotham
@@ -137,10 +137,10 @@ OpenBtn.TextColor3 = Color3.new(1,1,1)
 OpenBtn.Parent = ScreenGui
 local OpenCorner = Instance.new("UICorner"); OpenCorner.Parent = OpenBtn
 
--- ===== TAB SYSTEM =====
+-- BLOQUE 3: SISTEMA DE TABS (los botones de pestaña son fijos y NO se tintan)
 local tabButtons = {}
 local pages = {}
-local contentButtons = {} -- botones de contenido que se tintan (no incluye color-picker buttons)
+local contentButtons = {} -- botones de contenido que sí se tintan
 
 local function makeAutoCanvas(scrollFrame, layout)
     local function update()
@@ -154,7 +154,7 @@ end
 local function CreateTab(name)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1,-24,0,36)
-    btn.BackgroundColor3 = Color3.fromRGB(10,90,180)
+    btn.BackgroundColor3 = BTN_BASE -- FIJO: no cambiar con color picker
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 14
@@ -188,25 +188,26 @@ local function CreateTab(name)
     pages[name] = {Btn = btn, Page = page, Container = container, Layout = layout}
 
     btn.MouseButton1Click:Connect(function()
-        for k,v in pairs(pages) do v.Page.Visible = false; tabButtons[k].BackgroundColor3 = Color3.fromRGB(10,90,180) end
+        for k,v in pairs(pages) do v.Page.Visible = false; tabButtons[k].BackgroundColor3 = BTN_BASE end
         page.Visible = true
-        btn.BackgroundColor3 = Color3.fromRGB(30,130,220)
-        -- ensure active tab highlighted with hub color later when recolor applied
+        btn.BackgroundColor3 = ACTIVE_TAB_COLOR -- highlight fixed, NOT dynamic by color picker
     end)
 
     return pages[name]
 end
 
--- create tabs
+-- crear tabs (fijos)
 CreateTab("Principal")
 CreateTab("Teleport")
 CreateTab("Player")
 CreateTab("Ajustes")
 CreateTab("Info")
-pages["Principal"].Page.Visible = true
-tabButtons["Principal"].BackgroundColor3 = Color3.fromRGB(30,130,220)
 
--- ===== HELPERS UI =====
+-- mostrar principal
+pages["Principal"].Page.Visible = true
+tabButtons["Principal"].BackgroundColor3 = ACTIVE_TAB_COLOR
+
+-- BLOQUE 4: HELPERS UI (secciones, grids, botones)
 local function CreateSection(parent, title)
     local sec = Instance.new("Frame")
     sec.BackgroundTransparency = 1
@@ -250,9 +251,7 @@ local function CreateGridFrame(parent, cellX, cellY, pad, maxCols)
     grid.CellPadding = UDim2.new(0, pad or 6, 0, pad or 6)
     grid.FillDirection = Enum.FillDirection.Horizontal
     grid.SortOrder = Enum.SortOrder.LayoutOrder
-    if maxCols then
-        grid.FillDirectionMaxCells = maxCols
-    end
+    if maxCols then grid.FillDirectionMaxCells = maxCols end
     grid.Parent = frame
     return frame, grid
 end
@@ -272,12 +271,12 @@ local function CreateButton(parent, text, width)
     return b
 end
 
--- ===== FUNCTIONS: gameplay helpers =====
+-- BLOQUE 5: FUNCIONES (teleport, noclip, fly, save/load)
 local function getRoot()
     return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 end
 
--- noclip
+-- Noclip
 local noclipState = false
 local noclipConn = nil
 local function enableNoclip()
@@ -287,9 +286,7 @@ local function enableNoclip()
         local ch = LocalPlayer.Character
         if ch then
             for _, part in pairs(ch:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    pcall(function() part.CanCollide = false end)
-                end
+                if part:IsA("BasePart") then pcall(function() part.CanCollide = false end) end
             end
         end
     end)
@@ -300,7 +297,7 @@ local function disableNoclip()
     if noclipConn then noclipConn:Disconnect(); noclipConn = nil end
 end
 
--- teleport to mouse
+-- Teleport to mouse
 local function teleportToMouse()
     local mouse = LocalPlayer:GetMouse()
     if mouse and mouse.Hit then
@@ -309,7 +306,7 @@ local function teleportToMouse()
     end
 end
 
--- teleport to player (Player object)
+-- Teleport to player object
 local function teleportToPlayerObj(pl)
     if not pl or not pl.Character then return end
     local tgt = pl.Character:FindFirstChild("HumanoidRootPart") or pl.Character:FindFirstChildWhichIsA("BasePart")
@@ -317,7 +314,7 @@ local function teleportToPlayerObj(pl)
     if tgt and root then root.CFrame = tgt.CFrame + Vector3.new(0,3,0) end
 end
 
--- save/load positions
+-- save/load
 local saved = {}
 local function savePosition(slot)
     local root = getRoot()
@@ -329,16 +326,16 @@ local function loadPosition(slot)
     if cf and root then root.CFrame = cf + Vector3.new(0,3,0) end
 end
 
--- fly (simple BodyVelocity)
+-- Fly (simple)
 local flyState = false
 local flyConn = nil
-local flySpeed = 60
 local flyControl = {W=false,A=false,S=false,D=false,Up=false,Down=false}
+local flySpeed = 60
 local function startFly()
     if flyState then return end
     local root = getRoot(); if not root then return end
     flyState = true
-    local bv = Instance.new("BodyVelocity"); bv.MaxForce = Vector3.new(9e9,9e9,9e9); bv.Velocity = Vector3.new(0,0,0); bv.Parent = root
+    local bv = Instance.new("BodyVelocity"); bv.MaxForce = Vector3.new(9e9,9e9,9e9); bv.Parent = root
     flyConn = RunService.RenderStepped:Connect(function()
         local move = Vector3.new(0,0,0)
         if flyControl.W then move = move + workspace.CurrentCamera.CFrame.LookVector end
@@ -357,7 +354,7 @@ local function stopFly()
     if root then for _,v in pairs(root:GetChildren()) do if v:IsA("BodyVelocity") then v:Destroy() end end end
 end
 
--- infinite jump
+-- Infinite jump handler (uses variable infJump)
 local infJump = false
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
@@ -367,33 +364,31 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
--- ===== POPULATE UI (organized) =====
--- Principal page
+-- BLOQUE 6: POBLAR UI (contenido organizado y grids)
+
+-- PRINCIPAL
 do
     local page = pages["Principal"].Container
     local sec, body = CreateSection(page, "Accesos rápidos")
-    local gridFrame, gridLayout = CreateGridFrame(body, 260, 36, 8, 2)
+    local gf, g = CreateGridFrame(body, 260, 36, 8, 2)
 
-    local btnTpMouse = CreateButton(gridFrame, "TP a mouse", 260)
+    local btnTpMouse = CreateButton(gf, "TP a mouse", 260)
     btnTpMouse.MouseButton1Click:Connect(teleportToMouse)
 
-    local btnToggleNoclip = CreateButton(gridFrame, "Toggle Noclip", 260)
+    local btnToggleNoclip = CreateButton(gf, "Toggle Noclip", 260)
     btnToggleNoclip.MouseButton1Click:Connect(function()
         if noclipState then disableNoclip(); btnToggleNoclip.Text = "Noclip: OFF" else enableNoclip(); btnToggleNoclip.Text = "Noclip: ON" end
     end)
 
-    local btnFly = CreateButton(gridFrame, "Toggle Fly", 260)
+    local btnFly = CreateButton(gf, "Toggle Fly", 260)
     btnFly.MouseButton1Click:Connect(function()
         if flyState then stopFly(); btnFly.Text = "Fly: OFF" else startFly(); btnFly.Text = "Fly: ON" end
     end)
 
-    local btnInfJump = CreateButton(gridFrame, "Toggle Infinite Jump", 260)
-    btnInfJump.MouseButton1Click:Connect(function()
-        infJump = not infJump
-        btnInfJump.Text = "Infinite Jump: " .. (infJump and "ON" or "OFF")
-    end)
+    local btnInfJump = CreateButton(gf, "Toggle Infinite Jump", 260)
+    btnInfJump.MouseButton1Click:Connect(function() infJump = not infJump; btnInfJump.Text = "Infinite Jump: "..(infJump and "ON" or "OFF") end)
 
-    -- players list
+    -- Jugadores clickeables
     local secP, bodyP = CreateSection(page, "Jugadores (clic para TP)")
     local playersScroll = Instance.new("ScrollingFrame"); playersScroll.Size = UDim2.new(1,0,0,200); playersScroll.BackgroundTransparency = 1; playersScroll.Parent = bodyP; playersScroll.ScrollBarThickness = 8
     local playersContent = Instance.new("Frame"); playersContent.Size = UDim2.new(1,-12,0,0); playersContent.Position = UDim2.new(0,6,0,6); playersContent.BackgroundTransparency = 1; playersContent.Parent = playersScroll; playersContent.AutomaticSize = Enum.AutomaticSize.Y
@@ -416,16 +411,14 @@ do
     refreshPlayers()
 end
 
--- Teleport page
+-- TELEPORT
 do
     local page = pages["Teleport"].Container
     local sec, body = CreateSection(page, "Guardar / Cargar posiciones")
     local gridF, grid = CreateGridFrame(body, 120, 36, 8, 4)
     for i = 1, 4 do
-        local s = CreateButton(gridF, "Save "..i, 120)
-        s.MouseButton1Click:Connect(function() savePosition(i) end)
-        local l = CreateButton(gridF, "Load "..i, 120)
-        l.MouseButton1Click:Connect(function() loadPosition(i) end)
+        local s = CreateButton(gridF, "Save "..i, 120); s.MouseButton1Click:Connect(function() savePosition(i) end)
+        local l = CreateButton(gridF, "Load "..i, 120); l.MouseButton1Click:Connect(function() loadPosition(i) end)
     end
 
     local sec2, body2 = CreateSection(page, "Ir a coordenadas")
@@ -434,38 +427,29 @@ do
     go.MouseButton1Click:Connect(function()
         local txt = box.Text
         local x,y,z = txt:match("(-?%d+%.?%d*)%s+(-?%d+%.?%d*)%s+(-?%d+%.?%d*)")
-        if x and y and z then
-            local cf = CFrame.new(tonumber(x), tonumber(y), tonumber(z))
-            local root = getRoot()
-            if root then root.CFrame = cf end
-        end
+        if x and y and z then local cf = CFrame.new(tonumber(x), tonumber(y), tonumber(z)); local root = getRoot(); if root then root.CFrame = cf end end
     end)
 end
 
--- Player page (presets)
+-- PLAYER
 do
     local page = pages["Player"].Container
     local sec, body = CreateSection(page, "Presets Walk/Jump")
     local f, g = CreateGridFrame(body, 200, 36, 8, 2)
-
     local function setWalk(s) local ch = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait(); local hum = ch and ch:FindFirstChildWhichIsA("Humanoid"); if hum then pcall(function() hum.WalkSpeed = s end) end end
     local function setJump(j) local ch = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait(); local hum = ch and ch:FindFirstChildWhichIsA("Humanoid"); if hum then pcall(function() hum.JumpPower = j end) end end
-
-    local b1 = CreateButton(f, "WalkSpeed 16", 200); b1.MouseButton1Click:Connect(function() setWalk(16) end)
-    local b2 = CreateButton(f, "WalkSpeed 50", 200); b2.MouseButton1Click:Connect(function() setWalk(50) end)
-    local b3 = CreateButton(f, "Jump 50", 200); b3.MouseButton1Click:Connect(function() setJump(50) end)
-    local b4 = CreateButton(f, "Jump 80", 200); b4.MouseButton1Click:Connect(function() setJump(80) end)
-
-    local sec2, body2 = CreateSection(page, "Infinite Jump")
-    local ib = CreateButton(body2, "Toggle Infinite Jump", 200)
+    CreateButton(f, "WalkSpeed 16", 200).MouseButton1Click:Connect(function() setWalk(16) end)
+    CreateButton(f, "WalkSpeed 50", 200).MouseButton1Click:Connect(function() setWalk(50) end)
+    CreateButton(f, "Jump 50", 200).MouseButton1Click:Connect(function() setJump(50) end)
+    CreateButton(f, "Jump 80", 200).MouseButton1Click:Connect(function() setJump(80) end)
+    local sec2, body2 = CreateSection(page, "Infinite Jump"); local ib = CreateButton(body2, "Toggle Infinite Jump", 200)
     ib.MouseButton1Click:Connect(function() infJump = not infJump; ib.Text = "Infinite Jump: "..(infJump and "ON" or "OFF") end)
 end
 
--- Ajustes page (grid: opacity + color picker side-by-side)
+-- AJUSTES (grid: opacidad + color picker)
 do
     local page = pages["Ajustes"].Container
     local sec, body = CreateSection(page, "Ajustes de interfaz")
-
     local containerGrid = Instance.new("Frame"); containerGrid.BackgroundTransparency = 1; containerGrid.Parent = body; containerGrid.AutomaticSize = Enum.AutomaticSize.Y
     local grid = Instance.new("UIGridLayout"); grid.Parent = containerGrid; grid.CellSize = UDim2.new(0,300,0,160); grid.CellPadding = UDim2.new(0,12,0,12); grid.FillDirection = Enum.FillDirection.Horizontal; grid.FillDirectionMaxCells = 2
 
@@ -498,39 +482,30 @@ do
         colorBtn.BorderSizePixel = 0
         colorBtn.Parent = cf
         local cr = Instance.new("UICorner"); cr.Parent = colorBtn
-        -- do NOT register colorBtn in contentButtons to avoid tinting it
+        -- apply color: DO NOT change tabButtons color (tabButtons are fixed)
         colorBtn.MouseButton1Click:Connect(function()
-            -- apply hub color properly
-            local c = col
-            TitleBar.BackgroundColor3 = c
-            LeftPanel.BackgroundColor3 = c
-            OpenBtn.BackgroundColor3 = c
-            -- recolor tab buttons: active/dim
-            for k, tb in pairs(tabButtons) do
-                tb.BackgroundColor3 = Color3.fromRGB(10,90,180) -- base neutral
-            end
-            for k, p in pairs(pages) do
-                if p.Page.Visible and p.Btn then
-                    p.Btn.BackgroundColor3 = c
-                end
-            end
-            -- tint content buttons lightly (but keep readability)
+            -- apply to TitleBar, LeftPanel, OpenBtn
+            TitleBar.BackgroundColor3 = col
+            LeftPanel.BackgroundColor3 = col
+            OpenBtn.BackgroundColor3 = col
+            -- tint content buttons lightly
             local tintFactor = 0.25
             for _, b in ipairs(contentButtons) do
                 if b and b:IsA("TextButton") then
-                    local r,g,bb = math.floor(c.R*255*tintFactor), math.floor(c.G*255*tintFactor), math.floor(c.B*255*tintFactor)
+                    local r,g,bb = math.floor(col.R*255*tintFactor), math.floor(col.G*255*tintFactor), math.floor(col.B*255*tintFactor)
                     b.BackgroundColor3 = Color3.fromRGB(math.clamp(r,0,255), math.clamp(g,0,255), math.clamp(bb,0,255))
                 end
             end
-            -- highlight selected color visually
-            for _, child in ipairs(cf:GetChildren()) do
-                if child:IsA("TextButton") then child.BackgroundTransparency = (child==colorBtn) and 0 or 0.25 end
-            end
+            -- do NOT recolor tab buttons; keep them BTN_BASE; but ensure active tab highlight remains ACTIVE_TAB_COLOR
+            for k, tb in pairs(tabButtons) do tb.BackgroundColor3 = BTN_BASE end
+            for k, p in pairs(pages) do if p.Page.Visible then p.Btn.BackgroundColor3 = ACTIVE_TAB_COLOR end end
+            -- mark selection
+            for _, child in ipairs(cf:GetChildren()) do if child:IsA("TextButton") then child.BackgroundTransparency = (child==colorBtn) and 0 or 0.25 end end
         end)
     end
 end
 
--- Info page
+-- INFO
 do
     local page = pages["Info"].Container
     local sec, body = CreateSection(page, "Acerca")
@@ -540,7 +515,7 @@ do
     lbl.AutomaticSize = Enum.AutomaticSize.Y; lbl.Parent = body
 end
 
--- ===== FADE, DRAG & SHORTCUT =====
+-- BLOQUE 7: FADE, DRAG, HOTKEYS E INICIALIZACIÓN
 local function fadeIn()
     if MainFrame.Visible then return end
     MainFrame.BackgroundTransparency = 1; TitleBar.BackgroundTransparency = 1; LeftPanel.BackgroundTransparency = 1
@@ -560,12 +535,12 @@ end
 
 OpenBtn.MouseButton1Click:Connect(fadeIn)
 CloseBtn.MouseButton1Click:Connect(fadeOut)
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.RightControl then
         if MainFrame.Visible then fadeOut() else fadeIn() end
     end
-    -- fly keys
     if input.KeyCode == Enum.KeyCode.W then flyControl.W = true end
     if input.KeyCode == Enum.KeyCode.S then flyControl.S = true end
     if input.KeyCode == Enum.KeyCode.A then flyControl.A = true end
@@ -582,19 +557,15 @@ UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.Q then flyControl.Down = false end
 end)
 
--- Dragging TitleBar
+-- Drag TitleBar
 do
-    local dragging = false
-    local dragStart = Vector2.new()
-    local frameStart = Vector2.new()
+    local dragging, dragStart, frameStart = false, Vector2.new(), Vector2.new()
     TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = UserInputService:GetMouseLocation()
             frameStart = Vector2.new(MainFrame.AbsolutePosition.X + MainFrame.AbsoluteSize.X/2, MainFrame.AbsolutePosition.Y + MainFrame.AbsoluteSize.Y/2)
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
         end
     end)
     RunService.RenderStepped:Connect(function()
@@ -612,18 +583,17 @@ do
     end)
 end
 
--- initialize defaults
+-- Inicialización: aplicación de color por defecto y transparencias
 LeftPanel.BackgroundTransparency = DEFAULT_LEFT_TRANSP
 TitleBar.BackgroundTransparency = DEFAULT_LEFT_TRANSP
 OpenBtn.BackgroundTransparency = DEFAULT_LEFT_TRANSP
 
--- apply initial hub color (default)
 do
-    local c = HUB_COLORS[DEFAULT_COLOR_NAME]
+    local c = DEFAULT_HUB_COLOR
     TitleBar.BackgroundColor3 = c
     LeftPanel.BackgroundColor3 = c
     OpenBtn.BackgroundColor3 = c
-    -- tint content buttons lightly
+    -- tint content buttons
     local tintFactor = 0.25
     for _, b in ipairs(contentButtons) do
         if b and b:IsA("TextButton") then
@@ -631,8 +601,8 @@ do
             b.BackgroundColor3 = Color3.fromRGB(math.clamp(r,0,255), math.clamp(g,0,255), math.clamp(bb,0,255))
         end
     end
-    -- highlight active tab
-    for k,p in pairs(pages) do if p.Page.Visible then p.Btn.BackgroundColor3 = c else p.Btn.BackgroundColor3 = Color3.fromRGB(10,90,180) end end
+    -- tabs fixed color and highlight active
+    for k,p in pairs(pages) do if p.Page.Visible then p.Btn.BackgroundColor3 = ACTIVE_TAB_COLOR else p.Btn.BackgroundColor3 = BTN_BASE end end
 end
 
-print("KS HUB v2.3 cargado — completo.")
+print("KS HUB v2.3 (bloques) cargado — tabs NO se tintan, resto sí.")
