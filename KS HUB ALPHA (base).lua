@@ -1,45 +1,45 @@
--- KS HUB ALPHA (base) -> KSHUB
+-- KS HUB ALPHA (base) -> KSHUB (actualizado)
 -- Ejecutable por loadstring
--- Hecho para ejecutores en Roblox (LocalScript-like)
+-- Bloques claramente separados para editar por partes
 
--- Evitar duplicados
+-- Prevent duplicates
 pcall(function()
     local existing = game:GetService("CoreGui"):FindFirstChild("KSHUB")
     if existing then existing:Destroy() end
 end)
 
+-- Services & player
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() and Players.LocalPlayer
-while not LocalPlayer do wait() end
+while not LocalPlayer do task.wait() end
 
--- Config inicial
-local DEFAULT_BLUE = Color3.fromRGB(0, 85, 170)
+-- ======= CONFIG / CONSTANTES =======
+local DEFAULT_BLUE = Color3.fromRGB(0,85,170)
 local DEFAULT_TRANSPARENCY = 0.25 -- 25%
+local UI_PADDING = 8
 
--- Crear ScreenGui
+-- ======= CREATING GUI (MAIN) =======
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHUB"
 ScreenGui.Parent = game:GetService("CoreGui")
 ScreenGui.ResetOnSpawn = false
 
--- Ventana principal
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 520, 0, 340)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -170)
+MainFrame.Size = UDim2.new(0,520,0,360)
+MainFrame.Position = UDim2.new(0.5,-260,0.5,-180)
 MainFrame.BackgroundColor3 = DEFAULT_BLUE
 MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-pcall(function() MainFrame.Draggable = true end) -- Draggable puede no funcionar en todos los entornos
+pcall(function() MainFrame.Draggable = true end)
 MainFrame.Parent = ScreenGui
 
--- Título
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Position = UDim2.new(0, 0, 0, 0)
+Title.Size = UDim2.new(1,0,0,40)
+Title.Position = UDim2.new(0,0,0,0)
 Title.BackgroundColor3 = DEFAULT_BLUE
 Title.BackgroundTransparency = DEFAULT_TRANSPARENCY
 Title.BorderSizePixel = 0
@@ -49,11 +49,10 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 20
 Title.Parent = MainFrame
 
--- Botón cerrar (en el título, a la derecha)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Name = "CloseBtn"
-CloseBtn.Size = UDim2.new(0, 28, 0, 28)
-CloseBtn.Position = UDim2.new(1, -34, 0, 6)
+CloseBtn.Size = UDim2.new(0,28,0,28)
+CloseBtn.Position = UDim2.new(1,-34,0,6)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
 CloseBtn.BackgroundTransparency = 0.1
 CloseBtn.BorderSizePixel = 0
@@ -63,12 +62,10 @@ CloseBtn.Font = Enum.Font.SourceSansBold
 CloseBtn.TextSize = 18
 CloseBtn.Parent = MainFrame
 
--- Botón para reabrir cuando está cerrado (flotante)
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Name = "OpenBtn"
-OpenBtn.Size = UDim2.new(0, 80, 0, 30)
-OpenBtn.Position = UDim2.new(1, -100, 1, -50)
-OpenBtn.AnchorPoint = Vector2.new(0,0)
+OpenBtn.Size = UDim2.new(0,90,0,32)
+OpenBtn.Position = UDim2.new(1,-110,1,-70)
 OpenBtn.BackgroundColor3 = DEFAULT_BLUE
 OpenBtn.BackgroundTransparency = DEFAULT_TRANSPARENCY
 OpenBtn.BorderSizePixel = 0
@@ -79,7 +76,7 @@ OpenBtn.TextSize = 14
 OpenBtn.Parent = ScreenGui
 OpenBtn.Visible = false
 
--- Marco de pestañas (lado izquierdo)
+-- Left tab column
 local TabFrame = Instance.new("Frame")
 TabFrame.Name = "TabFrame"
 TabFrame.Size = UDim2.new(0,140,1,-40)
@@ -89,13 +86,12 @@ TabFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
 TabFrame.BorderSizePixel = 0
 TabFrame.Parent = MainFrame
 
--- Layout vertical para botones de pestaña
-local TabLayout = Instance.new("UIListLayout")
-TabLayout.Parent = TabFrame
-TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TabLayout.Padding = UDim.new(0,8)
+local TabListLayout = Instance.new("UIListLayout")
+TabListLayout.Parent = TabFrame
+TabListLayout.Padding = UDim.new(0,8)
+TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Contenedor de páginas (derecha)
+-- Right pages container
 local Pages = Instance.new("Frame")
 Pages.Name = "Pages"
 Pages.Size = UDim2.new(1,-140,1,-40)
@@ -105,14 +101,25 @@ Pages.BackgroundTransparency = 0.35
 Pages.BorderSizePixel = 0
 Pages.Parent = MainFrame
 
--- Tabla para mantener páginas y botones
+-- Helper: create tab + page (page is a ScrollingFrame ready to hold many items)
 local tabs = {}
 local pages = {}
 
+local function makeAutoCanvas(scrollFrame, contentLayout)
+    -- Keep canvas size in sync with contentAbsoluteSize
+    local function update()
+        local y = contentLayout.AbsoluteContentSize.Y
+        scrollFrame.CanvasSize = UDim2.new(0,0,0, y + UI_PADDING)
+    end
+    contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(update)
+    update()
+end
+
 local function CreateTab(name)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -12, 0, 34)
-    btn.Position = UDim2.new(0, 6, 0, 0)
+    btn.Name = name .. "TabBtn"
+    btn.Size = UDim2.new(1,-12,0,34)
+    btn.Position = UDim2.new(0,6,0,0)
     btn.BackgroundColor3 = DEFAULT_BLUE
     btn.BackgroundTransparency = DEFAULT_TRANSPARENCY
     btn.BorderSizePixel = 0
@@ -122,118 +129,106 @@ local function CreateTab(name)
     btn.TextSize = 14
     btn.Parent = TabFrame
 
-    local page = Instance.new("Frame")
+    local page = Instance.new("ScrollingFrame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1,0,1,0)
     page.Position = UDim2.new(0,0,0,0)
     page.BackgroundTransparency = 1
+    page.BorderSizePixel = 0
+    page.ScrollBarThickness = 6
     page.Parent = Pages
     page.Visible = false
 
+    -- Content container inside scrolling frame
+    local content = Instance.new("Frame")
+    content.Name = "Content"
+    content.Size = UDim2.new(1,-16,0,0)
+    content.Position = UDim2.new(0,8,0,8)
+    content.BackgroundTransparency = 1
+    content.Parent = page
+
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.Parent = content
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Padding = UDim.new(0,8)
+
+    makeAutoCanvas(page, contentLayout)
+
     tabs[name] = btn
-    pages[name] = page
+    pages[name] = {Page = page, Content = content, Layout = contentLayout}
 
     btn.MouseButton1Click:Connect(function()
-        for k,v in pairs(pages) do
-            v.Visible = false
-        end
+        for _, v in pairs(pages) do v.Page.Visible = false end
         page.Visible = true
     end)
 
-    return page
+    return pages[name]
 end
 
--- Crear pestañas solicitadas
-local PrincipalPage = CreateTab("Principal")
-local TeleportPage  = CreateTab("Teleport")
-local PlayerPage    = CreateTab("Player")
-local AjustesPage   = CreateTab("Ajustes")
-local InfoPage      = CreateTab("Info")
+-- Create required tabs
+local Principal = CreateTab("Principal")
+local Teleport = CreateTab("Teleport")
+local Player = CreateTab("Player")
+local Ajustes = CreateTab("Ajustes")
+local Info = CreateTab("Info")
+pages["Principal"].Page.Visible = true
 
--- Mostrar Principal por defecto
-pages["Principal"].Visible = true
+-- ======= UTILIDADES UI =======
+local function CreateSection(contentParent, title)
+    local sec = Instance.new("Frame")
+    sec.Size = UDim2.new(1,0,0,50)
+    sec.BackgroundTransparency = 1
+    sec.Parent = contentParent
 
--- === Funciones utilitarias para elementos UI (rápido) ===
-local function CreateLabel(parent, text, sizeY)
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -16, 0, sizeY or 24)
-    lbl.Position = UDim2.new(0,8,0,8 + (#parent:GetChildren() * 2))
+    lbl.Size = UDim2.new(1,0,0,20)
+    lbl.Position = UDim2.new(0,0,0,0)
     lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Color3.new(1,1,1)
+    lbl.Text = title
     lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Font = Enum.Font.Gotham
+    lbl.Font = Enum.Font.GothamBold
     lbl.TextSize = 14
-    lbl.Parent = parent
-    return lbl
+    lbl.TextColor3 = Color3.new(1,1,1)
+    lbl.Parent = sec
+
+    local body = Instance.new("Frame")
+    body.Size = UDim2.new(1,0,0,28)
+    body.Position = UDim2.new(0,0,0,22)
+    body.BackgroundTransparency = 1
+    body.Parent = sec
+
+    return sec, body
 end
 
--- === PLAYER PAGE CONTENT ===
-do
-    local pPage = pages["Player"]
+local function CreateGridButtons(parentFrame, cellSize, spacing)
+    local grid = Instance.new("UIGridLayout")
+    grid.CellSize = cellSize or UDim2.new(0,100,0,28)
+    grid.CellPadding = spacing or UDim2.new(0,6,0,6)
+    grid.FillDirection = Enum.FillDirection.Horizontal
+    grid.SortOrder = Enum.SortOrder.LayoutOrder
+    grid.Parent = parentFrame
+    return grid
+end
 
+-- ======= PLAYER TAB (WALKSPEED / JUMP / NOCLIP) =======
+do
+    local content = Player.Content
+
+    -- Header
     local header = Instance.new("TextLabel")
-    header.Size = UDim2.new(1, -16, 0, 22)
-    header.Position = UDim2.new(0,8,0,8)
+    header.Size = UDim2.new(1,0,0,22)
     header.BackgroundTransparency = 1
     header.Text = "Player - Ajustes"
-    header.TextColor3 = Color3.new(1,1,1)
     header.Font = Enum.Font.GothamBold
     header.TextSize = 16
-    header.Parent = pPage
+    header.TextColor3 = Color3.new(1,1,1)
+    header.Parent = content
 
-    -- Subframe para WalkSpeed (botones horizontal)
-    local speedFrame = Instance.new("Frame")
-    speedFrame.Size = UDim2.new(1, -16, 0, 48)
-    speedFrame.Position = UDim2.new(0,8,0,40)
-    speedFrame.BackgroundTransparency = 1
-    speedFrame.Parent = pPage
+    -- WalkSpeed Section (grid, will wrap)
+    local sec, body = CreateSection(content, "Velocidad (WalkSpeed):")
+    sec.Size = UDim2.new(1,0,0,58)
 
-    local speedLabel = Instance.new("TextLabel")
-    speedLabel.Size = UDim2.new(1,0,0,18)
-    speedLabel.Position = UDim2.new(0,0,0,0)
-    speedLabel.BackgroundTransparency = 1
-    speedLabel.Text = "Velocidad (WalkSpeed):"
-    speedLabel.TextXAlignment = Enum.TextXAlignment.Left
-    speedLabel.Font = Enum.Font.Gotham
-    speedLabel.TextSize = 14
-    speedLabel.TextColor3 = Color3.new(1,1,1)
-    speedLabel.Parent = speedFrame
-
-    local speedButtonsFrame = Instance.new("Frame")
-    speedButtonsFrame.Size = UDim2.new(1,0,0,28)
-    speedButtonsFrame.Position = UDim2.new(0,0,0,20)
-    speedButtonsFrame.BackgroundTransparency = 1
-    speedButtonsFrame.Parent = speedFrame
-
-    local speedLayout = Instance.new("UIListLayout")
-    speedLayout.Parent = speedButtonsFrame
-    speedLayout.FillDirection = Enum.FillDirection.Horizontal
-    speedLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    speedLayout.Padding = UDim.new(0,6)
-
-    local function makeSpeedButton(text, speedValue)
-        local b = Instance.new("TextButton")
-        b.Size = UDim2.new(0, 84, 1, 0)
-        b.BackgroundColor3 = DEFAULT_BLUE
-        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
-        b.BorderSizePixel = 0
-        b.Text = text
-        b.Font = Enum.Font.Gotham
-        b.TextSize = 14
-        b.TextColor3 = Color3.new(1,1,1)
-        b.Parent = speedButtonsFrame
-        b.MouseButton1Click:Connect(function()
-            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-            local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-            if humanoid then
-                pcall(function() humanoid.WalkSpeed = speedValue end)
-            end
-        end)
-        return b
-    end
-
-    -- Guardar valores: Normal será el WalkSpeed actual al momento de ejecutar
+    local grid = CreateGridButtons(body, UDim2.new(0,92,0,28), UDim2.new(0,6,0,6))
     local function getDefaultWalkSpeed()
         local ch = LocalPlayer.Character
         if ch then
@@ -243,43 +238,35 @@ do
         return 16
     end
     local defaultWalkSpeed = getDefaultWalkSpeed()
+    local speeds = {
+        {"Normal", defaultWalkSpeed},
+        {"25", 25},
+        {"50", 50},
+        {"100", 100},
+        {"200", 200},
+    }
+    for _, v in ipairs(speeds) do
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0,92,0,28)
+        b.BackgroundColor3 = DEFAULT_BLUE
+        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BorderSizePixel = 0
+        b.Text = v[1]
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 14
+        b.TextColor3 = Color3.new(1,1,1)
+        b.Parent = body
+        b.MouseButton1Click:Connect(function()
+            local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local hum = char:FindFirstChildWhichIsA("Humanoid")
+            if hum then pcall(function() hum.WalkSpeed = v[2] end) end
+        end)
+    end
 
-    -- Crear botones (lado a lado)
-    makeSpeedButton("Normal", defaultWalkSpeed)
-    makeSpeedButton("25", 25)
-    makeSpeedButton("50", 50)
-    makeSpeedButton("100", 100)
-    makeSpeedButton("200", 200)
-
-    -- JumpPower (impulso de salto)
-    local jumpFrame = Instance.new("Frame")
-    jumpFrame.Size = UDim2.new(1, -16, 0, 48)
-    jumpFrame.Position = UDim2.new(0,8,0,100)
-    jumpFrame.BackgroundTransparency = 1
-    jumpFrame.Parent = pPage
-
-    local jumpLabel = Instance.new("TextLabel")
-    jumpLabel.Size = UDim2.new(1,0,0,18)
-    jumpLabel.Position = UDim2.new(0,0,0,0)
-    jumpLabel.BackgroundTransparency = 1
-    jumpLabel.Text = "Impulso de salto (JumpPower):"
-    jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
-    jumpLabel.Font = Enum.Font.Gotham
-    jumpLabel.TextSize = 14
-    jumpLabel.TextColor3 = Color3.new(1,1,1)
-    jumpLabel.Parent = jumpFrame
-
-    local jumpButtonsFrame = Instance.new("Frame")
-    jumpButtonsFrame.Size = UDim2.new(1,0,0,28)
-    jumpButtonsFrame.Position = UDim2.new(0,0,0,20)
-    jumpButtonsFrame.BackgroundTransparency = 1
-    jumpButtonsFrame.Parent = jumpFrame
-
-    local jumpLayout = Instance.new("UIListLayout")
-    jumpLayout.Parent = jumpButtonsFrame
-    jumpLayout.FillDirection = Enum.FillDirection.Horizontal
-    jumpLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    jumpLayout.Padding = UDim.new(0,6)
+    -- JumpPower Section
+    local secJ, bodyJ = CreateSection(content, "Impulso de salto (JumpPower):")
+    secJ.Size = UDim2.new(1,0,0,58)
+    local gridJ = CreateGridButtons(bodyJ, UDim2.new(0,120,0,28), UDim2.new(0,6,0,6))
 
     local function getDefaultJumpPower()
         local ch = LocalPlayer.Character
@@ -290,156 +277,265 @@ do
         return 50
     end
     local defaultJump = getDefaultJumpPower()
-
-    local function makeJumpButton(text, factor) -- factor: multiplier (1 = normal)
+    local jumps = {
+        {"Normal (predet)", 1},
+        {"+50%", 1.5},
+        {"+100%", 2},
+        {"+200%", 3},
+    }
+    for _, v in ipairs(jumps) do
         local b = Instance.new("TextButton")
-        b.Size = UDim2.new(0, 120, 1, 0)
+        b.Size = UDim2.new(0,120,0,28)
         b.BackgroundColor3 = DEFAULT_BLUE
         b.BackgroundTransparency = DEFAULT_TRANSPARENCY
         b.BorderSizePixel = 0
-        b.Text = text
+        b.Text = v[1]
         b.Font = Enum.Font.Gotham
         b.TextSize = 14
         b.TextColor3 = Color3.new(1,1,1)
-        b.Parent = jumpButtonsFrame
+        b.Parent = bodyJ
         b.MouseButton1Click:Connect(function()
-            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-            local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-            if humanoid then
-                local target = math.floor(defaultJump * factor)
-                pcall(function() humanoid.JumpPower = target end)
+            local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local hum = char:FindFirstChildWhichIsA("Humanoid")
+            if hum then
+                local target = math.floor(defaultJump * v[2])
+                pcall(function() hum.JumpPower = target end)
             end
         end)
-        return b
     end
 
-    -- Normal(predet), +50%, +100%, +200%
-    makeJumpButton("Normal (predet)", 1)
-    makeJumpButton("+50%", 1.5)
-    makeJumpButton("+100%", 2)
-    makeJumpButton("+200%", 3)
-
-    -- Noclip toggle
-    local noclipState = false
-    local noclipConn = nil
-    local savedCanCollide = {} -- map part -> original cancollide
-
+    -- Noclip
+    local secN, bodyN = CreateSection(content, "Noclip:")
+    secN.Size = UDim2.new(1,0,0,42)
     local noclipBtn = Instance.new("TextButton")
-    noclipBtn.Size = UDim2.new(0, 120, 0, 30)
-    noclipBtn.Position = UDim2.new(0, 8, 0, 170)
+    noclipBtn.Size = UDim2.new(0,160,0,28)
+    noclipBtn.Position = UDim2.new(0,0,0,0)
     noclipBtn.BackgroundColor3 = DEFAULT_BLUE
     noclipBtn.BackgroundTransparency = DEFAULT_TRANSPARENCY
     noclipBtn.BorderSizePixel = 0
+    noclipBtn.Text = "Noclip: OFF"
     noclipBtn.Font = Enum.Font.Gotham
     noclipBtn.TextSize = 14
     noclipBtn.TextColor3 = Color3.new(1,1,1)
-    noclipBtn.Text = "Noclip: OFF"
-    noclipBtn.Parent = pPage
+    noclipBtn.Parent = bodyN
 
+    local noclipState = false
+    local noclipConn = nil
     local function enableNoclip()
         if noclipState then return end
         noclipState = true
         noclipBtn.Text = "Noclip: ON"
-        savedCanCollide = {}
-        local function noclipStep()
+        noclipConn = RunService.Stepped:Connect(function()
             local ch = LocalPlayer.Character
             if ch then
                 for _, part in pairs(ch:GetDescendants()) do
                     if part:IsA("BasePart") then
-                        if savedCanCollide[part] == nil then
-                            savedCanCollide[part] = part.CanCollide
-                        end
-                        part.CanCollide = false
+                        pcall(function() part.CanCollide = false end)
                     end
                 end
             end
-        end
-        noclipConn = RunService.Stepped:Connect(noclipStep)
+        end)
     end
-
     local function disableNoclip()
         if not noclipState then return end
         noclipState = false
         noclipBtn.Text = "Noclip: OFF"
-        if noclipConn then
-            noclipConn:Disconnect()
-            noclipConn = nil
-        end
-        -- Restaurar valores guardados
-        for part, original in pairs(savedCanCollide) do
-            if part and part.Parent then
-                pcall(function() part.CanCollide = original end)
-            end
-        end
-        savedCanCollide = {}
+        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+        -- can't reliably restore original values safely for every part here
     end
-
     noclipBtn.MouseButton1Click:Connect(function()
         if noclipState then disableNoclip() else enableNoclip() end
     end)
 
-    -- Reaplicar default values en respawn
-    LocalPlayer.CharacterAdded:Connect(function(char)
-        wait(0.5)
+    -- Reapply defaults on respawn
+    LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(0.5)
         defaultWalkSpeed = getDefaultWalkSpeed()
         defaultJump = getDefaultJumpPower()
-        if noclipState then
-            -- reinstaurar noclip en nuevo character
-            enableNoclip()
-        end
+        if noclipState then enableNoclip() end
     end)
 end
 
--- === AJUSTES PAGE CONTENT (transparencias) ===
+-- ======= TELEPORT TAB (Save/Load + Players list) =======
 do
-    local aPage = pages["Ajustes"]
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -16, 0, 22)
-    label.Position = UDim2.new(0,8,0,8)
-    label.BackgroundTransparency = 1
-    label.Text = "Ajustes de interfaz"
-    label.TextColor3 = Color3.new(1,1,1)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 16
-    label.Parent = aPage
+    local content = Teleport.Content
 
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1,0,0,22)
+    header.BackgroundTransparency = 1
+    header.Text = "Teleport - Save / Load"
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 16
+    header.TextColor3 = Color3.new(1,1,1)
+    header.Parent = content
+
+    -- Save buttons (Save1..Save4)
+    local secSave, bodySave = CreateSection(content, "Tp - Save (Guarda tu posición actual):")
+    secSave.Size = UDim2.new(1,0,0,60)
+    local gridS = CreateGridButtons(bodySave, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
+    local saved = {} -- 1..4 store CFrame
+
+    for i=1,4 do
+        local idx = i
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0,96,0,28)
+        b.BackgroundColor3 = DEFAULT_BLUE
+        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BorderSizePixel = 0
+        b.Text = "Save"..idx
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 14
+        b.TextColor3 = Color3.new(1,1,1)
+        b.Parent = bodySave
+        b.MouseButton1Click:Connect(function()
+            local ch = LocalPlayer.Character
+            if ch then
+                local hrp = ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChildWhichIsA("BasePart")
+                if hrp then
+                    saved[idx] = hrp.CFrame
+                    pcall(function() print("[KSHUB] Guardado Save"..idx) end)
+                end
+            end
+        end)
+    end
+
+    -- Load buttons (Load1..Load4)
+    local secLoad, bodyLoad = CreateSection(content, "Tp - Load (Carga la posición):")
+    secLoad.Size = UDim2.new(1,0,0,60)
+    local gridL = CreateGridButtons(bodyLoad, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
+    for i=1,4 do
+        local idx = i
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0,96,0,28)
+        b.BackgroundColor3 = DEFAULT_BLUE
+        b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+        b.BorderSizePixel = 0
+        b.Text = "Load"..idx
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 14
+        b.TextColor3 = Color3.new(1,1,1)
+        b.Parent = bodyLoad
+        b.MouseButton1Click:Connect(function()
+            local pos = saved[idx]
+            if pos then
+                local ch = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+                local hrp = ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChildWhichIsA("BasePart")
+                if hrp then
+                    pcall(function() hrp.CFrame = pos + Vector3.new(0,3,0) end)
+                end
+            else
+                pcall(function() print("[KSHUB] No hay Save"..idx.." guardado.") end)
+            end
+        end)
+    end
+
+    -- Players list to teleport to them
+    local secPlayers, bodyPlayers = CreateSection(content, "Teleport to Player:")
+    secPlayers.Size = UDim2.new(1,0,0,160)
+
+    local playersScroll = Instance.new("ScrollingFrame")
+    playersScroll.Size = UDim2.new(1,0,0,132)
+    playersScroll.Position = UDim2.new(0,0,0,24)
+    playersScroll.BackgroundTransparency = 1
+    playersScroll.CanvasSize = UDim2.new(0,0,0,0)
+    playersScroll.ScrollBarThickness = 6
+    playersScroll.Parent = secPlayers
+
+    local playersContent = Instance.new("Frame")
+    playersContent.Size = UDim2.new(1, -12, 0, 0)
+    playersContent.Position = UDim2.new(0,6,0,6)
+    playersContent.BackgroundTransparency = 1
+    playersContent.Parent = playersScroll
+
+    local playersLayout = Instance.new("UIListLayout")
+    playersLayout.Parent = playersContent
+    playersLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    playersLayout.Padding = UDim.new(0,6)
+
+    -- auto canvas
+    makeAutoCanvas(playersScroll, playersLayout)
+
+    local function refreshPlayersList()
+        -- clear
+        for _,c in ipairs(playersContent:GetChildren()) do
+            if not c:IsA("UIListLayout") then c:Destroy() end
+        end
+        for _, pl in ipairs(Players:GetPlayers()) do
+            if pl ~= LocalPlayer then
+                local b = Instance.new("TextButton")
+                b.Size = UDim2.new(1,0,0,28)
+                b.BackgroundColor3 = DEFAULT_BLUE
+                b.BackgroundTransparency = DEFAULT_TRANSPARENCY
+                b.BorderSizePixel = 0
+                b.Text = pl.Name
+                b.Font = Enum.Font.Gotham
+                b.TextSize = 14
+                b.TextColor3 = Color3.new(1,1,1)
+                b.Parent = playersContent
+                b.MouseButton1Click:Connect(function()
+                    local targetChar = pl.Character
+                    local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+                    if targetChar and myChar then
+                        local targetHRP = targetChar:FindFirstChild("HumanoidRootPart") or targetChar:FindFirstChildWhichIsA("BasePart")
+                        local myHRP = myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChildWhichIsA("BasePart")
+                        if targetHRP and myHRP then
+                            pcall(function() myHRP.CFrame = targetHRP.CFrame + Vector3.new(0,3,0) end)
+                        end
+                    end
+                end)
+            end
+        end
+    end
+
+    refreshPlayersList()
+    Players.PlayerAdded:Connect(refreshPlayersList)
+    Players.PlayerRemoving:Connect(refreshPlayersList)
+end
+
+-- ======= AJUSTES TAB (transparency) =======
+do
+    local content = Ajustes.Content
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1,0,0,22)
+    header.BackgroundTransparency = 1
+    header.Text = "Ajustes de interfaz"
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 16
+    header.TextColor3 = Color3.new(1,1,1)
+    header.Parent = content
+
+    local sec, body = CreateSection(content, "Transparencia de interfaz:")
+    sec.Size = UDim2.new(1,0,0,48)
+
+    local grid = CreateGridButtons(body, UDim2.new(0,84,0,28), UDim2.new(0,6,0,6))
     local options = {
-        {name = "0%", value = 0},
-        {name = "25%", value = 0.25},
-        {name = "50%", value = 0.5},
-        {name = "75%", value = 0.75},
-        {name = "90%", value = 0.9},
+        {"0%", 0},
+        {"25%", 0.25},
+        {"50%", 0.5},
+        {"75%", 0.75},
+        {"90%", 0.9},
     }
-
-    local optFrame = Instance.new("Frame")
-    optFrame.Size = UDim2.new(1, -16, 0, 40)
-    optFrame.Position = UDim2.new(0,8,0,40)
-    optFrame.BackgroundTransparency = 1
-    optFrame.Parent = aPage
-
-    local optLayout = Instance.new("UIListLayout")
-    optLayout.Parent = optFrame
-    optLayout.FillDirection = Enum.FillDirection.Horizontal
-    optLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    optLayout.Padding = UDim.new(0,8)
-
     local function applyTransparency(t)
-        -- Aplica la transparencia a los elementos principales de la UI
         pcall(function()
             MainFrame.BackgroundTransparency = t
             Title.BackgroundTransparency = t
             TabFrame.BackgroundTransparency = t
             OpenBtn.BackgroundTransparency = t
-            -- Pages tiene su propio fondo semitransparente, ajustamos proporcionalmente
-            if Pages then
-                Pages.BackgroundTransparency = math.clamp(t + 0.1, 0, 1)
-            end
-            -- Además ajustar todos los botones (opcionales): recorremos TabFrame y Pages
+            Pages.BackgroundTransparency = math.clamp(t + 0.1, 0, 1)
+            -- ajuste a botones (solo backgrounds)
             for _, v in pairs(TabFrame:GetDescendants()) do
-                if v:IsA("TextButton") or v:IsA("TextLabel") then
-                    -- no tocar transparencia de texto, solo fondo
-                    if v.BackgroundTransparency ~= 1 then
-                        v.BackgroundTransparency = t
+                if v:IsA("TextButton") then
+                    if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end
+                end
+            end
+            -- recorrer páginas y elementos principales
+            for _, pg in pairs(pages) do
+                for _, v in pairs(pg.Page:GetDescendants()) do
+                    if v:IsA("TextButton") or v:IsA("Frame") then
+                        if v.BackgroundTransparency ~= 1 and v ~= Pages then
+                            -- skip textlabels (transparent) and keep visual consistent
+                            if v:IsA("TextButton") then v.BackgroundTransparency = t end
+                        end
                     end
                 end
             end
@@ -448,80 +544,28 @@ do
 
     for _, opt in ipairs(options) do
         local b = Instance.new("TextButton")
-        b.Size = UDim2.new(0, 84, 1, 0)
+        b.Size = UDim2.new(0,84,0,28)
         b.BackgroundColor3 = DEFAULT_BLUE
         b.BackgroundTransparency = DEFAULT_TRANSPARENCY
         b.BorderSizePixel = 0
-        b.Text = opt.name
+        b.Text = opt[1]
         b.Font = Enum.Font.Gotham
         b.TextSize = 14
         b.TextColor3 = Color3.new(1,1,1)
-        b.Parent = optFrame
-        b.MouseButton1Click:Connect(function()
-            applyTransparency(opt.value)
-        end)
+        b.Parent = body
+        b.MouseButton1Click:Connect(function() applyTransparency(opt[2]) end)
     end
 end
 
--- === INFO PAGE CONTENT ===
+-- ======= INFO TAB =======
 do
-    local iPage = pages["Info"]
+    local content = Info.Content
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -16, 0, 80)
-    label.Position = UDim2.new(0,8,0,8)
+    label.Size = UDim2.new(1,0,0,80)
     label.BackgroundTransparency = 1
-    label.Text = "KSHUB - KS HUB ALPHA (base)\nInterfaz azul con transparencia ajustable.\nPestañas: Principal, Teleport, Player, Ajustes, Info"
-    label.TextColor3 = Color3.new(1,1,1)
     label.TextWrapped = true
+    label.Text = "KSHUB - KS HUB ALPHA (base)\nInterfaz azul con transparencia ajustable.\nPestañas: Principal, Teleport, Player, Ajustes, Info"
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
-    label.Parent = iPage
-end
-
--- === Teleport (placeholder) y Principal (placeholder) ===
-do
-    local pp = pages["Principal"]
-    local t = Instance.new("TextLabel")
-    t.Size = UDim2.new(1, -16, 0, 40)
-    t.Position = UDim2.new(0,8,0,8)
-    t.BackgroundTransparency = 1
-    t.Text = "Bienvenido a KSHUB - Principal"
-    t.TextColor3 = Color3.new(1,1,1)
-    t.Font = Enum.Font.GothamBold
-    t.TextSize = 18
-    t.Parent = pp
-
-    local tp = pages["Teleport"]
-    local tpLabel = Instance.new("TextLabel")
-    tpLabel.Size = UDim2.new(1, -16, 0, 40)
-    tpLabel.Position = UDim2.new(0,8,0,8)
-    tpLabel.BackgroundTransparency = 1
-    tpLabel.Text = "Teleport: Añade aquí tus botones de teletransporte."
-    tpLabel.TextColor3 = Color3.new(1,1,1)
-    tpLabel.Font = Enum.Font.Gotham
-    tpLabel.TextSize = 14
-    tpLabel.Parent = tp
-end
-
--- === Botones cerrar / abrir funcionalidad ===
-CloseBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-    OpenBtn.Visible = true
-end)
-
-OpenBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true
-    OpenBtn.Visible = false
-end)
-
--- Inicializar transparencia por defecto
-do
-    MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
-    Title.BackgroundTransparency = DEFAULT_TRANSPARENCY
-    TabFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
-    OpenBtn.BackgroundTransparency = DEFAULT_TRANSPARENCY
-    Pages.BackgroundTransparency = math.clamp(DEFAULT_TRANSPARENCY + 0.1, 0, 1)
-end
-
--- Mensaje en consola para confirmar carga
-pcall(function() print("[KSHUB] cargado correctamente.") end)
+    label.TextColor3 = Color3.new(1,1,1)
+    lab
