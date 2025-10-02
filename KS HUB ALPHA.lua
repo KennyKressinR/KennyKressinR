@@ -1,19 +1,16 @@
--- KS HUB ALPHA v0.002 (completo)
+-- KS HUB ALPHA v0.003 (fix: drag, visible content, scrolls)
 -- Ejecutable por loadstring
--- Estructura: bloques claros para editar por partes
+-- Mantiene bloques para edición futura
 
 -- ========== BLOQUE: PREVENIR DUPLICADOS ==========
 pcall(function()
     local core = game:GetService("CoreGui")
     if core:FindFirstChild("KSHUB") then
         core:FindFirstChild("KSHUB"):Destroy()
-        print("[KSHUB] Eliminado KSHUB en CoreGui (previo).")
     end
-
     local pl = game:GetService("Players").LocalPlayer
     if pl and pl:FindFirstChild("PlayerGui") and pl.PlayerGui:FindFirstChild("KSHUB") then
         pl.PlayerGui:FindFirstChild("KSHUB"):Destroy()
-        print("[KSHUB] Eliminado KSHUB en PlayerGui (previo).")
     end
 end)
 
@@ -29,62 +26,51 @@ end
 
 -- ========== BLOQUE: CONFIG / CONSTANTES ==========
 local DEFAULT_BLUE = Color3.fromRGB(0,85,170)
-local DEFAULT_TRANSPARENCY = 0.25 -- 25%
+local DEFAULT_TRANSPARENCY = 0.25
 local UI_PADDING = 8
 
--- ========== BLOQUE: GUI PARENT (MEJORADO Y DEBUG) ==========
+-- ========== BLOQUE: GUI PARENT (robusto) ==========
 local guiParent = nil
-
 if type(gethui) == "function" then
     pcall(function() guiParent = gethui() end)
-    if guiParent then print("[KSHUB] usando gethui() como guiParent.") end
+    if guiParent then print("[KSHUB] usando gethui()") end
 end
-
-if not guiParent then
-    if LocalPlayer then
-        local ok, pg = pcall(function() return LocalPlayer:FindFirstChild("PlayerGui") end)
-        if ok and pg then
-            guiParent = pg
-            print("[KSHUB] usando PlayerGui (FindFirstChild).")
-        else
-            local success, waited = pcall(function() return LocalPlayer:WaitForChild("PlayerGui", 3) end)
-            if success and waited then
-                guiParent = waited
-                print("[KSHUB] usando PlayerGui (WaitForChild).")
-            end
-        end
+if not guiParent and LocalPlayer then
+    local ok, pg = pcall(function() return LocalPlayer:FindFirstChild("PlayerGui") end)
+    if ok and pg then guiParent = pg print("[KSHUB] usando PlayerGui (FindFirstChild)") end
+    if not guiParent then
+        local suc, waited = pcall(function() return LocalPlayer:WaitForChild("PlayerGui", 3) end)
+        if suc and waited then guiParent = waited print("[KSHUB] usando PlayerGui (WaitForChild)") end
     end
 end
-
 if not guiParent then
     guiParent = game:GetService("CoreGui")
-    print("[KSHUB] no se encontró PlayerGui/gethui -> usando CoreGui como fallback.")
+    print("[KSHUB] fallback a CoreGui")
 end
 
--- ========== BLOQUE: CREAR SCREENGUI Y PROTECCIÓN PARA EXECUTORS ==========
+-- ========== BLOQUE: CREAR SCREENGUI ==========
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHUB"
 ScreenGui.ResetOnSpawn = false
-
 if syn and syn.protect_gui and type(syn.protect_gui) == "function" then
     pcall(function() syn.protect_gui(ScreenGui) end)
     print("[KSHUB] syn.protect_gui aplicado.")
 end
-
 ScreenGui.Parent = guiParent
-print("[KSHUB] ScreenGui.parent = ", tostring(guiParent))
+print("[KSHUB] ScreenGui.parent = ".. tostring(guiParent))
 
--- ========== BLOQUE: MAIN FRAME (INTERFAZ) ==========
+-- ========== BLOQUE: MAIN FRAME ==========
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0,520,0,380)
-MainFrame.Position = UDim2.new(0.5,-260,0.5,-190)
+MainFrame.Position = UDim2.new(0.5,-260,0.5,-190) -- inicial centrado por offset
 MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
 MainFrame.BackgroundColor3 = DEFAULT_BLUE
 MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
+-- Title (usado como handle para drag)
 local Title = Instance.new("TextButton")
 Title.Name = "Title"
 Title.Size = UDim2.new(1,0,0,40)
@@ -99,6 +85,7 @@ Title.TextSize = 20
 Title.AutoButtonColor = false
 Title.Parent = MainFrame
 
+-- Left tabs
 local TabFrame = Instance.new("Frame")
 TabFrame.Name = "TabFrame"
 TabFrame.Size = UDim2.new(0,140,1,-40)
@@ -113,6 +100,7 @@ TabListLayout.Parent = TabFrame
 TabListLayout.Padding = UDim.new(0,8)
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- Pages container (derecha)
 local Pages = Instance.new("Frame")
 Pages.Name = "Pages"
 Pages.Size = UDim2.new(1,-140,1,-40)
@@ -122,6 +110,7 @@ Pages.BackgroundTransparency = 0.35
 Pages.BorderSizePixel = 0
 Pages.Parent = MainFrame
 
+-- Close / Open
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Name = "CloseBtn"
 CloseBtn.Size = UDim2.new(0,28,0,28)
@@ -149,17 +138,21 @@ OpenBtn.TextSize = 14
 OpenBtn.Parent = ScreenGui
 OpenBtn.Visible = false
 
--- ========== BLOQUE: DRAG (robusto, usa Title como handle) ==========
+-- ========== BLOQUE: DRAG (FIX definitivo) ==========
 do
     local dragging = false
-    local dragStart = nil
-    local startPos = nil
+    local dragStartPos = nil -- mouse position at start (Vector2)
+    local frameStartCenter = nil -- frame center in pixels (Vector2)
 
     Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
+            dragStartPos = UserInputService:GetMouseLocation()
+            -- compute center pixel of frame
+            frameStartCenter = Vector2.new(
+                MainFrame.AbsolutePosition.X + MainFrame.AbsoluteSize.X/2,
+                MainFrame.AbsolutePosition.Y + MainFrame.AbsoluteSize.Y/2
+            )
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -168,11 +161,19 @@ do
         end
     end)
 
+    Title.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
     RunService.RenderStepped:Connect(function()
-        if dragging and dragStart and startPos then
-            local mousePos = UserInputService:GetMouseLocation()
-            local delta = mousePos - dragStart
-            MainFrame.Position = UDim2.new(0, startPos.X.Offset + delta.X, 0, startPos.Y.Offset + delta.Y)
+        if dragging and dragStartPos and frameStartCenter then
+            local now = UserInputService:GetMouseLocation()
+            local delta = now - dragStartPos
+            local newCenter = frameStartCenter + delta
+            -- set position so that anchorPoint (0.5,0.5) sits at newCenter
+            MainFrame.Position = UDim2.new(0, math.floor(newCenter.X), 0, math.floor(newCenter.Y))
         end
     end)
 end
@@ -246,7 +247,7 @@ local Ajustes = CreateTab("Ajustes")
 local Info = CreateTab("Info")
 pages["Principal"].Page.Visible = true
 
--- ========== BLOQUE: UTILIDADES UI (secciones, grid) ==========
+-- ========== BLOQUE: UTILIDADES UI ==========
 local function CreateSection(contentParent, title)
     local sec = Instance.new("Frame")
     sec.Size = UDim2.new(1,0,0,60)
@@ -283,10 +284,9 @@ local function CreateGridButtons(parentFrame, cellSize, spacing)
     return grid
 end
 
--- ========== BLOQUE: PLAYER TAB (WALKSPEED / JUMP / NOCLIP) ==========
+-- ========== BLOQUE: PLAYER TAB ==========
 do
     local content = Player.Content
-
     local header = Instance.new("TextLabel")
     header.Size = UDim2.new(1,0,0,22)
     header.BackgroundTransparency = 1
@@ -296,10 +296,10 @@ do
     header.TextColor3 = Color3.new(1,1,1)
     header.Parent = content
 
+    -- WalkSpeed
     local sec, body = CreateSection(content, "Velocidad (WalkSpeed):")
     sec.Size = UDim2.new(1,0,0,64)
-    local grid = CreateGridButtons(body, UDim2.new(0,92,0,28), UDim2.new(0,6,0,6))
-
+    CreateGridButtons(body, UDim2.new(0,92,0,28), UDim2.new(0,6,0,6))
     local function getDefaultWalkSpeed()
         local ch = LocalPlayer.Character
         if ch then
@@ -334,10 +334,10 @@ do
         end)
     end
 
+    -- JumpPower
     local secJ, bodyJ = CreateSection(content, "Impulso de salto (JumpPower):")
     secJ.Size = UDim2.new(1,0,0,64)
-    local gridJ = CreateGridButtons(bodyJ, UDim2.new(0,120,0,28), UDim2.new(0,6,0,6))
-
+    CreateGridButtons(bodyJ, UDim2.new(0,120,0,28), UDim2.new(0,6,0,6))
     local function getDefaultJumpPower()
         local ch = LocalPlayer.Character
         if ch then
@@ -374,11 +374,11 @@ do
         end)
     end
 
+    -- Noclip
     local secN, bodyN = CreateSection(content, "Noclip:")
     secN.Size = UDim2.new(1,0,0,46)
     local noclipBtn = Instance.new("TextButton")
     noclipBtn.Size = UDim2.new(0,160,0,28)
-    noclipBtn.Position = UDim2.new(0,0,0,0)
     noclipBtn.BackgroundColor3 = DEFAULT_BLUE
     noclipBtn.BackgroundTransparency = DEFAULT_TRANSPARENCY
     noclipBtn.BorderSizePixel = 0
@@ -414,19 +414,11 @@ do
     noclipBtn.MouseButton1Click:Connect(function()
         if noclipState then disableNoclip() else enableNoclip() end
     end)
-
-    LocalPlayer.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        defaultWalkSpeed = getDefaultWalkSpeed()
-        defaultJump = getDefaultJumpPower()
-        if noclipState then enableNoclip() end
-    end)
 end
 
--- ========== BLOQUE: TELEPORT TAB (Save/Load + Players list) ==========
+-- ========== BLOQUE: TELEPORT TAB ==========
 do
     local content = Teleport.Content
-
     local header = Instance.new("TextLabel")
     header.Size = UDim2.new(1,0,0,22)
     header.BackgroundTransparency = 1
@@ -436,9 +428,10 @@ do
     header.TextColor3 = Color3.new(1,1,1)
     header.Parent = content
 
+    -- Save / Load
     local secSave, bodySave = CreateSection(content, "Tp - Save (Guarda tu posición actual):")
     secSave.Size = UDim2.new(1,0,0,60)
-    local gridS = CreateGridButtons(bodySave, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
+    CreateGridButtons(bodySave, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
     local saved = {}
 
     for i=1,4 do
@@ -457,17 +450,15 @@ do
             local ch = LocalPlayer.Character
             if ch then
                 local hrp = ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChildWhichIsA("BasePart")
-                if hrp then
-                    saved[idx] = hrp.CFrame
-                    pcall(function() print("[KSHUB] Guardado Save"..idx) end)
-                end
+                if hrp then saved[idx] = hrp.CFrame; pcall(function() print("[KSHUB] Guardado Save"..idx) end) end
             end
         end)
     end
 
     local secLoad, bodyLoad = CreateSection(content, "Tp - Load (Carga la posición):")
     secLoad.Size = UDim2.new(1,0,0,60)
-    local gridL = CreateGridButtons(bodyLoad, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
+    CreateGridButtons(bodyLoad, UDim2.new(0,96,0,28), UDim2.new(0,6,0,6))
+
     for i=1,4 do
         local idx = i
         local b = Instance.new("TextButton")
@@ -485,15 +476,12 @@ do
             if pos then
                 local ch = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
                 local hrp = ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChildWhichIsA("BasePart")
-                if hrp then
-                    pcall(function() hrp.CFrame = pos + Vector3.new(0,3,0) end)
-                end
-            else
-                pcall(function() print("[KSHUB] No hay Save"..idx.." guardado.") end)
-            end
+                if hrp then pcall(function() hrp.CFrame = pos + Vector3.new(0,3,0) end) end
+            else pcall(function() print("[KSHUB] No hay Save"..idx) end) end
         end)
     end
 
+    -- Players list
     local secPlayers, bodyPlayers = CreateSection(content, "Teleport to Player:")
     secPlayers.Size = UDim2.new(1,0,0,170)
 
@@ -519,9 +507,7 @@ do
     makeAutoCanvas(playersScroll, playersLayout)
 
     local function refreshPlayersList()
-        for _,c in ipairs(playersContent:GetChildren()) do
-            if not c:IsA("UIListLayout") then c:Destroy() end
-        end
+        for _,c in ipairs(playersContent:GetChildren()) do if not c:IsA("UIListLayout") then c:Destroy() end end
         for _, pl in ipairs(Players:GetPlayers()) do
             if pl ~= LocalPlayer then
                 local b = Instance.new("TextButton")
@@ -540,9 +526,7 @@ do
                     if targetChar and myChar then
                         local targetHRP = targetChar:FindFirstChild("HumanoidRootPart") or targetChar:FindFirstChildWhichIsA("BasePart")
                         local myHRP = myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChildWhichIsA("BasePart")
-                        if targetHRP and myHRP then
-                            pcall(function() myHRP.CFrame = targetHRP.CFrame + Vector3.new(0,3,0) end)
-                        end
+                        if targetHRP and myHRP then pcall(function() myHRP.CFrame = targetHRP.CFrame + Vector3.new(0,3,0) end) end
                     end
                 end)
             end
@@ -554,7 +538,7 @@ do
     Players.PlayerRemoving:Connect(refreshPlayersList)
 end
 
--- ========== BLOQUE: AJUSTES TAB (TRANSPARENCIA) ==========
+-- ========== BLOQUE: AJUSTES TAB ==========
 do
     local content = Ajustes.Content
     local header = Instance.new("TextLabel")
@@ -569,7 +553,7 @@ do
     local sec, body = CreateSection(content, "Transparencia de interfaz:")
     sec.Size = UDim2.new(1,0,0,48)
 
-    local grid = CreateGridButtons(body, UDim2.new(0,84,0,28), UDim2.new(0,6,0,6))
+    CreateGridButtons(body, UDim2.new(0,84,0,28), UDim2.new(0,6,0,6))
     local options = {
         {"0%", 0},
         {"25%", 0.25},
@@ -585,15 +569,11 @@ do
             OpenBtn.BackgroundTransparency = t
             Pages.BackgroundTransparency = math.clamp(t + 0.1, 0, 1)
             for _, v in pairs(TabFrame:GetDescendants()) do
-                if v:IsA("TextButton") then
-                    if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end
-                end
+                if v:IsA("TextButton") then if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end end
             end
             for _, pg in pairs(pages) do
                 for _, v in pairs(pg.Page:GetDescendants()) do
-                    if v:IsA("TextButton") then
-                        if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end
-                    end
+                    if v:IsA("TextButton") then if v.BackgroundTransparency ~= 1 then v.BackgroundTransparency = t end end
                 end
             end
         end)
@@ -621,14 +601,14 @@ do
     label.Size = UDim2.new(1,0,0,80)
     label.BackgroundTransparency = 1
     label.TextWrapped = true
-    label.Text = "KSHUB - KS HUB ALPHA (v0.002)\nInterfaz azul con transparencia ajustable.\nPestañas: Principal, Teleport, Player, Ajustes, Info"
+    label.Text = "KSHUB - KS HUB ALPHA (v0.003)\nInterfaz azul con transparencia ajustable.\nPestañas: Principal, Teleport, Player, Ajustes, Info"
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
     label.TextColor3 = Color3.new(1,1,1)
     label.Parent = content
 end
 
--- ========== BLOQUE: PRINCIPAL TAB (placeholder) ==========
+-- ========== BLOQUE: PRINCIPAL TAB (contenido visible) ==========
 do
     local content = Principal.Content
     local welcome = Instance.new("TextLabel")
@@ -639,21 +619,29 @@ do
     welcome.TextSize = 18
     welcome.TextColor3 = Color3.new(1,1,1)
     welcome.Parent = content
+
+    local info = Instance.new("TextLabel")
+    info.Size = UDim2.new(1,0,0,60)
+    info.BackgroundTransparency = 1
+    info.TextWrapped = true
+    info.Text = "Consejo: arrastra desde la barra superior (KSHUB). Usa Ajustes -> Transparencia para cambiar apariencia."
+    info.Font = Enum.Font.Gotham
+    info.TextSize = 14
+    info.TextColor3 = Color3.new(1,1,1)
+    info.Parent = content
 end
 
--- ========== BLOQUE: OPEN / CLOSE BEHAVIOR ==========
-do
-    CloseBtn.MouseButton1Click:Connect(function()
-        MainFrame.Visible = false
-        OpenBtn.Visible = true
-    end)
-    OpenBtn.MouseButton1Click:Connect(function()
-        MainFrame.Visible = true
-        OpenBtn.Visible = false
-    end)
-end
+-- ========== BLOQUE: OPEN / CLOSE ==========
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true
+end)
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenBtn.Visible = false
+end)
 
--- ========== BLOQUE: INICIALIZAR VALORES POR DEFECTO ==========
+-- ========== BLOQUE: INICIAL ==========
 do
     MainFrame.BackgroundTransparency = DEFAULT_TRANSPARENCY
     Title.BackgroundTransparency = DEFAULT_TRANSPARENCY
@@ -662,5 +650,4 @@ do
     Pages.BackgroundTransparency = math.clamp(DEFAULT_TRANSPARENCY + 0.1, 0, 1)
 end
 
--- ========== FIN - Mensaje de confirmación ==========
-pcall(function() print("[KSHUB v0.002] cargado correctamente.") end)
+pcall(function() print("[KSHUB v0.003] cargado correctamente.") end)
