@@ -1,15 +1,17 @@
--- KS HUB ALPHA v0.002
--- Ejecutable por loadstring
--- Estructura: bloques claros para editar por partes
-
--- ========== BLOQUE: PREVENIR DUPLICADOS ==========
 pcall(function()
-    local existing = game:GetService("CoreGui"):FindFirstChild("KSHUB")
-    if existing then existing:Destroy() end
-    local existing2 = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui") and game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("KSHUB")
-    if existing2 then existing2:Destroy() end
-end)
+    -- Buscar en CoreGui y PlayerGui y destruir si existe (seguro)
+    local core = game:GetService("CoreGui")
+    if core:FindFirstChild("KSHUB") then
+        core:FindFirstChild("KSHUB"):Destroy()
+        print("[KSHUB] Eliminado KSHUB en CoreGui (previo).")
+    end
 
+    local pl = game:GetService("Players").LocalPlayer
+    if pl and pl:FindFirstChild("PlayerGui") and pl.PlayerGui:FindFirstChild("KSHUB") then
+        pl.PlayerGui:FindFirstChild("KSHUB"):Destroy()
+        print("[KSHUB] Eliminado KSHUB en PlayerGui (previo).")
+    end
+end)
 -- ========== BLOQUE: SERVICES Y PLAYER ==========
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -25,13 +27,41 @@ local DEFAULT_BLUE = Color3.fromRGB(0, 85, 170)
 local DEFAULT_TRANSPARENCY = 0.25 -- 25%
 local UI_PADDING = 8
 
--- ========== BLOQUE: GUI PARENT (gethui / PlayerGui safe) ==========
-local guiParent
-if gethui then
-    guiParent = gethui()
-else
-    guiParent = (LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")) and LocalPlayer:WaitForChild("PlayerGui") or game:GetService("CoreGui")
+-- ========== BLOQUE: GUI PARENT (MEJORADO Y DEBUG) ==========
+local guiParent = nil
+
+-- 1) Primero intenta gethui (mejor compatibilidad con algunos executors)
+if type(gethui) == "function" then
+    pcall(function() guiParent = gethui() end)
+    if guiParent then print("[KSHUB] usando gethui() como guiParent.") end
 end
+
+-- 2) Si no hay gethui, intenta PlayerGui preferentemente
+if not guiParent then
+    if LocalPlayer then
+        -- si ya existe PlayerGui úsala; si no, espera unos segundos y si no aparece, fallback a CoreGui
+        local ok, pg = pcall(function() return LocalPlayer:FindFirstChild("PlayerGui") end)
+        if ok and pg then
+            guiParent = pg
+            print("[KSHUB] usando PlayerGui (FindFirstChild).")
+        else
+            -- esperar breve tiempo por si PlayerGui está tardando en crearse
+            local success, waited = pcall(function() return LocalPlayer:WaitForChild("PlayerGui", 3) end)
+            if success and waited then
+                guiParent = waited
+                print("[KSHUB] usando PlayerGui (WaitForChild).")
+            end
+        end
+    end
+end
+
+-- 3) Si todavía no hay guiParent, intenta CoreGui (con protección si existe syn.protect_gui)
+if not guiParent then
+    guiParent = game:GetService("CoreGui")
+    print("[KSHUB] no se encontró PlayerGui/gethui -> usando CoreGui como fallback.")
+end
+
+-- nota: further protection (syn.protect_gui) la aplicaremos cuando creemos el ScreenGui
 
 -- ========== BLOQUE: CREAR SCREENGUI Y PROTECCIÓN PARA EXECUTORS ==========
 local ScreenGui = Instance.new("ScreenGui")
