@@ -29,24 +29,9 @@ local DEFAULT_BLUE = Color3.fromRGB(0,85,170)
 local DEFAULT_TRANSPARENCY = 0.25
 local UI_PADDING = 8
 
--- ========== BLOQUE: GUI PARENT (robusto) ==========
-local guiParent = nil
-if type(gethui) == "function" then
-    pcall(function() guiParent = gethui() end)
-    if guiParent then print("[KSHUB] usando gethui()") end
-end
-if not guiParent and LocalPlayer then
-    local ok, pg = pcall(function() return LocalPlayer:FindFirstChild("PlayerGui") end)
-    if ok and pg then guiParent = pg print("[KSHUB] usando PlayerGui (FindFirstChild)") end
-    if not guiParent then
-        local suc, waited = pcall(function() return LocalPlayer:WaitForChild("PlayerGui", 3) end)
-        if suc and waited then guiParent = waited print("[KSHUB] usando PlayerGui (WaitForChild)") end
-    end
-end
-if not guiParent then
-    guiParent = game:GetService("CoreGui")
-    print("[KSHUB] fallback a CoreGui")
-end
+-- ========== BLOQUE: GUI PARENT (corregido) ==========
+local guiParent = LocalPlayer:WaitForChild("PlayerGui")  -- siempre visible
+print("[KSHUB] ScreenGui.parent = PlayerGui")
 
 -- ========== BLOQUE: CREAR SCREENGUI ==========
 local ScreenGui = Instance.new("ScreenGui")
