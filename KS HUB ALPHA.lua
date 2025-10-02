@@ -124,16 +124,16 @@ OpenBtn.Parent = ScreenGui
 OpenBtn.Visible = false
 
 -- ========== BLOQUE: DRAG (FIX definitivo) ==========
+-- DRAG (robusto, con clamp para que no se salga de la pantalla)
 do
     local dragging = false
-    local dragStartPos = nil -- mouse position at start (Vector2)
-    local frameStartCenter = nil -- frame center in pixels (Vector2)
+    local dragStartMouse = Vector2.new(0,0)
+    local frameStartCenter = Vector2.new(0,0)
 
     Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            dragStartPos = UserInputService:GetMouseLocation()
-            -- compute center pixel of frame
+            dragStartMouse = UserInputService:GetMouseLocation()
             frameStartCenter = Vector2.new(
                 MainFrame.AbsolutePosition.X + MainFrame.AbsoluteSize.X/2,
                 MainFrame.AbsolutePosition.Y + MainFrame.AbsoluteSize.Y/2
@@ -153,12 +153,23 @@ do
     end)
 
     RunService.RenderStepped:Connect(function()
-        if dragging and dragStartPos and frameStartCenter then
+        if dragging then
             local now = UserInputService:GetMouseLocation()
-            local delta = now - dragStartPos
+            local delta = now - dragStartMouse
             local newCenter = frameStartCenter + delta
-            -- set position so that anchorPoint (0.5,0.5) sits at newCenter
-            MainFrame.Position = UDim2.new(0, math.floor(newCenter.X), 0, math.floor(newCenter.Y))
+
+            -- obtener tamaño de viewport para clamping
+            local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
+
+            -- limitar para que no se salga de la pantalla (considera el half-size)
+            local halfW = MainFrame.AbsoluteSize.X / 2
+            local halfH = MainFrame.AbsoluteSize.Y / 2
+
+            local clampedX = math.clamp(newCenter.X, halfW, viewport.X - halfW)
+            local clampedY = math.clamp(newCenter.Y, halfH, viewport.Y - halfH)
+
+            -- Posicionar usando fromOffset (UDim2.new(0, x, 0, y)) — con AnchorPoint 0.5,0.5 esto pone el centro en (x,y)
+            MainFrame.Position = UDim2.fromOffset(math.floor(clampedX), math.floor(clampedY))
         end
     end)
 end
