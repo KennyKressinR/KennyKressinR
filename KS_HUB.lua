@@ -1,6 +1,7 @@
--- KS HUB v0.2.x - Versión corregida: UI compacta, scroll arreglado, botones más pequeños, TP accesible, Delay funcional
+-- KS HUB v0.2.x - Actualizado
 -- Pegar como LocalScript en StarterPlayerScripts
 
+-- ===== Servicios =====
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -10,20 +11,24 @@ local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- ===== Estado =====
 local hub = {
     noclip = false,
     antiVoid = false,
     highlights = false,
     fullbright = false,
-    instantInteract = false, -- "delay" invertido: true = interactuar instantáneamente
+    instantInteract = false,
     savedWaypoints = {},
     highlightObjects = {},
+    toolHighlights = {},
     origCanCollide = {},
     origLighting = {},
-    origPromptDurations = {}, -- store original HoldDuration for ProximityPrompt
+    origPromptDurations = {},
+    rtxEnabled = false,
+    rtxObjects = {}
 }
 
--- Character refs
+-- ===== Refs personaje =====
 local character, humanoid, hrp
 local function setCharRefs()
     character = player.Character or player.CharacterAdded:Wait()
@@ -35,57 +40,60 @@ end
 setCharRefs()
 player.CharacterAdded:Connect(function() wait(0.1) setCharRefs() end)
 
--- UI creators (compact)
-local MAIN_COLOR = Color3.fromRGB(0,102,204)
-local BTN_COLOR = Color3.fromRGB(102,204,255)
-
+-- ===== Helpers =====
 local function new(class, props)
     local o = Instance.new(class)
     if props then for k,v in pairs(props) do o[k] = v end end
     return o
 end
 
--- ScreenGui & main (menos ancho)
+local function safePcall(fn,...)
+    local ok, a = pcall(fn, ...)
+    return ok, a
+end
+
+-- ===== UI - tamaño mayor y transparencia por defecto 75% =====
+local MAIN_COLOR = Color3.fromRGB(0,102,204)
+local BTN_COLOR = Color3.fromRGB(102,204,255)
+
 local screenGui = new("ScreenGui",{Name="KSHub",ResetOnSpawn=false,Parent=playerGui})
 local main = new("Frame",{
     Name="Main",
-    Size=UDim2.new(0,320,0,460), -- menos ancho que antes
+    Size=UDim2.new(0,340,0,620),            -- MÁS ALTO para más contenido
     Position=UDim2.new(0.5,0,0.5,0),
     AnchorPoint=Vector2.new(0.5,0.5),
     BackgroundColor3=MAIN_COLOR,
     BorderSizePixel=0,
+    BackgroundTransparency = 0.75,          -- Transparencia por defecto 75%
     Parent=screenGui
 })
 
--- Header y drag
-local header = new("Frame",{Size=UDim2.new(1,0,0,36),BackgroundColor3=Color3.fromRGB(0,76,153),Parent=main})
-local title = new("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.new(0,0,0,0),BackgroundTransparency=1,Text="KS HUB v0.2.x",TextColor3=Color3.fromRGB(255,255,255),Font=Enum.Font.SourceSansBold,TextSize=18,Parent=header})
-local closeBtn = new("TextButton",{Size=UDim2.new(0,48,1,0),Position=UDim2.new(1,-48,0,0),BackgroundColor3=BTN_COLOR,Text="X",Font=Enum.Font.SourceSansBold,TextSize=18,Parent=header})
-local toggleBtn = new("TextButton",{Name="ToggleOpen",Size=UDim2.new(0,56,0,26),Position=UDim2.new(0,8,0,8),BackgroundColor3=BTN_COLOR,Text="KS",Font=Enum.Font.SourceSansBold,TextSize=16,Parent=screenGui,Visible=false})
+-- Header + drag + close/toggle
+local header = new("Frame",{Size=UDim2.new(1,0,0,38),BackgroundColor3=Color3.fromRGB(0,76,153),Parent=main})
+local title = new("TextLabel",{Size=UDim2.new(1,-60,1,0),Position=UDim2.new(0,0,0,0),BackgroundTransparency=1,Text="KS HUB v0.2.x",TextColor3=Color3.fromRGB(255,255,255),Font=Enum.Font.SourceSansBold,TextSize=18,Parent=header})
+local closeBtn = new("TextButton",{Size=UDim2.new(0,54,1,0),Position=UDim2.new(1,-54,0,0),BackgroundColor3=BTN_COLOR,Text="X",Font=Enum.Font.SourceSansBold,TextSize=16,Parent=header})
+local toggleBtn = new("TextButton",{Name="ToggleOpen",Size=UDim2.new(0,64,0,30),Position=UDim2.new(0,8,0,8),BackgroundColor3=BTN_COLOR,Text="KS",Font=Enum.Font.SourceSansBold,TextSize=16,Parent=screenGui,Visible=false})
 
--- Tabs + ScrollingFrames con UIListLayout y ajuste dinámico del CanvasSize
-local tabBar = new("Frame",{Size=UDim2.new(1,0,0,28),Position=UDim2.new(0,0,0,36),BackgroundTransparency=1,Parent=main})
+-- Tabs y scrolls (ajustados al nuevo tamaño)
+local tabBar = new("Frame",{Size=UDim2.new(1,0,0,30),Position=UDim2.new(0,0,0,38),BackgroundTransparency=1,Parent=main})
 local tabs = {"Principal","Visuales","Ajustes"}
 local tabButtons = {}
 local scrolls = {}
 local contents = {}
-
 for i,name in ipairs(tabs) do
     local btn = new("TextButton",{Size=UDim2.new(1/#tabs,-4,1,0),Position=UDim2.new((i-1)/#tabs,2,0,0),BackgroundColor3=BTN_COLOR,Text=name,Font=Enum.Font.SourceSansBold,TextSize=14,Parent=tabBar})
     tabButtons[i] = btn
 
-    local scroll = new("ScrollingFrame",{Name=name.."Scroll",Size=UDim2.new(1,-12,1,-96),Position=UDim2.new(0,6,0,72),BackgroundTransparency=1,ScrollBarThickness=6,Parent=main,Visible=(i==1)})
+    local scroll = new("ScrollingFrame",{Name=name.."Scroll",Size=UDim2.new(1,-12,1,-120),Position=UDim2.new(0,6,0,78),BackgroundTransparency=1,ScrollBarThickness=8,Parent=main,Visible=(i==1)})
     local content = new("Frame",{Size=UDim2.new(1,0,0,10),BackgroundTransparency=1,Parent=scroll})
-    local layout = new("UIListLayout",{Parent=content,Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder})
+    local layout = new("UIListLayout",{Parent=content,Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder})
     local pad = new("UIPadding",{Parent=content,PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8),PaddingTop=UDim.new(0,8),PaddingBottom=UDim.new(0,8)})
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         scroll.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 8)
     end)
-
     scrolls[i] = scroll
     contents[i] = content
 end
-
 for i,btn in ipairs(tabButtons) do
     btn.MouseButton1Click:Connect(function()
         for j,s in ipairs(scrolls) do s.Visible = (i==j) end
@@ -115,23 +123,35 @@ end
 closeBtn.MouseButton1Click:Connect(function() main.Visible = false toggleBtn.Visible = true end)
 toggleBtn.MouseButton1Click:Connect(function() main.Visible = true toggleBtn.Visible = false end)
 
--- Small button creator (50% smaller look)
+-- Pequeños creadores (botones compactos)
 local function addLabel(parent, txt)
-    local l = new("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundTransparency=1,Text=txt,TextColor3=Color3.fromRGB(255,255,255),Font=Enum.Font.SourceSansBold,TextSize=14,Parent=parent})
-    return l
+    return new("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundTransparency=1,Text=txt,TextColor3=Color3.fromRGB(255,255,255),Font=Enum.Font.SourceSansBold,TextSize=14,Parent=parent})
 end
 local function addBtn(parent, txt)
-    local b = new("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=BTN_COLOR,Text=txt,Font=Enum.Font.SourceSansBold,TextSize=14,Parent=parent})
-    return b
+    return new("TextButton",{Size=UDim2.new(1,0,0,28),BackgroundColor3=BTN_COLOR,Text=txt,Font=Enum.Font.SourceSansBold,TextSize=14,Parent=parent})
 end
 local function addBox(parent, placeholder)
-    local tb = new("TextBox",{Size=UDim2.new(1,0,0,24),BackgroundColor3=Color3.fromRGB(245,245,245),Text="",PlaceholderText=placeholder,Font=Enum.Font.SourceSans,TextSize=14,TextColor3=Color3.new(0,0,0),Parent=parent})
-    return tb
+    return new("TextBox",{Size=UDim2.new(1,0,0,26),BackgroundColor3=Color3.fromRGB(245,245,245),Text="",PlaceholderText=placeholder,Font=Enum.Font.SourceSans,TextSize=14,TextColor3=Color3.new(0,0,0),Parent=parent})
 end
 
--- -------- Principal tab content (ordenado y TP arriba para ser accesible) --------
+-- ===== Contenido: Principal (TP arriba para accesibilidad) =====
 local principal = contents[1]
 addLabel(principal,"Principal - Funciones")
+
+-- Teleport a jugador (arriba)
+addLabel(principal,"Teleport a jugador (nombre parcial)")
+local tpBox = addBox(principal,"Nombre parcial")
+local tpBtn = addBtn(principal,"TP")
+tpBtn.MouseButton1Click:Connect(function()
+    local q = (tpBox.Text or ""):lower():gsub("%s+","")
+    if q == "" then return end
+    for _,pl in ipairs(Players:GetPlayers()) do
+        if pl ~= player and pl.Name:lower():gsub("%s+",""):find(q,1,true) and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+            pcall(function() if hrp then hrp.CFrame = pl.Character.HumanoidRootPart.CFrame + Vector3.new(0,5,0) end end)
+            break
+        end
+    end
+end)
 
 -- Noclip
 local noclipBtn = addBtn(principal,"Activar Noclip")
@@ -142,22 +162,17 @@ noclipBtn.MouseButton1Click:Connect(function()
         hub.origCanCollide = {}
         if character then
             for _,p in pairs(character:GetDescendants()) do
-                if p:IsA("BasePart") then
-                    hub.origCanCollide[p] = p.CanCollide
-                    p.CanCollide = false
-                end
+                if p:IsA("BasePart") then hub.origCanCollide[p] = p.CanCollide p.CanCollide = false end
             end
         end
     else
-        for part,val in pairs(hub.origCanCollide) do
-            if part and part.Parent then pcall(function() part.CanCollide = val end) end
-        end
+        for part,val in pairs(hub.origCanCollide) do if part and part.Parent then pcall(function() part.CanCollide = val end) end end
         hub.origCanCollide = {}
     end
 end)
 
--- Delay / InstantInteract toggle (funciona con ProximityPrompt HoldDuration)
-local delayBtn = addBtn(principal,"InstantInteract: OFF")
+-- InstantInteract (convierte HoldDuration a 0 para ProximityPrompt)
+local instantBtn = addBtn(principal,"InstantInteract: OFF")
 local function applyInstantToPrompt(prompt)
     if not prompt or not prompt:IsA("ProximityPrompt") then return end
     if hub.instantInteract then
@@ -170,31 +185,23 @@ local function applyInstantToPrompt(prompt)
         end
     end
 end
-delayBtn.MouseButton1Click:Connect(function()
+instantBtn.MouseButton1Click:Connect(function()
     hub.instantInteract = not hub.instantInteract
-    delayBtn.Text = hub.instantInteract and "InstantInteract: ON" or "InstantInteract: OFF"
-    -- apply to existing prompts in workspace
-    for _, p in ipairs(Workspace:GetDescendants()) do
-        if p:IsA("ProximityPrompt") then applyInstantToPrompt(p) end
-    end
+    instantBtn.Text = hub.instantInteract and "InstantInteract: ON" or "InstantInteract: OFF"
+    for _,p in ipairs(Workspace:GetDescendants()) do if p:IsA("ProximityPrompt") then applyInstantToPrompt(p) end end
 end)
--- auto-apply for prompts spawned later
 Workspace.DescendantAdded:Connect(function(desc)
-    if desc:IsA("ProximityPrompt") then
-        -- short wait to let creator finish initializing
-        wait(0.05)
-        applyInstantToPrompt(desc)
-    end
+    if desc:IsA("ProximityPrompt") then wait(0.05) applyInstantToPrompt(desc) end
 end)
 
--- AntiVoid toggle
+-- AntiVoid
 local antiVoidBtn = addBtn(principal,"Activar AntiVoid")
 antiVoidBtn.MouseButton1Click:Connect(function()
     hub.antiVoid = not hub.antiVoid
     antiVoidBtn.Text = hub.antiVoid and "Desactivar AntiVoid" or "Activar AntiVoid"
 end)
 
--- Waypoints (2) - arriba para accesibilidad
+-- Waypoints (2)
 addLabel(principal,"Waypoints (2)")
 local wpSave1 = addBtn(principal,"Save 1")
 local wpLoad1 = addBtn(principal,"Load 1")
@@ -205,22 +212,7 @@ wpLoad1.MouseButton1Click:Connect(function() if hub.savedWaypoints[1] and hrp th
 wpSave2.MouseButton1Click:Connect(function() if hrp then hub.savedWaypoints[2] = hrp.CFrame end end)
 wpLoad2.MouseButton1Click:Connect(function() if hub.savedWaypoints[2] and hrp then pcall(function() hrp.CFrame = hub.savedWaypoints[2] end) end end)
 
--- Teleport a jugador (colocado arriba para que el scroll alcance)
-addLabel(principal,"Teleport a jugador (nombre parcial)")
-local tpBox = addBox(principal,"Nombre parcial")
-local tpBtn = addBtn(principal,"TP")
-tpBtn.MouseButton1Click:Connect(function()
-    local q = (tpBox.Text or ""):lower():gsub("%s+","")
-    if q == "" then return end
-    for _,pl in ipairs(Players:GetPlayers()) do
-        if pl ~= player and pl.Name:lower():gsub("%s+",""):find(q,1,true) and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-            pcall(function() hrp.CFrame = pl.Character.HumanoidRootPart.CFrame + Vector3.new(0,5,0) end)
-            break
-        end
-    end
-end)
-
--- WalkSpeed presets (ordenadas mayor a menor)
+-- WalkSpeed (orden mayor->menor)
 addLabel(principal,"WalkSpeed Presets")
 local wsVals = {200,150,75,50,30}
 for _,v in ipairs(wsVals) do
@@ -230,7 +222,7 @@ end
 local bNormal = addBtn(principal,"Normal")
 bNormal.MouseButton1Click:Connect(function() if humanoid then pcall(function() humanoid.WalkSpeed = hub.baseWalkSpeed end) end end)
 
--- JumpPower presets (compactos)
+-- Jump presets
 addLabel(principal,"JumpPower Presets")
 local jpReset = addBtn(principal,"Reset Jump")
 local jp25 = addBtn(principal,"+25%")
@@ -241,10 +233,11 @@ jp25.MouseButton1Click:Connect(function() if humanoid then pcall(function() huma
 jp50.MouseButton1Click:Connect(function() if humanoid then pcall(function() humanoid.JumpPower = math.floor(hub.baseJumpPower * 1.50) end) end end)
 jp100.MouseButton1Click:Connect(function() if humanoid then pcall(function() humanoid.JumpPower = math.floor(hub.baseJumpPower * 2.0) end) end end)
 
--- -------- Visuales tab --------
+-- ===== Contenido: Visuales =====
 local visuals = contents[2]
-addLabel(visuals,"Visuales")
+addLabel(visuals,"Visuales - Lo que puedes ver")
 
+-- Highlights jugadores (existente)
 local highlightsBtn = addBtn(visuals,"Toggle Highlights Jugadores")
 highlightsBtn.MouseButton1Click:Connect(function()
     hub.highlights = not hub.highlights
@@ -266,22 +259,54 @@ highlightsBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-Players.PlayerAdded:Connect(function(pl)
-    if hub.highlights then
-        wait(0.1)
-        if pl.Character then
-            pcall(function()
-                local h = Instance.new("Highlight", pl.Character)
-                h.Adornee = pl.Character
-                h.FillTransparency = 0.6
-                h.OutlineTransparency = 0.8
-                hub.highlightObjects[pl.UserId] = h
-            end)
+-- Ver Items/Tools (através de paredes)
+local toolsBtn = addBtn(visuals,"Toggle Ver Items/Tools")
+local function applyToolHighlights(enable)
+    if enable then
+        -- scan workspace for Tools or Models with Handle
+        for _,inst in ipairs(Workspace:GetDescendants()) do
+            if inst:IsA("Tool") or (inst:IsA("Model") and inst:FindFirstChild("Handle")) then
+                local key = inst
+                if not hub.toolHighlights[key] then
+                    pcall(function()
+                        local adornee = inst:IsA("Tool") and (inst:FindFirstChild("Handle") or inst) or inst:FindFirstChild("Handle")
+                        if adornee then
+                            local h = Instance.new("Highlight")
+                            h.Parent = workspace
+                            h.Adornee = adornee
+                            h.FillTransparency = 0.7
+                            h.OutlineTransparency = 0.6
+                            hub.toolHighlights[key] = h
+                        end
+                    end)
+                end
+            end
+        end
+    else
+        for k,h in pairs(hub.toolHighlights) do
+            if h and h.Parent then pcall(function() h:Destroy() end) end
+            hub.toolHighlights[k] = nil
+        end
+    end
+end
+
+toolsBtn.MouseButton1Click:Connect(function()
+    hub.toolsVisible = not hub.toolsVisible
+    toolsBtn.Text = hub.toolsVisible and "Ver Items: ON" or "Ver Items: OFF"
+    applyToolHighlights(hub.toolsVisible)
+end)
+
+-- Auto-apply for tools added later
+Workspace.DescendantAdded:Connect(function(desc)
+    if hub.toolsVisible then
+        wait(0.05)
+        if desc:IsA("Tool") or (desc:IsA("Model") and desc:FindFirstChild("Handle")) then
+            applyToolHighlights(true)
         end
     end
 end)
-Players.PlayerRemoving:Connect(function(pl) hub.highlightObjects[pl.UserId] = nil end)
 
+-- FullBright (existente)
 local fbBtn = addBtn(visuals,"Toggle FullBright")
 fbBtn.MouseButton1Click:Connect(function()
     hub.fullbright = not hub.fullbright
@@ -305,7 +330,24 @@ fbBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- -------- Ajustes tab --------
+-- RTX toggle (local visual effects)
+local rtxBtn = addBtn(visuals,"Toggle RTX")
+rtxBtn.MouseButton1Click:Connect(function()
+    hub.rtxEnabled = not hub.rtxEnabled
+    rtxBtn.Text = hub.rtxEnabled and "RTX: ON" or "RTX: OFF"
+    if hub.rtxEnabled then
+        -- create local effects
+        local bloom = new("BloomEffect",{Parent = Lighting,Intensity = 1,Size = 24})
+        local cc = new("ColorCorrection",{Parent = Lighting,Contrast = 0.05, Saturation = 0.1, Brightness = 0})
+        local sun = new("SunRays",{Parent = Lighting,Intensity = 0.2,Spread = 0.5})
+        hub.rtxObjects = {bloom,cc,sun}
+    else
+        for _,inst in ipairs(hub.rtxObjects or {}) do if inst and inst.Parent then pcall(function() inst:Destroy() end) end end
+        hub.rtxObjects = {}
+    end
+end)
+
+-- ===== Ajustes =====
 local ajustes = contents[3]
 addLabel(ajustes,"Ajustes")
 addLabel(ajustes,"Transparencia GUI")
@@ -315,11 +357,11 @@ local t25 = addBtn(ajustes,"25%")
 t75.MouseButton1Click:Connect(function() main.BackgroundTransparency = 0.75 end)
 t50.MouseButton1Click:Connect(function() main.BackgroundTransparency = 0.5 end)
 t25.MouseButton1Click:Connect(function() main.BackgroundTransparency = 0.25 end)
+local changelog = new("TextLabel",{Size=UDim2.new(1,0,0,120),BackgroundTransparency=0.2,BackgroundColor3=Color3.fromRGB(10,40,80),TextColor3=Color3.fromRGB(255,255,255),Text="Changelog v0.2.x:\n- Transparencia por defecto 75%\n- Tools visible (Highlight)\n- RTX local (Bloom/CC/SunRays)\n- Scroll y ventana más grandes",Font=Enum.Font.SourceSans,TextWrapped=true,TextSize=14,Parent=ajustes})
 
-local changelog = new("TextLabel",{Size=UDim2.new(1,0,0,110),BackgroundTransparency=0.2,BackgroundColor3=Color3.fromRGB(10,40,80),TextColor3=Color3.fromRGB(255,255,255),Text="Changelog v0.2.x:\n- UI compacta y centrada\n- Botones 50% más pequeños\n- TP y Waypoints accesibles\n- WalkSpeed ordenadas (mayor->menor)\n- InstantInteract funcional (convierte HoldDuration a 0)",Font=Enum.Font.SourceSans,TextWrapped=true,TextSize=14,Parent=ajustes})
-
--- -------- Core loops: noclip y antiVoid --------
+-- ===== Core loops =====
 RunService.RenderStepped:Connect(function()
+    -- noclip
     if hub.noclip and character then
         for _,p in pairs(character:GetDescendants()) do
             if p:IsA("BasePart") then
@@ -328,7 +370,7 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
-
+    -- antiVoid
     if hub.antiVoid and hrp and hrp.Position.Y < -50 then
         if hub.savedWaypoints[1] then
             pcall(function() hrp.CFrame = hub.savedWaypoints[1] + Vector3.new(0,5,0) end)
@@ -340,25 +382,45 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Restore prompts on script end / player leave
+-- Restore prompts on leave
 local function restoreAllPrompts()
     for prompt,orig in pairs(hub.origPromptDurations) do
-        if prompt and prompt.Parent then
-            pcall(function() prompt.HoldDuration = orig end)
-        end
+        if prompt and prompt.Parent then pcall(function() prompt.HoldDuration = orig end) end
     end
     hub.origPromptDurations = {}
 end
 
+-- Cleanup on exit
 player.AncestryChanged:Connect(function()
     if not player:IsDescendantOf(game) then
-        -- restore collisions
         for part,val in pairs(hub.origCanCollide) do if part and part.Parent then pcall(function() part.CanCollide = val end) end end
-        -- destroy highlights
         for id,h in pairs(hub.highlightObjects) do if h and h.Parent then pcall(function() h:Destroy() end) end end
+        for k,h in pairs(hub.toolHighlights) do if h and h.Parent then pcall(function() h:Destroy() end) end end
+        for _,inst in ipairs(hub.rtxObjects or {}) do if inst and inst.Parent then pcall(function() inst:Destroy() end) end end
         restoreAllPrompts()
     end
 end)
 
--- Feedback
-print("[KS HUB] UI ajustada. TP accesible, botones más pequeños, InstantInteract funcionando.")
+-- Auto-apply highlights for players and tools if toggled
+Players.PlayerAdded:Connect(function(pl)
+    if hub.highlights and pl.Character then
+        wait(0.1)
+        pcall(function()
+            local h = Instance.new("Highlight", pl.Character)
+            h.Adornee = pl.Character
+            h.FillTransparency = 0.6
+            h.OutlineTransparency = 0.8
+            hub.highlightObjects[pl.UserId] = h
+        end)
+    end
+end)
+Workspace.DescendantAdded:Connect(function(desc)
+    if hub.toolsVisible and (desc:IsA("Tool") or (desc:IsA("Model") and desc:FindFirstChild("Handle"))) then
+        wait(0.05)
+        applyToolHighlights(true)
+    end
+end)
+
+print("[KS HUB] Actualización aplicada: transparencia 75%, Tools-visible y RTX añadidos.")
+
+-- ===== FIN =====
