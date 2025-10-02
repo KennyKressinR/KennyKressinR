@@ -123,56 +123,44 @@ OpenBtn.TextSize = 14
 OpenBtn.Parent = ScreenGui
 OpenBtn.Visible = false
 
--- ========== BLOQUE: DRAG (FIX definitivo) ==========
--- DRAG (robusto, con clamp para que no se salga de la pantalla)
-do
+-- ========== Bloque DRSG
     local dragging = false
-    local dragStartMouse = Vector2.new(0,0)
-    local frameStartCenter = Vector2.new(0,0)
+    local dragging = false
+local dragStart = Vector2.new(0, 0)
+local startPos = Vector2.new(0, 0)
 
-    Title.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStartMouse = UserInputService:GetMouseLocation()
-            frameStartCenter = Vector2.new(
-                MainFrame.AbsolutePosition.X + MainFrame.AbsoluteSize.X/2,
-                MainFrame.AbsolutePosition.Y + MainFrame.AbsoluteSize.Y/2
-            )
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
 
-    Title.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
+MainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
 
-    RunService.RenderStepped:Connect(function()
-        if dragging then
-            local now = UserInputService:GetMouseLocation()
-            local delta = now - dragStartMouse
-            local newCenter = frameStartCenter + delta
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        local newPos = startPos + UDim2.new(0, delta.X, 0, delta.Y)
 
-            -- obtener tamaño de viewport para clamping
-            local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
+        -- Limitar la posición para que el HUB no se salga de la pantalla
+        local screenSize = workspace.CurrentCamera.ViewportSize
+        local hubSize = MainFrame.Size
+        newPos = UDim2.new(
+            math.clamp(newPos.X.Scale, 0, 1),
+            math.clamp(newPos.X.Offset, 0, screenSize.X - hubSize.X.Offset),
+            math.clamp(newPos.Y.Scale, 0, 1),
+            math.clamp(newPos.Y.Offset, 0, screenSize.Y - hubSize.Y.Offset)
+        )
 
-            -- limitar para que no se salga de la pantalla (considera el half-size)
-            local halfW = MainFrame.AbsoluteSize.X / 2
-            local halfH = MainFrame.AbsoluteSize.Y / 2
-
-            local clampedX = math.clamp(newCenter.X, halfW, viewport.X - halfW)
-            local clampedY = math.clamp(newCenter.Y, halfH, viewport.Y - halfH)
-
-            -- Posicionar usando fromOffset (UDim2.new(0, x, 0, y)) — con AnchorPoint 0.5,0.5 esto pone el centro en (x,y)
-            MainFrame.Position = UDim2.fromOffset(math.floor(clampedX), math.floor(clampedY))
-        end
-    end)
-end
+        MainFrame.Position = newPos
+    end
+end)
 
 -- ========== BLOQUE: TAB CREATOR (cada página es ScrollingFrame) ==========
 local tabs = {}
