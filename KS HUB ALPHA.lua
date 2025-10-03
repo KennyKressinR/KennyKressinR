@@ -1,8 +1,11 @@
---[[
-KS HUB - v3.2
-Corrección: left panel ahora es scrollable y hub tamaño razonable (0.72x0.72).
-Mantiene: tabs tintables, títulos sin solapamiento, noclip, teleport, walk/jump presets.
-]]--
+--[[ KS HUB - v3.2 (MODIFICADO)
+   Cambios:
+   - UI_PADDING aumentado (más espacio entre opciones)
+   - MainFrame más grande y LeftPanel más ancho (ventanilla más accesible)
+   - Mejor padding y simetría
+   - Nueva opción "Anti delay" (toggle) — fuerza HoldDuration = 0 en ProximityPrompts y restaura al apagar
+   Mantiene todas las funciones originales (teleport, noclip, save/load, etc).
+--]]
 
 -- ===== BLOQUE 1: SERVICES / PREVENT DUPLICATES / CONFIG =====
 local Players = game:GetService("Players")
@@ -23,18 +26,19 @@ pcall(function()
 end)
 
 local HUB_COLORS = {
-    Azul     = Color3.fromRGB(0,85,170),
-    Verde    = Color3.fromRGB(50,205,50),
-    Rojo     = Color3.fromRGB(200,50,50),
+    Azul = Color3.fromRGB(0,85,170),
+    Verde = Color3.fromRGB(50,205,50),
+    Rojo = Color3.fromRGB(200,50,50),
     Amarillo = Color3.fromRGB(240,220,40),
 }
 local DEFAULT_COLOR_NAME = "Azul"
 local DEFAULT_HUB_COLOR = HUB_COLORS[DEFAULT_COLOR_NAME]
-
-local BTN_BASE = Color3.fromRGB(10,90,180)        -- base for content buttons (will tint)
+local BTN_BASE = Color3.fromRGB(10,90,180) -- base for content buttons (will tint)
 local FADE_TIME = 0.18
 local DEFAULT_LEFT_TRANSP = 0.25
-local UI_PADDING = 14
+
+-- ++ Cambié esto a un valor mayor para más espacio entre cada opción:
+local UI_PADDING = 18
 
 -- ===== BLOQUE 2: CREAR GUI PRINCIPAL =====
 local guiParent = LocalPlayer:FindFirstChild("PlayerGui") or game:GetService("CoreGui")
@@ -46,13 +50,15 @@ ScreenGui.Parent = guiParent
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0.72,0,0.72,0) -- aumentado, pero relativo -> no sale de pantalla
+-- ++ Ventanilla más grande:
+MainFrame.Size = UDim2.new(0.82,0,0.82,0)
 MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
 MainFrame.Position = UDim2.fromScale(0.5,0.5)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18,18,18)
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
+
 local MainCorner = Instance.new("UICorner"); MainCorner.Parent = MainFrame; MainCorner.CornerRadius = UDim.new(0,10)
 MainFrame.ClipsDescendants = true
 
@@ -64,14 +70,14 @@ TitleBar.Position = UDim2.new(0,0,0,0)
 TitleBar.BackgroundColor3 = DEFAULT_HUB_COLOR
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
-local TitleCorner = Instance.new("UICorner"); TitleCorner.Parent = TitleBar; TitleCorner.CornerRadius = UDim.new(0,8)
 
+local TitleCorner = Instance.new("UICorner"); TitleCorner.Parent = TitleBar; TitleCorner.CornerRadius = UDim.new(0,8)
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Name = "TitleLabel"
 TitleLabel.Size = UDim2.new(1,-220,0,40)
 TitleLabel.Position = UDim2.new(0,18,0,12)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "K S H U B  ·  v3.2"
+TitleLabel.Text = "K S H U B · v3.2"
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 20
 TitleLabel.TextColor3 = Color3.new(1,1,1)
@@ -88,9 +94,7 @@ DateLabel.TextSize = 12
 DateLabel.TextColor3 = Color3.new(1,1,1)
 DateLabel.TextXAlignment = Enum.TextXAlignment.Right
 DateLabel.Parent = TitleBar
-spawn(function()
-    while true do pcall(function() DateLabel.Text = os.date("%d/%m/%Y %H:%M") end); task.wait(30) end
-end)
+spawn(function() while true do pcall(function() DateLabel.Text = os.date("%d/%m/%Y %H:%M") end); task.wait(30) end end)
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Name = "CloseBtn"
@@ -108,7 +112,8 @@ local CloseCorner = Instance.new("UICorner"); CloseCorner.Parent = CloseBtn
 -- Left / Right panels
 local LeftPanel = Instance.new("Frame")
 LeftPanel.Name = "LeftPanel"
-LeftPanel.Size = UDim2.new(0,200,1,-64)
+-- ++ LeftPanel más ancho:
+LeftPanel.Size = UDim2.new(0,230,1,-64)
 LeftPanel.Position = UDim2.new(0,0,0,64)
 LeftPanel.BackgroundColor3 = DEFAULT_HUB_COLOR
 LeftPanel.BackgroundTransparency = DEFAULT_LEFT_TRANSP
@@ -136,14 +141,17 @@ LeftContent.AutomaticSize = Enum.AutomaticSize.Y
 local LeftList = Instance.new("UIListLayout")
 LeftList.Parent = LeftContent
 LeftList.SortOrder = Enum.SortOrder.LayoutOrder
-LeftList.Padding = UDim.new(0,UI_PADDING)
-local LeftPad = Instance.new("UIPadding"); LeftPad.Parent = LeftPanel; LeftPad.PaddingTop = UDim.new(0,12); LeftPad.PaddingLeft = UDim.new(0,8)
+-- ++ Usar UI_PADDING para espaciado
+LeftList.Padding = UDim.new(0, UI_PADDING)
+
+local LeftPad = Instance.new("UIPadding"); LeftPad.Parent = LeftPanel; LeftPad.PaddingTop = UDim.new(0,16); LeftPad.PaddingLeft = UDim.new(0,12)
 
 -- Right panel
 local RightPanel = Instance.new("Frame")
 RightPanel.Name = "RightPanel"
-RightPanel.Size = UDim2.new(1,-200,1,-64)
-RightPanel.Position = UDim2.new(0,200,0,64)
+-- ++ Ajustar posición y tamaño acorde al nuevo LeftPanel
+RightPanel.Size = UDim2.new(1,-230,1,-64)
+RightPanel.Position = UDim2.new(0,230,0,64)
 RightPanel.BackgroundColor3 = Color3.fromRGB(26,26,26)
 RightPanel.BorderSizePixel = 0
 RightPanel.Parent = MainFrame
@@ -187,16 +195,12 @@ local function applyHubColor(c)
     LeftPanel.BackgroundColor3 = c
     OpenBtn.BackgroundColor3 = c
     -- recolor tab buttons (dimmed), active brightened
-    for name,btn in pairs(tabButtons) do
-        btn.BackgroundColor3 = dimColor(c, 0.7)
-    end
+    for name,btn in pairs(tabButtons) do btn.BackgroundColor3 = dimColor(c, 0.7) end
     for name, p in pairs(pages) do
-        if p.Page.Visible then
-            p.Btn.BackgroundColor3 = brightColor(c,1.06)
-        end
+        if p.Page.Visible then p.Btn.BackgroundColor3 = brightColor(c,1.06) end
     end
     -- tint content buttons
-    tintContentButtons = tintContentButtons or function(col) -- safety if defined later
+    tintContentButtons = tintContentButtons or function(col)
         local tintFactor = 0.28
         for _,b in ipairs(contentButtons) do
             if b and b:IsA("TextButton") then
@@ -240,7 +244,8 @@ local function CreateTab(name)
     local layout = Instance.new("UIListLayout")
     layout.Parent = container
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0,UI_PADDING)
+    -- ++ usar UI_PADDING para espacio interno
+    layout.Padding = UDim.new(0, UI_PADDING)
 
     makeAutoCanvas(page, layout)
 
@@ -277,7 +282,9 @@ local function CreateSection(parent, title)
     local lbl = Instance.new("TextLabel"); lbl.Size = UDim2.new(1,0,0,30); lbl.BackgroundTransparency = 1; lbl.Text = title or ""; lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 16; lbl.TextColor3 = Color3.new(1,1,1); lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.Parent = sec
     local spacer = Instance.new("Frame"); spacer.Size = UDim2.new(1,0,0,6); spacer.BackgroundTransparency = 1; spacer.Parent = sec
     local body = Instance.new("Frame"); body.Size = UDim2.new(1,0,0,0); body.BackgroundTransparency = 1; body.Parent = sec; body.AutomaticSize = Enum.AutomaticSize.Y
-    local layout = Instance.new("UIListLayout"); layout.Parent = body; layout.SortOrder = Enum.SortOrder.LayoutOrder; layout.Padding = UDim.new(0,8)
+    local layout = Instance.new("UIListLayout"); layout.Parent = body; layout.SortOrder = Enum.SortOrder.LayoutOrder
+    -- ++ mayor padding entre elementos dentro de cada sección:
+    layout.Padding = UDim.new(0, math.floor(UI_PADDING/2))
     return sec, body
 end
 
@@ -317,9 +324,7 @@ local function CreateButton(parent, text, width)
 end
 
 -- ===== BLOQUE 5: FUNCIONES (teleport, noclip, save/load) =====
-local function getRoot()
-    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-end
+local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") end
 
 local noclipState = false
 local noclipConn = nil
@@ -357,8 +362,12 @@ local function teleportToPlayerObj(pl)
 end
 
 local saved = {}
-local function savePosition(slot) local root = getRoot(); if root then saved[slot] = root.CFrame end end
-local function loadPosition(slot) local cf = saved[slot]; local root = getRoot(); if cf and root then pcall(function() root.CFrame = cf + Vector3.new(0,3,0) end) end end
+local function savePosition(slot)
+    local root = getRoot(); if root then saved[slot] = root.CFrame end
+end
+local function loadPosition(slot)
+    local cf = saved[slot]; local root = getRoot(); if cf and root then pcall(function() root.CFrame = cf + Vector3.new(0,3,0) end) end
+end
 
 -- helper: tint content buttons
 local function tintContentButtons(col)
@@ -373,15 +382,79 @@ local function tintContentButtons(col)
     end
 end
 
--- ===== BLOQUE 6: POBLAR UI =====
+-- ===== BLOQUE 5.1: ANTI DELAY (NUEVO) =====
+-- antiDelay: setea ProximityPrompt.HoldDuration = 0 en todos los prompts locales y restaura al desactivar.
+local antiDelayEnabled = false
+local originalHold = {} -- tabla: [ProximityPrompt] = originalHoldDuration
+local descAddedConn = nil
 
+local function applyAntiDelayToPrompt(prompt)
+    if not prompt or not prompt:IsA("ProximityPrompt") then return end
+    if originalHold[prompt] == nil then
+        -- guardar original (si existe)
+        originalHold[prompt] = prompt.HoldDuration
+    end
+    -- forzar a 0 (instantáneo en cliente)
+    pcall(function() prompt.HoldDuration = 0 end)
+end
+
+local function restorePromptHold(prompt)
+    if not prompt or not prompt:IsA("ProximityPrompt") then return end
+    local orig = originalHold[prompt]
+    if orig ~= nil then
+        pcall(function() prompt.HoldDuration = orig end)
+        originalHold[prompt] = nil
+    end
+end
+
+local function enableAntiDelay()
+    if antiDelayEnabled then return end
+    antiDelayEnabled = true
+    -- aplicar a los prompts existentes
+    for _, d in ipairs(workspace:GetDescendants()) do
+        if d:IsA("ProximityPrompt") then
+            applyAntiDelayToPrompt(d)
+        end
+    end
+    -- escuchar prompts que aparezcan después
+    descAddedConn = workspace.DescendantAdded:Connect(function(d)
+        if d:IsA("ProximityPrompt") and antiDelayEnabled then
+            -- pequeño delay para asegurarnos propiedades estén listas
+            task.defer(function()
+                if d and d.Parent then applyAntiDelayToPrompt(d) end
+            end)
+        end
+    end)
+end
+
+local function disableAntiDelay()
+    if not antiDelayEnabled then return end
+    antiDelayEnabled = false
+    -- restaurar valores guardados
+    for prompt, orig in pairs(originalHold) do
+        pcall(function()
+            if prompt and prompt.Parent then
+                prompt.HoldDuration = orig
+            end
+        end)
+    end
+    originalHold = {}
+    if descAddedConn then descAddedConn:Disconnect(); descAddedConn = nil end
+end
+
+local function toggleAntiDelay()
+    if antiDelayEnabled then disableAntiDelay() else enableAntiDelay() end
+end
+
+-- ===== BLOQUE 6: POBLAR UI =====
 -- PRINCIPAL
 do
     local page = pages["Principal"].Container
     local sec, body = CreateSection(page, "Accesos rápidos")
     local gridF, grid = CreateGridFrame(body, 320, 40, 12, 2)
     local b1 = CreateButton(gridF, "TP a mouse", 320); b1.MouseButton1Click:Connect(teleportToMouse)
-    local b2 = CreateButton(gridF, "Toggle Noclip", 320); b2.MouseButton1Click:Connect(function()
+    local b2 = CreateButton(gridF, "Toggle Noclip", 320);
+    b2.MouseButton1Click:Connect(function()
         if noclipState then disableNoclip(); b2.Text = "Noclip: OFF" else enableNoclip(); b2.Text = "Noclip: ON" end
     end)
     CreateSeparator(body)
@@ -397,25 +470,54 @@ do
         local l = CreateButton(gridF, "Load "..i, 140); l.MouseButton1Click:Connect(function() loadPosition(i) end)
     end
     CreateSeparator(body)
+
     local sec2, body2 = CreateSection(page, "Ir a coordenadas (x y z)")
     local box = Instance.new("TextBox"); box.Size = UDim2.new(1,0,0,34); box.PlaceholderText = "x y z"; box.Font = Enum.Font.Gotham; box.Parent = body2
     local go = CreateButton(body2, "Ir a coordenadas", 260)
     go.MouseButton1Click:Connect(function()
         local txt = box.Text
         local x,y,z = txt:match("(-?%d+%.?%d*)%s+(-?%d+%.?%d*)%s+(-?%d+%.?%d*)")
-        if x and y and z then local cf = CFrame.new(tonumber(x), tonumber(y), tonumber(z)); local root = getRoot(); if root then pcall(function() root.CFrame = cf end) end end
+        if x and y and z then
+            local cf = CFrame.new(tonumber(x), tonumber(y), tonumber(z));
+            local root = getRoot();
+            if root then pcall(function() root.CFrame = cf end) end
+        end
     end)
+
     CreateSeparator(body)
     local secP, bodyP = CreateSection(page, "Jugadores (clic para TP)")
-    local playersScroll = Instance.new("ScrollingFrame"); playersScroll.Size = UDim2.new(1,0,0,220); playersScroll.BackgroundTransparency = 1; playersScroll.Parent = bodyP; playersScroll.ScrollBarThickness = 10
-    local playersContent = Instance.new("Frame"); playersContent.Size = UDim2.new(1,-12,0,0); playersContent.Position = UDim2.new(0,6,0,6); playersContent.BackgroundTransparency = 1; playersContent.Parent = playersScroll; playersContent.AutomaticSize = Enum.AutomaticSize.Y
-    local playersLayout = Instance.new("UIListLayout"); playersLayout.Parent = playersContent; playersLayout.Padding = UDim.new(0,10)
+
+    local playersScroll = Instance.new("ScrollingFrame");
+    playersScroll.Size = UDim2.new(1,0,0,220);
+    playersScroll.BackgroundTransparency = 1;
+    playersScroll.Parent = bodyP;
+    playersScroll.ScrollBarThickness = 10
+
+    local playersContent = Instance.new("Frame");
+    playersContent.Size = UDim2.new(1,-12,0,0);
+    playersContent.Position = UDim2.new(0,6,0,6);
+    playersContent.BackgroundTransparency = 1;
+    playersContent.Parent = playersScroll;
+    playersContent.AutomaticSize = Enum.AutomaticSize.Y
+
+    local playersLayout = Instance.new("UIListLayout");
+    playersLayout.Parent = playersContent;
+    playersLayout.Padding = UDim.new(0,10)
     makeAutoCanvas(playersScroll, playersLayout)
+
     local function refreshPlayers()
         for _,c in pairs(playersContent:GetChildren()) do if not c:IsA("UIListLayout") then c:Destroy() end end
         for _,pl in ipairs(Players:GetPlayers()) do
             if pl ~= LocalPlayer then
-                local b = Instance.new("TextButton"); b.Size = UDim2.new(1,0,0,36); b.BackgroundColor3 = BTN_BASE; b.BorderSizePixel = 0; b.Text = pl.Name; b.Font = Enum.Font.Gotham; b.TextSize = 14; b.TextColor3 = Color3.new(1,1,1); b.Parent = playersContent
+                local b = Instance.new("TextButton");
+                b.Size = UDim2.new(1,0,0,36);
+                b.BackgroundColor3 = BTN_BASE;
+                b.BorderSizePixel = 0;
+                b.Text = pl.Name;
+                b.Font = Enum.Font.Gotham;
+                b.TextSize = 14;
+                b.TextColor3 = Color3.new(1,1,1);
+                b.Parent = playersContent
                 local cr = Instance.new("UICorner"); cr.Parent = b
                 contentButtons[#contentButtons+1] = b
                 b.MouseButton1Click:Connect(function() teleportToPlayerObj(pl) end)
@@ -435,7 +537,10 @@ do
     local gf, gg = CreateGridFrame(bodyV, 120, 36, 10, 3)
     local function getDefaultWalkSpeed()
         local ch = LocalPlayer.Character
-        if ch then local h = ch:FindFirstChildWhichIsA("Humanoid") if h and h.WalkSpeed then return h.WalkSpeed end end
+        if ch then
+            local h = ch:FindFirstChildWhichIsA("Humanoid")
+            if h and h.WalkSpeed then return h.WalkSpeed end
+        end
         return 16
     end
     local defaultWalk = getDefaultWalkSpeed()
@@ -449,12 +554,16 @@ do
         end)
     end
     CreateSeparator(page)
+
     -- Impulso de salto
     local secJ, bodyJ = CreateSection(page, "Impulso de salto")
     local gf2, gg2 = CreateGridFrame(bodyJ, 140, 36, 10, 3)
     local function getDefaultJumpPower()
         local ch = LocalPlayer.Character
-        if ch then local h = ch:FindFirstChildWhichIsA("Humanoid") if h and (h.JumpPower or h.JumpHeight) then return h.JumpPower or 50 end end
+        if ch then
+            local h = ch:FindFirstChildWhichIsA("Humanoid")
+            if h and (h.JumpPower or h.JumpHeight) then return h.JumpPower or 50 end
+        end
         return 50
     end
     local defaultJump = getDefaultJumpPower()
@@ -476,6 +585,7 @@ do
     local sec, body = CreateSection(page, "Ajustes de interfaz")
     local containerGrid = Instance.new("Frame"); containerGrid.BackgroundTransparency = 1; containerGrid.Parent = body; containerGrid.AutomaticSize = Enum.AutomaticSize.Y
     local grid = Instance.new("UIGridLayout"); grid.Parent = containerGrid; grid.CellSize = UDim2.new(0,320,0,180); grid.CellPadding = UDim2.new(0,12,0,12); grid.FillDirection = Enum.FillDirection.Horizontal; grid.FillDirectionMaxCells = 2
+
     -- Opacidad
     local leftFrame = Instance.new("Frame"); leftFrame.BackgroundTransparency = 1; leftFrame.Parent = containerGrid
     local s1, b1 = CreateSection(leftFrame, "Transparencia Left panel")
@@ -483,12 +593,9 @@ do
     local options = {{"0%",0},{"25%",0.25},{"50%",0.5},{"75%",0.75},{"90%",0.9}}
     for _, opt in ipairs(options) do
         local bt = CreateButton(gf, opt[1], 100)
-        bt.MouseButton1Click:Connect(function()
-            LeftPanel.BackgroundTransparency = opt[2]
-            TitleBar.BackgroundTransparency = opt[2]
-            OpenBtn.BackgroundTransparency = opt[2]
-        end)
+        bt.MouseButton1Click:Connect(function() LeftPanel.BackgroundTransparency = opt[2] TitleBar.BackgroundTransparency = opt[2] OpenBtn.BackgroundTransparency = opt[2] end)
     end
+
     -- Color picker
     local rightFrame = Instance.new("Frame"); rightFrame.BackgroundTransparency = 1; rightFrame.Parent = containerGrid
     local s2, b2 = CreateSection(rightFrame, "Color del HUB (Title & Left & Tabs)")
@@ -510,6 +617,14 @@ do
             for _, child in ipairs(cf:GetChildren()) do if child:IsA("TextButton") then child.BackgroundTransparency = (child==colorBtn) and 0 or 0.35 end end
         end)
     end
+
+    -- NUEVO: Botón Anti delay (ProximityPrompt instantáneo)
+    local s3, b3 = CreateSection(rightFrame, "Funciones")
+    local antiBtn = CreateButton(b3, "Anti delay: OFF", 220)
+    antiBtn.MouseButton1Click:Connect(function()
+        toggleAntiDelay()
+        antiBtn.Text = antiDelayEnabled and "Anti delay: ON" or "Anti delay: OFF"
+    end)
 end
 
 -- INFO
@@ -517,9 +632,8 @@ do
     local page = pages["Info"].Container
     local sec, body = CreateSection(page, "Acerca")
     local lbl = Instance.new("TextLabel"); lbl.BackgroundTransparency = 1; lbl.TextWrapped = true
-    lbl.Text = "KS HUB v3.2 - Ahora Left panel es scrollable; hub dimensionado; tabs tintables; teleport en Teleport."
-    lbl.Font = Enum.Font.Gotham; lbl.TextSize = 14; lbl.TextColor3 = Color3.new(1,1,1)
-    lbl.AutomaticSize = Enum.AutomaticSize.Y; lbl.Parent = body
+    lbl.Text = "KS HUB v3.2 - Versión modificada: left panel scrollable; hub dimensionado; tabs tintables; agregado 'Anti delay' (ProximityPrompt instant)."
+    lbl.Font = Enum.Font.Gotham; lbl.TextSize = 14; lbl.TextColor3 = Color3.new(1,1,1); lbl.AutomaticSize = Enum.AutomaticSize.Y; lbl.Parent = body
 end
 
 -- ===== BLOQUE 7: FADE, DRAG, HOTKEYS E INICIALIZACIÓN =====
@@ -542,7 +656,6 @@ end
 
 OpenBtn.MouseButton1Click:Connect(fadeIn)
 CloseBtn.MouseButton1Click:Connect(fadeOut)
-
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.RightControl then
@@ -550,7 +663,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
--- Drag TitleBar
+-- Drag TitleBar (mejorado: respeta límites de pantalla)
 do
     local dragging = false
     local dragStart = Vector2.new()
@@ -583,8 +696,7 @@ applyHubColor(DEFAULT_HUB_COLOR)
 LeftPanel.BackgroundTransparency = DEFAULT_LEFT_TRANSP
 TitleBar.BackgroundTransparency = DEFAULT_LEFT_TRANSP
 OpenBtn.BackgroundTransparency = DEFAULT_LEFT_TRANSP
-
 -- update left scroll canvas on start
 makeAutoCanvas(LeftScroll, LeftList)
 
-print("[KS HUB v3.2] cargado — Left panel scrollable y hub dimensionado.")
+print("[KS HUB v3.2 - MOD] cargado — Left panel scrollable, hub dimensionado y 'Anti delay' disponible.")
