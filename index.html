@@ -3,97 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mis redes | Kenny KressinR</title>
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .profile-img {
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #fff;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      margin: 0 0 30px 0;
-      font-size: 1.8rem;
-      letter-spacing: 1px;
-    }
-
-    .social-links {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-      max-width: 400px;
-    }
-
-    .btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      border-radius: 12px;
-      padding: 10px 20px;
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    .btn img {
-      width: 24px;
-      height: 24px;
-    }
-
-    footer {
-      position: absolute;
-      bottom: 10px;
-      font-size: 0.8rem;
-      color: #aaa;
-    }
-
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.5rem;
-      }
-      .btn {
-        width: 100%;
-        justify-content: center;
-      }
-    }
-  </style>
+  <title>Mis Redes | Kenny KressinR</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- 🖼️ FOTO -->
-  <img src="https://raw.githubusercontent.com/kennykressinr/kennykressinr/main/perfil.jpg" alt="Foto de perfil" class="profile-img" />
+  <!-- FOTO DE PERFIL -->
+  <img id="profile-img" src="https://i.imgur.com/placeholder.jpg" alt="Foto de perfil" class="profile-img" />
 
-  <!-- 🧭 TÍTULO -->
+  <!-- TÍTULO -->
   <h1>Mis Redes Sociales</h1>
 
-  <!-- 🔗 BOTONES -->
+  <!-- BOTONES DE REDES -->
   <div class="social-links">
     <a class="btn" href="https://www.instagram.com/kennykressinr?igsh=MWN1c21weTYyeDJqZw==" target="_blank">
       <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" /> Instagram
@@ -107,7 +28,7 @@
       <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram Draws" /> IG Dibujos
     </a>
 
-    <a class="btn" href="#" onclick="alert('Tu usuario de Discord es: kennykressinr')" target="_blank">
+    <a class="btn" href="#" target="_blank" onclick="alert('Tu usuario de Discord es: kennykressinr')">
       <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" /> Discord
     </a>
 
@@ -116,14 +37,38 @@
     </a>
   </div>
 
+  <!-- PIE -->
   <footer>© 2025 Kenny KressinR</footer>
 
-  <!-- 📘 GUÍA DE EDICIÓN -->
+  <!-- SCRIPT PARA OBTENER FOTO DE IG AUTOMÁTICAMENTE -->
+  <script>
+    const igUsername = "kennykressinr"; // Cambiar si cambias tu usuario de Instagram
+    const profileImg = document.getElementById("profile-img");
+
+    async function fetchIGProfile() {
+      try {
+        const res = await fetch(`https://www.instagram.com/${igUsername}/?__a=1&__d=dis`);
+        if(!res.ok) throw new Error("No se pudo obtener la foto de IG");
+        const data = await res.json();
+        // Esta ruta depende de la estructura de Instagram, puede cambiar
+        const picUrl = data.graphql.user.profile_pic_url_hd;
+        profileImg.src = picUrl;
+      } catch(err) {
+        console.log("Error al obtener la foto de IG:", err);
+        profileImg.src = "https://i.imgur.com/placeholder.jpg"; // fallback
+      }
+    }
+
+    fetchIGProfile();
+  </script>
+
+  <!-- GUÍA DE EDICIÓN -->
   <!--
-  🔧 Cómo actualizar:
-  - Cambiar la foto: reemplaza el link del <img src="...">
-  - Agregar red nueva: copia un <a class="btn">...</a> y cambia el enlace + icono.
-  - Subir iconos o imágenes: Add File → Upload Files → Commit → usar el enlace RAW.
+  🔧 Cómo actualizar tu página:
+  1️⃣ Cambiar tu foto de perfil: Automático con Instagram, solo cambie igUsername
+  2️⃣ Agregar nueva red: copiar un <a class="btn"> y actualizar icono + link
+  3️⃣ Cambiar estilos: editar style.css
+  4️⃣ Subir iconos: Add File → Upload Files → Commit → usar enlace RAW
   -->
 </body>
 </html>
