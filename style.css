@@ -1,95 +1,122 @@
-/* --- RESETEO GLOBAL (asegura igual apariencia en todos los navegadores) --- */
+/* -----------------------
+   style.css — versión compatible
+   Mantén los mismos valores visuales, con fixes cross-browser
+   ----------------------- */
+
+/* Reset básico y optimizaciones cross-browser */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- FONDO Y FUENTE GENERAL --- */
+/* Fondo general */
 body {
-    background-color: #0e0e0e;
-    color: #ffffff;
-    font-family: 'Poppins', Arial, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
+  background-color: #0e0e0e;
+  color: #ffffff;
+  font-family: "Poppins", Arial, sans-serif; /* fallback Arial */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  -webkit-text-size-adjust: 100%; /* evita zoom de texto en móviles */
+  text-rendering: optimizeLegibility;
 }
 
-/* --- CONTENEDOR CENTRAL --- */
+/* Contenedor central */
 .container {
-    text-align: center;
-    width: 100%;
-    max-width: 500px;
-    padding: 20px;
+  text-align: center;
 }
 
-/* --- TÍTULO --- */
+/* Título principal */
 .title {
-    font-size: 2.8rem;
-    font-weight: 600;
-    margin-bottom: 0.3rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.3rem;
 }
 
-/* --- SUBTÍTULO --- */
+/* Subtítulo */
 .subtitle {
-    font-size: 1.1rem;
-    color: #a0a0a0;
-    margin-bottom: 2rem;
+  font-size: 1.1rem;
+  color: #a0a0a0;
+  margin-bottom: 2rem;
 }
 
-/* --- BOTONES --- */
+/* Sección de botones
+   - usamos gap por conveniencia pero añadimos fallback con margen
+   - así funciona en navegadores que aún no soportan gap en flex */
 .buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
 }
 
-/* --- ESTILO DE CADA BOTÓN --- */
+/* Fallback para navegadores sin soporte gap */
+.buttons > * {
+  margin-bottom: 12px;
+}
+.buttons > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Estilo de cada botón */
 .btn {
-    text-decoration: none;
-    background-color: #1a1a1a;
-    color: #ffffff;
-    padding: 12px 24px;
-    border-radius: 12px;
-    border: 1px solid #333;
-    transition: all 0.2s ease;
-    width: 220px;
-    font-size: 1rem;
-    display: inline-block;
+  display: inline-block;               /* consistente entre navegadores */
+  text-decoration: none;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  transition: all 0.2s ease;
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  width: 220px;
+  box-sizing: border-box;
+  text-align: center;
+  line-height: 1.1;                    /* evita que el botón se haga gigante */
 }
 
-/* --- EFECTO HOVER --- */
+/* Asegurar que si pones iconos no crezcan */
+.btn img {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  margin-right: 10px;
+  display: inline-block;
+  object-fit: contain;
+}
+
+/* Efecto al pasar el mouse (con prefixes) */
 .btn:hover {
-    background-color: #333333;
-    transform: scale(1.04);
-    border-color: #444;
+  background-color: #333333;
+  transform: scale(1.03);
+  -webkit-transform: scale(1.03);
+  -ms-transform: scale(1.03);
 }
 
-/* --- COMPATIBILIDAD CON MÓVILES Y SAFARI --- */
+/* Focus visible (accesibilidad) */
+.btn:focus {
+  outline: 2px solid rgba(255,255,255,0.06);
+  outline-offset: 2px;
+}
+
+/* Compatibilidad móvil */
 @media (max-width: 480px) {
-    .title {
-        font-size: 2.2rem;
-    }
-    .btn {
-        width: 180px;
-        font-size: 0.95rem;
-    }
+  .title { font-size: 2rem; }
+  .btn {
+    width: 90%;
+    max-width: 220px;
+    font-size: 0.95rem;
+  }
 }
 
-/* --- INSTRUCCIONES DE EDICIÓN MANUAL ---
-   ➤ Para agregar un botón:
-       Copia una línea del div.buttons, por ejemplo:
-       <a href="URL" target="_blank" class="btn">Nuevo botón</a>
-
-   ➤ Para cambiar colores:
-       - Fondo: body { background-color: #000; }
-       - Botones: .btn { background-color, border-color }
-       - Hover: .btn:hover { background-color }
-
-   ➤ Compatible con Chrome, Firefox, Edge, Opera, Safari, Android y iOS.
+/* Comentarios (edición manual)
+   ➤ Para agregar botón:
+       <a href="TU_URL" target="_blank" class="btn">Nombre</a>
+   ➤ Si cambias gap: actualiza también el margen fallback
+   ➤ Si añades iconos, usa <img> dentro del <a> (ya tiene tamaño forzado)
 */
