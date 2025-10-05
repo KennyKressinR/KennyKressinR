@@ -1,72 +1,90 @@
-/* Fondo general */
+/* Reset universal para que todos los navegadores se comporten igual */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Fondo y fuente */
 body {
     background-color: #0e0e0e;
     color: #ffffff;
-    font-family: "Poppins", sans-serif;
+    font-family: 'Poppins', Arial, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    margin: 0;
-}
-
-/* Contenedor central */
-.container {
+    width: 100%;
     text-align: center;
 }
 
-/* Título principal */
+/* Contenedor */
+.container {
+    max-width: 400px;
+    width: 90%;
+}
+
+/* Título */
 .title {
     font-size: 2.5rem;
-    margin-bottom: 0.3rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
 }
 
 /* Subtítulo */
 .subtitle {
-    font-size: 1.1rem;
-    color: #a0a0a0;
+    font-size: 1rem;
+    color: #b0b0b0;
     margin-bottom: 2rem;
 }
 
-/* Sección de botones */
+/* Botones */
 .buttons {
     display: flex;
     flex-direction: column;
-    gap: 12px;
     align-items: center;
+    gap: 12px;
 }
 
-/* Estilo de cada botón */
+/* Estilo base de botones */
 .btn {
+    display: block;
+    width: 100%;
+    max-width: 220px;
     text-decoration: none;
+    color: #fff;
     background-color: #1a1a1a;
-    color: #ffffff;
-    padding: 12px 24px;
-    border-radius: 10px;
     border: 1px solid #333;
-    transition: all 0.2s ease;
-    width: 220px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease-in-out;
 }
 
-/* Efecto al pasar el mouse */
+/* Hover compatible con todos los navegadores */
 .btn:hover {
     background-color: #333333;
     transform: scale(1.03);
 }
 
-/* --- COMENTARIOS DE EDICIÓN MANUAL --- */
-/*
-    ➤ Para agregar un nuevo botón:
-        Copia una línea de <a> dentro del div.buttons:
-        <a href="TU_URL" target="_blank" class="btn">Nombre del botón</a>
+/* Compatibilidad móvil */
+@media (max-width: 480px) {
+    .title {
+        font-size: 2rem;
+    }
+    .btn {
+        font-size: 0.95rem;
+        padding: 10px 16px;
+    }
+}
 
-    ➤ Para cambiar colores:
-        - Fondo: body { background-color: #000000; }
-        - Botones: .btn { background-color: #1a1a1a; border-color: #333; }
-        - Hover: .btn:hover { background-color: #333333; }
-
-    ➤ Para cambiar fuente o tamaño de texto:
-        - Todo el sitio usa "Poppins". Puedes cambiarlo en body { font-family: ... }
-        - Título: cambia font-size en .title
-        - Botones: cambia padding o font-size dentro de .btn
+/* --- COMENTARIOS DE EDICIÓN MANUAL ---
+   ➤ Para agregar un nuevo botón:
+       <a href="URL" target="_blank" class="btn">Nombre</a>
+   ➤ Para cambiar colores:
+       Fondo → body { background-color: ... }
+       Botones → .btn { background-color, border-color }
+       Hover → .btn:hover { background-color }
+   ➤ Compatible en Chrome, Firefox, Edge, Opera, Safari y Android/iOS.
 */
