@@ -48,13 +48,18 @@ section {
   border-radius: 15px;
 }
 
-/* FONDOS DISTINTOS PARA SECCIONES */
+/* 🔸 REDES SOCIALES (NARANJA CÁLIDO ADAPTADO AL FONDO) */
 .redes {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 140, 0, 0.08);
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
+  border: 1px solid rgba(255, 160, 60, 0.2);
 }
 
+/* 🎮 PERFIL DE JUEGOS */
 .juegos {
-  background: rgba(0, 150, 255, 0.1); /* franja azul ligera para juegos */
+  background: rgba(0, 150, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
+  border: 1px solid rgba(0, 150, 255, 0.2);
 }
 
 /* CONTENEDOR DE BOTONES */
@@ -81,9 +86,16 @@ section {
   text-decoration: none;
 }
 
-.btn:hover {
-  transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.25);
+.redes .btn:hover {
+  background: linear-gradient(135deg, #ff9500, #ff6f00);
+  box-shadow: 0 0 10px rgba(255, 150, 0, 0.6);
+  transform: scale(1.07);
+}
+
+.juegos .btn:hover {
+  background: linear-gradient(135deg, #2196f3, #00bcd4);
+  box-shadow: 0 0 10px rgba(0, 150, 255, 0.6);
+  transform: scale(1.07);
 }
 
 /* ICONOS */
