@@ -1,11 +1,11 @@
-/* Reset universal para que todos los navegadores se comporten igual */
+/* --- RESETEO GLOBAL (asegura igual apariencia en todos los navegadores) --- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Fondo y fuente */
+/* --- FONDO Y FUENTE GENERAL --- */
 body {
     background-color: #0e0e0e;
     color: #ffffff;
@@ -14,77 +14,82 @@ body {
     align-items: center;
     justify-content: center;
     height: 100vh;
-    width: 100%;
-    text-align: center;
+    margin: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Contenedor */
+/* --- CONTENEDOR CENTRAL --- */
 .container {
-    max-width: 400px;
-    width: 90%;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
 }
 
-/* Título */
+/* --- TÍTULO --- */
 .title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     font-weight: 600;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
 }
 
-/* Subtítulo */
+/* --- SUBTÍTULO --- */
 .subtitle {
-    font-size: 1rem;
-    color: #b0b0b0;
+    font-size: 1.1rem;
+    color: #a0a0a0;
     margin-bottom: 2rem;
 }
 
-/* Botones */
+/* --- BOTONES --- */
 .buttons {
     display: flex;
     flex-direction: column;
+    gap: 14px;
     align-items: center;
-    gap: 12px;
 }
 
-/* Estilo base de botones */
+/* --- ESTILO DE CADA BOTÓN --- */
 .btn {
-    display: block;
-    width: 100%;
-    max-width: 220px;
     text-decoration: none;
-    color: #fff;
     background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 12px;
     border: 1px solid #333;
-    padding: 12px 20px;
-    border-radius: 8px;
+    transition: all 0.2s ease;
+    width: 220px;
     font-size: 1rem;
-    letter-spacing: 0.5px;
-    transition: all 0.2s ease-in-out;
+    display: inline-block;
 }
 
-/* Hover compatible con todos los navegadores */
+/* --- EFECTO HOVER --- */
 .btn:hover {
     background-color: #333333;
-    transform: scale(1.03);
+    transform: scale(1.04);
+    border-color: #444;
 }
 
-/* Compatibilidad móvil */
+/* --- COMPATIBILIDAD CON MÓVILES Y SAFARI --- */
 @media (max-width: 480px) {
     .title {
-        font-size: 2rem;
+        font-size: 2.2rem;
     }
     .btn {
+        width: 180px;
         font-size: 0.95rem;
-        padding: 10px 16px;
     }
 }
 
-/* --- COMENTARIOS DE EDICIÓN MANUAL ---
-   ➤ Para agregar un nuevo botón:
-       <a href="URL" target="_blank" class="btn">Nombre</a>
+/* --- INSTRUCCIONES DE EDICIÓN MANUAL ---
+   ➤ Para agregar un botón:
+       Copia una línea del div.buttons, por ejemplo:
+       <a href="URL" target="_blank" class="btn">Nuevo botón</a>
+
    ➤ Para cambiar colores:
-       Fondo → body { background-color: ... }
-       Botones → .btn { background-color, border-color }
-       Hover → .btn:hover { background-color }
-   ➤ Compatible en Chrome, Firefox, Edge, Opera, Safari y Android/iOS.
+       - Fondo: body { background-color: #000; }
+       - Botones: .btn { background-color, border-color }
+       - Hover: .btn:hover { background-color }
+
+   ➤ Compatible con Chrome, Firefox, Edge, Opera, Safari, Android y iOS.
 */
