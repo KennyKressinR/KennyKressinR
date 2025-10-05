@@ -1,13 +1,3 @@
-/* ===========================================================
-   ESTILOS PRINCIPALES - KENNYKRESSINR
-   ===========================================================
-   💡 Cómo actualizar:
-   1️⃣ Edita este archivo y guarda los cambios.
-   2️⃣ Sube el nuevo style.css al mismo lugar que index.html.
-   3️⃣ En index.html cambia el número de versión: style.css?v=2
-   4️⃣ Recarga la página (Ctrl + F5) para ver el cambio.
-   =========================================================== */
-
 /* ESTILO GENERAL */
 body {
   font-family: "Poppins", sans-serif;
@@ -49,7 +39,7 @@ h2 {
   padding-bottom: 5px;
 }
 
-/* SECCIONES GENERALES */
+/* SECCIONES */
 section {
   margin-bottom: 40px;
   width: 100%;
@@ -58,14 +48,14 @@ section {
   border-radius: 15px;
 }
 
-/* 🔸 SECCIÓN REDES SOCIALES - TONO NARANJOSO COMPLEMENTARIO */
+/* 🔸 REDES SOCIALES (NARANJA CÁLIDO ADAPTADO AL FONDO) */
 .redes {
   background: rgba(255, 140, 0, 0.08);
   box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
   border: 1px solid rgba(255, 160, 60, 0.2);
 }
 
-/* 🎮 SECCIÓN DE JUEGOS - AZUL SUAVE */
+/* 🎮 PERFIL DE JUEGOS */
 .juegos {
   background: rgba(0, 150, 255, 0.1);
   box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
@@ -80,7 +70,7 @@ section {
   gap: 15px;
 }
 
-/* BOTONES GENERALES */
+/* BOTONES */
 .btn {
   display: flex;
   align-items: center;
@@ -96,7 +86,6 @@ section {
   text-decoration: none;
 }
 
-/* EFECTOS DE HOVER PERSONALIZADOS */
 .redes .btn:hover {
   background: linear-gradient(135deg, #ff9500, #ff6f00);
   box-shadow: 0 0 10px rgba(255, 150, 0, 0.6);
@@ -109,13 +98,13 @@ section {
   transform: scale(1.07);
 }
 
-/* ICONOS DE LOS BOTONES */
+/* ICONOS */
 .btn img {
   width: 24px;
   height: 24px;
 }
 
-/* PIE DE PÁGINA */
+/* FOOTER */
 footer {
   margin-top: 30px;
   font-size: 0.8rem;
@@ -123,7 +112,7 @@ footer {
   text-align: center;
 }
 
-/* RESPONSIVO (TELÉFONOS Y PANTALLAS PEQUEÑAS) */
+/* RESPONSIVO */
 @media (max-width: 600px) {
   h1 {
     font-size: 1.5rem;
@@ -132,4 +121,4 @@ footer {
     width: 100%;
     justify-content: center;
   }
-                              }
+}
