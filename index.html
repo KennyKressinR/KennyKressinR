@@ -1,47 +1,73 @@
-
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KennyKressinR</title>
+  <title>Mis Redes | KennyKressinR</title>
 
-  <!-- Fuente moderna (Poppins) -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <!-- ✅ Carga del estilo local (funciona en GitHub Pages si style.css está en el mismo lugar) -->
+  <link rel="stylesheet" href="style.css?v=1">
 
-  <!-- Estilos principales -->
-  <link rel="stylesheet" href="style.css?v=2">
+  <!-- 💡 NOTA: 
+       - Si no ves los cambios del CSS tras editarlo, cambia el número de versión (v=1, v=2, etc.)
+         Esto fuerza al navegador a descargar el archivo actualizado.
+       - Ambos archivos (index.html y style.css) deben estar juntos en la raíz del repositorio.
+  -->
 </head>
 <body>
 
-  <div class="container">
-    <!-- Título principal -->
-    <h1 class="title">KennyKressinR</h1>
+  <!-- FOTO DE PERFIL -->
+  <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/Profile.jpg" 
+       alt="Foto de perfil" class="profile-img" />
 
-    <!-- Subtítulo -->
-    <p class="subtitle">Conecta conmigo 🌐</p>
+  <!-- TÍTULO PRINCIPAL -->
+  <h1>Conecta conmigo 🌐</h1>
 
-    <!-- Sección de botones -->
-    <div class="buttons">
+  <!-- SECCIÓN DE REDES -->
+  <section class="redes">
+    <h2>Redes Sociales</h2>
+    <div class="social-links">
 
-      <a href="https://www.instagram.com/kennykressinr" target="_blank" class="btn">Instagram</a>
+      <a class="btn" href="https://www.instagram.com/kennykressinr?igsh=MWN1c21weTYyeDJqZw==" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" /> Instagram
+      </a>
 
-      <a href="https://www.facebook.com/DanielRodriguezKK" target="_blank" class="btn">Facebook</a>
+      <a class="btn" href="https://www.facebook.com/DanielRodriguezKK" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png" alt="Facebook" /> Facebook
+      </a>
 
-      <a href="https://www.tiktok.com/@kennykressinr" target="_blank" class="btn">TikTok</a>
+      <a class="btn" href="https://www.instagram.com/kennykrdraws?igsh=MWJwZHBsYWwwbTIzYg==" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Dibujos" /> Dibujos
+      </a>
 
-      <a href="https://www.youtube.com/@kennykressinr" target="_blank" class="btn">YouTube</a>
+      <a class="btn" href="https://www.tiktok.com/@kennykressinr" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/3046/3046120.png" alt="TikTok" /> TikTok
+      </a>
 
-      <a href="https://www.instagram.com/kennykrdraws" target="_blank" class="btn">Dibujos</a>
-
-      <a href="https://discord.gg/4bPRDGZR" target="_blank" class="btn">Discord</a>
-
-      <a href="https://www.roblox.com/share?code=5ba74769028bcd4a87e5bbd17f13531c&type=Profile&source=ProfileShare&stamp=1759663952398" target="_blank" class="btn">Roblox</a>
-
-      <a href="https://launch.minecraft.net/profile/KennyKressin" target="_blank" class="btn">Minecraft (Bedrock)</a>
+      <a class="btn" href="https://discord.gg/4bPRDGZR" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" /> Discord
+      </a>
 
     </div>
-  </div>
+  </section>
+
+  <!-- SECCIÓN PERFIL DE JUEGOS -->
+  <section class="juegos">
+    <h2>Perfil de Juegos 🎮</h2>
+    <div class="social-links">
+
+      <a class="btn" href="https://www.roblox.com/share?code=5ba74769028bcd4a87e5bbd17f13531c&type=Profile&source=ProfileShare&stamp=1759663952398" target="_blank">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png" alt="Roblox" /> Roblox
+      </a>
+
+      <a class="btn" href="https://launch.minecraft.net/profile/KennyKressin" target="_blank">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8bqcn8xTGlSw5XjXm8-LKRnIfIa_uW2TCjA&s" alt="Minecraft" /> Minecraft (Bedrock)
+      </a>
+
+    </div>
+  </section>
+
+  <!-- PIE DE PÁGINA -->
+  <footer>© 2025 KennyKressinR</footer>
 
 </body>
 </html>
