@@ -1,122 +1,72 @@
-/* -----------------------
-   style.css — versión compatible
-   Mantén los mismos valores visuales, con fixes cross-browser
-   ----------------------- */
-
-/* Reset básico y optimizaciones cross-browser */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* Fondo general */
 body {
-  background-color: #0e0e0e;
-  color: #ffffff;
-  font-family: "Poppins", Arial, sans-serif; /* fallback Arial */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  margin: 0;
-  -webkit-text-size-adjust: 100%; /* evita zoom de texto en móviles */
-  text-rendering: optimizeLegibility;
+    background-color: #0e0e0e;
+    color: #ffffff;
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
 }
 
 /* Contenedor central */
 .container {
-  text-align: center;
+    text-align: center;
 }
 
 /* Título principal */
 .title {
-  font-size: 2.5rem;
-  margin-bottom: 0.3rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.3rem;
 }
 
 /* Subtítulo */
 .subtitle {
-  font-size: 1.1rem;
-  color: #a0a0a0;
-  margin-bottom: 2rem;
+    font-size: 1.1rem;
+    color: #a0a0a0;
+    margin-bottom: 2rem;
 }
 
-/* Sección de botones
-   - usamos gap por conveniencia pero añadimos fallback con margen
-   - así funciona en navegadores que aún no soportan gap en flex */
+/* Sección de botones */
 .buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-}
-
-/* Fallback para navegadores sin soporte gap */
-.buttons > * {
-  margin-bottom: 12px;
-}
-.buttons > *:last-child {
-  margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
 }
 
 /* Estilo de cada botón */
 .btn {
-  display: inline-block;               /* consistente entre navegadores */
-  text-decoration: none;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  padding: 12px 24px;
-  border-radius: 10px;
-  border: 1px solid #333;
-  transition: all 0.2s ease;
-  -webkit-transition: all 0.2s ease;
-  -moz-transition: all 0.2s ease;
-  width: 220px;
-  box-sizing: border-box;
-  text-align: center;
-  line-height: 1.1;                    /* evita que el botón se haga gigante */
+    text-decoration: none;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    transition: all 0.2s ease;
+    width: 220px;
 }
 
-/* Asegurar que si pones iconos no crezcan */
-.btn img {
-  width: 24px;
-  height: 24px;
-  vertical-align: middle;
-  margin-right: 10px;
-  display: inline-block;
-  object-fit: contain;
-}
-
-/* Efecto al pasar el mouse (con prefixes) */
+/* Efecto al pasar el mouse */
 .btn:hover {
-  background-color: #333333;
-  transform: scale(1.03);
-  -webkit-transform: scale(1.03);
-  -ms-transform: scale(1.03);
+    background-color: #333333;
+    transform: scale(1.03);
 }
 
-/* Focus visible (accesibilidad) */
-.btn:focus {
-  outline: 2px solid rgba(255,255,255,0.06);
-  outline-offset: 2px;
-}
+/* --- COMENTARIOS DE EDICIÓN MANUAL --- */
+/*
+    ➤ Para agregar un nuevo botón:
+        Copia una línea de <a> dentro del div.buttons:
+        <a href="TU_URL" target="_blank" class="btn">Nombre del botón</a>
 
-/* Compatibilidad móvil */
-@media (max-width: 480px) {
-  .title { font-size: 2rem; }
-  .btn {
-    width: 90%;
-    max-width: 220px;
-    font-size: 0.95rem;
-  }
-}
+    ➤ Para cambiar colores:
+        - Fondo: body { background-color: #000000; }
+        - Botones: .btn { background-color: #1a1a1a; border-color: #333; }
+        - Hover: .btn:hover { background-color: #333333; }
 
-/* Comentarios (edición manual)
-   ➤ Para agregar botón:
-       <a href="TU_URL" target="_blank" class="btn">Nombre</a>
-   ➤ Si cambias gap: actualiza también el margen fallback
-   ➤ Si añades iconos, usa <img> dentro del <a> (ya tiene tamaño forzado)
+    ➤ Para cambiar fuente o tamaño de texto:
+        - Todo el sitio usa "Poppins". Puedes cambiarlo en body { font-family: ... }
+        - Título: cambia font-size en .title
+        - Botones: cambia padding o font-size dentro de .btn
 */
