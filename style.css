@@ -1,3 +1,13 @@
+/* ===========================================================
+   ESTILOS PRINCIPALES - KENNYKRESSINR
+   ===========================================================
+   💡 Cómo actualizar:
+   1️⃣ Edita este archivo y guarda los cambios.
+   2️⃣ Sube el nuevo style.css al mismo lugar que index.html.
+   3️⃣ En index.html cambia el número de versión: style.css?v=2
+   4️⃣ Recarga la página (Ctrl + F5) para ver el cambio.
+   =========================================================== */
+
 /* ESTILO GENERAL */
 body {
   font-family: "Poppins", sans-serif;
@@ -39,7 +49,7 @@ h2 {
   padding-bottom: 5px;
 }
 
-/* SECCIONES */
+/* SECCIONES GENERALES */
 section {
   margin-bottom: 40px;
   width: 100%;
@@ -48,14 +58,14 @@ section {
   border-radius: 15px;
 }
 
-/* 🔸 REDES SOCIALES (NARANJA CÁLIDO ADAPTADO AL FONDO) */
+/* 🔸 SECCIÓN REDES SOCIALES - TONO NARANJOSO COMPLEMENTARIO */
 .redes {
   background: rgba(255, 140, 0, 0.08);
   box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
   border: 1px solid rgba(255, 160, 60, 0.2);
 }
 
-/* 🎮 PERFIL DE JUEGOS */
+/* 🎮 SECCIÓN DE JUEGOS - AZUL SUAVE */
 .juegos {
   background: rgba(0, 150, 255, 0.1);
   box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
@@ -70,7 +80,7 @@ section {
   gap: 15px;
 }
 
-/* BOTONES */
+/* BOTONES GENERALES */
 .btn {
   display: flex;
   align-items: center;
@@ -86,6 +96,7 @@ section {
   text-decoration: none;
 }
 
+/* EFECTOS DE HOVER PERSONALIZADOS */
 .redes .btn:hover {
   background: linear-gradient(135deg, #ff9500, #ff6f00);
   box-shadow: 0 0 10px rgba(255, 150, 0, 0.6);
@@ -98,13 +109,13 @@ section {
   transform: scale(1.07);
 }
 
-/* ICONOS */
+/* ICONOS DE LOS BOTONES */
 .btn img {
   width: 24px;
   height: 24px;
 }
 
-/* FOOTER */
+/* PIE DE PÁGINA */
 footer {
   margin-top: 30px;
   font-size: 0.8rem;
@@ -112,7 +123,7 @@ footer {
   text-align: center;
 }
 
-/* RESPONSIVO */
+/* RESPONSIVO (TELÉFONOS Y PANTALLAS PEQUEÑAS) */
 @media (max-width: 600px) {
   h1 {
     font-size: 1.5rem;
@@ -122,4 +133,3 @@ footer {
     justify-content: center;
   }
 }
-body { border: 5px solid orange; }
