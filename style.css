@@ -65,7 +65,7 @@ section {
   gap: 15px;
 }
 
-/* BOTONES */
+/* BOTONES BASE */
 .btn {
   display: flex;
   align-items: center;
@@ -81,15 +81,69 @@ section {
   text-decoration: none;
 }
 
-.btn:hover {
-  transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.25);
-}
-
 /* ICONOS */
 .btn img {
   width: 24px;
   height: 24px;
+}
+
+/* BOTONES COLOREADOS */
+.btn.instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.btn.facebook {
+  background: #1877f2;
+}
+
+.btn.ig-draws {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.btn.tiktok {
+  background: #000;
+  color: #fff;
+}
+
+.btn.discord {
+  background: #5865f2;
+}
+
+.btn.roblox {
+  background: #ff0000;
+}
+
+.btn.minecraft {
+  background: #3caa3c;
+}
+
+/* HOVER CON GLOW */
+.btn.instagram:hover {
+  box-shadow: 0 0 15px #bc1888;
+}
+
+.btn.facebook:hover {
+  box-shadow: 0 0 15px #1877f2;
+}
+
+.btn.ig-draws:hover {
+  box-shadow: 0 0 15px #bc1888;
+}
+
+.btn.tiktok:hover {
+  box-shadow: 0 0 15px #fff;
+}
+
+.btn.discord:hover {
+  box-shadow: 0 0 15px #5865f2;
+}
+
+.btn.roblox:hover {
+  box-shadow: 0 0 15px #ff0000;
+}
+
+.btn.minecraft:hover {
+  box-shadow: 0 0 15px #3caa3c;
 }
 
 /* FOOTER */
