@@ -122,3 +122,4 @@ footer {
     justify-content: center;
   }
 }
+body { border: 5px solid orange; }
