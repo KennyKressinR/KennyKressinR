@@ -1,45 +1,146 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi primera página en GitHub</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis redes | Kenny KressinR</title>
   <style>
+    /* 🎨 ESTILO GENERAL */
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(120deg, #ff9a9e, #fad0c4);
-      color: #222;
-      text-align: center;
-      padding: 80px;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
     }
-    h1 {
-      font-size: 2.5rem;
+
+    /* 🖼️ FOTO DE PERFIL */
+    .profile-img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
       margin-bottom: 20px;
     }
-    button {
-      background: #222;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: 0.3s;
+
+    h1 {
+      margin: 0 0 30px 0;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
     }
-    button:hover {
-      background: #444;
+
+    /* 🔘 CONTENEDOR DE BOTONES */
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      max-width: 400px;
+    }
+
+    /* 🎯 BOTONES */
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* 🧩 ICONOS */
+    .btn img {
+      width: 24px;
+      height: 24px;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    /* 💡 MEDIA QUERY (para celulares) */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>Bienvenido 🗣️</h2>
-  <p>Empezemos a navegar!🚢⛴️</p>
-  <button onclick="saludo()">Haz clic aquí</button>
 
-  <script>
-    function saludo() {
-      alert("¡Gracias por visitar mi primera página en GitHub Pages!");
-    }
-  </script>
+  <!-- 🖼️ FOTO -->
+  <img src="https://i.imgur.com/YOURIMAGE.jpg" alt="Foto de perfil" class="profile-img" />
+
+  <!-- 🧭 TÍTULO -->
+  <h1>Mis Redes Sociales</h1>
+
+  <!-- 🔗 BOTONES -->
+  <div class="social-links">
+    <!-- 🟣 Instagram principal -->
+    <a class="btn" href="https://www.instagram.com/kennykressinr?igsh=MWN1c21weTYyeDJqZw==" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" /> Instagram
+    </a>
+
+    <!-- 🔵 Facebook -->
+    <a class="btn" href="https://www.facebook.com/DanielRodriguezKK" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png" alt="Facebook" /> Facebook
+    </a>
+
+    <!-- 🎨 Instagram de dibujos -->
+    <a class="btn" href="https://www.instagram.com/kennykrdraws?igsh=MWJwZHBsYWwwbTIzYg==" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram Draws" /> IG Dibujos
+    </a>
+
+    <!-- 💬 Discord -->
+    <a class="btn" href="#" onclick="alert('Tu usuario de Discord es: kennykressinr')" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" /> Discord
+    </a>
+
+    <!-- 🎮 Roblox -->
+    <a class="btn" href="https://www.roblox.com/share?code=5ba74769028bcd4a87e5bbd17f13531c&type=Profile&source=ProfileShare&stamp=1759663952398" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/5968/5968930.png" alt="Roblox" /> Roblox
+    </a>
+  </div>
+
+  <!-- 🧾 PIE -->
+  <footer>© 2025 Kenny KressinR</footer>
+
+  <!-- 📘 GUÍA PARA FUTURAS EDICIONES -->
+  <!--
+  🔧 Cómo actualizar:
+  1️⃣ Para cambiar la foto → reemplaza el link dentro del <img src="...">
+      Puedes subir tu imagen a Imgur y copiar el enlace directo (termina en .jpg o .png).
+  2️⃣ Para agregar una nueva red → copia uno de los <a class="btn">...</a> y cambia el enlace + icono.
+      Ejemplo:
+        <a class="btn" href="https://tiktok.com/tuusuario" target="_blank">
+          <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok" /> TikTok
+        </a>
+  3️⃣ Guarda los cambios (Commit) y GitHub Pages se actualizará solo 💫
+  -->
 </body>
 </html>
