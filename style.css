@@ -1,72 +1,135 @@
-/* Fondo general */
+/* ===========================================================
+   ESTILOS PRINCIPALES - KENNYKRESSINR
+   ===========================================================
+   💡 Cómo actualizar:
+   1️⃣ Edita este archivo y guarda los cambios.
+   2️⃣ Sube el nuevo style.css al mismo lugar que index.html.
+   3️⃣ En index.html cambia el número de versión: style.css?v=2
+   4️⃣ Recarga la página (Ctrl + F5) para ver el cambio.
+   =========================================================== */
+
+/* ESTILO GENERAL */
 body {
-    background-color: #0e0e0e;
-    color: #ffffff;
-    font-family: "Poppins", sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  padding: 40px 20px 80px 20px;
 }
 
-/* Contenedor central */
-.container {
-    text-align: center;
+/* FOTO DE PERFIL */
+.profile-img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  margin-bottom: 15px;
 }
 
-/* Título principal */
-.title {
-    font-size: 2.5rem;
-    margin-bottom: 0.3rem;
+/* TÍTULOS */
+h1 {
+  margin: 0 0 30px 0;
+  font-size: 1.9rem;
+  letter-spacing: 1px;
+  text-align: center;
 }
 
-/* Subtítulo */
-.subtitle {
-    font-size: 1.1rem;
-    color: #a0a0a0;
-    margin-bottom: 2rem;
+h2 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 5px;
 }
 
-/* Sección de botones */
-.buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
+/* SECCIONES GENERALES */
+section {
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 15px;
 }
 
-/* Estilo de cada botón */
+/* 🔸 SECCIÓN REDES SOCIALES - TONO NARANJOSO COMPLEMENTARIO */
+.redes {
+  background: rgba(255, 140, 0, 0.08);
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
+  border: 1px solid rgba(255, 160, 60, 0.2);
+}
+
+/* 🎮 SECCIÓN DE JUEGOS - AZUL SUAVE */
+.juegos {
+  background: rgba(0, 150, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
+  border: 1px solid rgba(0, 150, 255, 0.2);
+}
+
+/* CONTENEDOR DE BOTONES */
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+
+/* BOTONES GENERALES */
 .btn {
-    text-decoration: none;
-    background-color: #1a1a1a;
-    color: #ffffff;
-    padding: 12px 24px;
-    border-radius: 10px;
-    border: 1px solid #333;
-    transition: all 0.2s ease;
-    width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
 }
 
-/* Efecto al pasar el mouse */
-.btn:hover {
-    background-color: #333333;
-    transform: scale(1.03);
+/* EFECTOS DE HOVER PERSONALIZADOS */
+.redes .btn:hover {
+  background: linear-gradient(135deg, #ff9500, #ff6f00);
+  box-shadow: 0 0 10px rgba(255, 150, 0, 0.6);
+  transform: scale(1.07);
 }
 
-/* --- COMENTARIOS DE EDICIÓN MANUAL --- */
-/*
-    ➤ Para agregar un nuevo botón:
-        Copia una línea de <a> dentro del div.buttons:
-        <a href="TU_URL" target="_blank" class="btn">Nombre del botón</a>
+.juegos .btn:hover {
+  background: linear-gradient(135deg, #2196f3, #00bcd4);
+  box-shadow: 0 0 10px rgba(0, 150, 255, 0.6);
+  transform: scale(1.07);
+}
 
-    ➤ Para cambiar colores:
-        - Fondo: body { background-color: #000000; }
-        - Botones: .btn { background-color: #1a1a1a; border-color: #333; }
-        - Hover: .btn:hover { background-color: #333333; }
+/* ICONOS DE LOS BOTONES */
+.btn img {
+  width: 24px;
+  height: 24px;
+}
 
-    ➤ Para cambiar fuente o tamaño de texto:
-        - Todo el sitio usa "Poppins". Puedes cambiarlo en body { font-family: ... }
-        - Título: cambia font-size en .title
-        - Botones: cambia padding o font-size dentro de .btn
-*/
+/* PIE DE PÁGINA */
+footer {
+  margin-top: 30px;
+  font-size: 0.8rem;
+  color: #aaa;
+  text-align: center;
+}
+
+/* RESPONSIVO (TELÉFONOS Y PANTALLAS PEQUEÑAS) */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+                              }
