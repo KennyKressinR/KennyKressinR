@@ -44,6 +44,17 @@ section {
   margin-bottom: 40px;
   width: 100%;
   max-width: 400px;
+  padding: 20px;
+  border-radius: 15px;
+}
+
+/* FONDOS DISTINTOS PARA SECCIONES */
+.redes {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.juegos {
+  background: rgba(0, 150, 255, 0.1); /* franja azul ligera para juegos */
 }
 
 /* CONTENEDOR DE BOTONES */
