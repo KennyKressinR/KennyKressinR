@@ -1,65 +1,270 @@
-<!DOCTYPE html>  
-<html lang="es">  
-<head>  
-  <meta charset="UTF-8" />  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
-  <title>Mis Redes | KennyKressinR</title>  
-  <link rel="stylesheet" href="style.css">  
-</head>  
-<body>  
-  
-  <!-- FOTO DE PERFIL -->  
-  <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/d6773195641bb1b2fb0f50c3773dd3e09da8bdff/Profile.jpg" alt="Foto de perfil" class="profile-img" />  
-  
-  <!-- TÍTULO PRINCIPAL -->  
-  <h1>Conecta conmigo 🌐</h1>  
-  
-  <!-- SECCIÓN DE REDES -->  
-  <section class="redes">  
-    <h2>Redes Sociales</h2>  
-    <div class="social-links">  
-  
-      <a class="btn" href="https://www.instagram.com/kennykressinr?igsh=MWN1c21weTYyeDJqZw==" target="_blank">  
-        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" /> Instagram  
-      </a>  
-  
-      <a class="btn" href="https://www.facebook.com/DanielRodriguezKK" target="_blank">  
-        <img src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png" alt="Facebook" /> Facebook  
-      </a>  
-  
-      <a class="btn" href="https://www.instagram.com/kennykrdraws?igsh=MWJwZHBsYWwwbTIzYg==" target="_blank">  
-        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram Draws" /> IG Dibujos  
-      </a>  
-  
-      <a class="btn" href="https://www.tiktok.com/@kennykressinr" target="_blank">  
-        <img src="https://cdn-icons-png.flaticon.com/512/3046/3046120.png" alt="TikTok" /> TikTok  
-      </a>  
-  
-      <a class="btn" href="https://discord.gg/4bPRDGZR" target="_blank">  
-        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" /> Discord  
-      </a>  
-  
-    </div>  
-  </section>  
-  
-  <!-- SECCIÓN PERFIL DE JUEGOS -->  
-  <section class="juegos">  
-    <h2>Perfil de Juegos 🎮</h2>  
-    <div class="social-links">  
-  
-      <a class="btn" href="https://www.roblox.com/share?code=5ba74769028bcd4a87e5bbd17f13531c&type=Profile&source=ProfileShare&stamp=1759663952398" target="_blank">  
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png" alt="Roblox" /> Roblox  
-      </a>  
-  
-      <a class="btn" href="https://launch.minecraft.net/profile/KennyKressin" target="_blank">  
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8bqcn8xTGlSw5XjXm8-LKRnIfIa_uW2TCjA&s" alt="Minecraft" /> Minecraft (Bedrock)  
-      </a>  
-  
-    </div>  
-  </section>  
-  
-  <!-- PIE DE PÁGINA -->  
-  <footer>© 2025 KennyKressinR</footer>  
-  
-</body>  
-</html>  
+<!DOCTYPE html><html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis Redes | KennyKressinR</title>
+  <style>
+    :root{
+      --default-gradient: linear-gradient(135deg, #1e1e2f, #2a2a40);
+      --content-max-width: 400px;
+      --page-padding: 40px 20px 80px 20px;
+    }
+    /* Fondo global (contenedor fijo que puede mostrar imagen + degradado) */
+    #bg {
+      position: fixed;
+      inset: 0;
+      background: var(--default-gradient);
+      background-size: cover;
+      background-position: center;
+      z-index: -1;
+      transition: background-image 0.5s ease, opacity 0.5s ease;
+    }/* Contenedor principal (contenido encima del fondo) */
+.content {
+  font-family: "Poppins", sans-serif;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  padding: var(--page-padding);
+  box-sizing: border-box;
+  position: relative; /* para z-index */
+  z-index: 1;
+}
+
+/* Contenido centrado y con separación para que no se superponga nada */
+.card {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-bottom: 24px;
+  padding: 18px;
+  border-radius: 15px;
+  box-sizing: border-box;
+}
+
+/* Mantengo tus estilos originales pero adaptados a las "card" */
+.profile-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); }
+
+/* FOTO DE PERFIL */
+.profile-img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  margin-bottom: 15px;
+}
+
+h1 { margin: 0 0 10px 0; font-size: 1.9rem; letter-spacing: 1px; text-align: center; }
+h2 { font-size: 1.15rem; margin-bottom: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 6px; }
+
+section { margin-bottom: 20px; }
+
+.redes { background: rgba(255, 140, 0, 0.08); box-shadow: 0 0 20px rgba(255, 140, 0, 0.06); border: 1px solid rgba(255, 160, 60, 0.08); }
+.juegos { background: rgba(0, 150, 255, 0.06); box-shadow: 0 0 20px rgba(0, 150, 255, 0.06); border: 1px solid rgba(0, 150, 255, 0.08); }
+
+.social-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+.btn { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.06); border: none; border-radius: 12px; padding: 10px 16px; color: white; font-size: 0.98rem; cursor: pointer; transition: all 0.25s ease; text-decoration: none; }
+.redes .btn:hover { transform: scale(1.04); }
+.juegos .btn:hover { transform: scale(1.04); }
+.btn img { width: 22px; height: 22px; }
+
+footer { margin-top: 18px; font-size: 0.8rem; color: #ddd; text-align: center; }
+
+/* Panel pequeño para cambiar fondo / música (opcional y compacto) */
+.controls { margin-top: 8px; width: 100%; display:flex; flex-direction: column; gap:8px; }
+.controls input[type="text"]{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(0,0,0,0.15); color:white }
+.small-row { display:flex; gap:8px; }
+.small-row button{ flex:1 }
+
+/* Botón reproducir/pausar música */
+.music-toggle { margin-top:6px; }
+
+@media (max-width:600px){ h1{ font-size:1.5rem } .btn{ width:100%; justify-content:center } }
+
+  </style>
+</head>
+<body>
+  <!-- DIV DE FONDO: el script lo actualizará según la URL o dejará el degradado por defecto -->
+  <div id="bg" aria-hidden="true"></div>  <main class="content">
+    <div class="card profile-card" style="text-align:center;">
+      <!-- FOTO DE PERFIL -->
+      <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/d6773195641bb1b2fb0f50c3773dd3e09da8bdff/Profile.jpg" alt="Foto de perfil" class="profile-img" />
+      <h1>Conecta conmigo 🌐</h1>
+    </div><div class="card redes">
+  <section>
+    <h2>Redes Sociales</h2>
+    <div class="social-links">
+      <a class="btn" href="https://www.instagram.com/kennykressinr?igsh=MWN1c21weTYyeDJqZw==" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" /> Instagram
+      </a>
+
+      <a class="btn" href="https://www.facebook.com/DanielRodriguezKK" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png" alt="Facebook" /> Facebook
+      </a>
+
+      <a class="btn" href="https://www.instagram.com/kennykrdraws?igsh=MWJwZHBsYWwwbTIzYg==" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram Draws" /> IG Dibujos
+      </a>
+
+      <a class="btn" href="https://www.tiktok.com/@kennykressinr" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/3046/3046120.png" alt="TikTok" /> TikTok
+      </a>
+
+      <a class="btn" href="https://discord.gg/4bPRDGZR" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" /> Discord
+      </a>
+    </div>
+  </section>
+</div>
+
+<div class="card juegos">
+  <section>
+    <h2>Perfil de Juegos 🎮</h2>
+    <div class="social-links">
+      <a class="btn" href="https://www.roblox.com/share?code=5ba74769028bcd4a87e5bbd17f13531c&type=Profile&source=ProfileShare&stamp=1759663952398" target="_blank">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png" alt="Roblox" /> Roblox
+      </a>
+
+      <a class="btn" href="https://launch.minecraft.net/profile/KennyKressin" target="_blank">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8bqcn8xTGlSw5XjXm8-LKRnIfIa_uW2TCjA&s" alt="Minecraft" /> Minecraft (Bedrock)
+      </a>
+    </div>
+  </section>
+</div>
+
+<!-- Panel opcional: permite actualizar fondo/música desde la propia página (se guarda en localStorage) -->
+<div class="card" style="background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03);">
+  <h2>Personalizar fondo / música</h2>
+  <div class="controls">
+    <input id="bgInput" type="text" placeholder="https://wallpapers-clan.com/wp-content/uploads/2023/10/halloween-spooky-house-jack-o-lantern-wallpaper-scaled.jpg" />
+    <div class="small-row">
+      <button id="setBgBtn" class="btn">Establecer fondo</button>
+      <button id="clearBgBtn" class="btn">Restablecer fondo</button>
+    </div>
+
+    <input id="musicInput" type="text" placeholder="Pegar URL de audio (mp3) para fondo (ej: https://...)" />
+    <div class="small-row">
+      <button id="setMusicBtn" class="btn">Establecer música</button>
+      <button id="clearMusicBtn" class="btn">Quitar música</button>
+    </div>
+
+    <div class="small-row">
+      <button id="playMusicBtn" class="btn">Reproducir / Pausar música</button>
+      <span id="musicStatus" style="align-self:center;color:#ddd;font-size:0.9rem"></span>
+    </div>
+  </div>
+</div>
+
+<footer>© 2025 KennyKressinR</footer>
+
+  </main>  <!-- Elemento audio (oculto). El script gestiona reproducción y controles. --><audio id="bg-audio" loop preload="none"></audio>
+
+  <script>
+    (function(){
+      const bgDiv = document.getElementById('bg');
+      const audio = document.getElementById('bg-audio');
+      const musicStatus = document.getElementById('musicStatus');
+
+      // Leer parámetros de la URL: ?bg=...&music=...
+      const params = new URLSearchParams(location.search);
+      const queryBg = params.get('bg');
+      const queryMusic = params.get('music');
+
+      // Helpers para localStorage
+      const LS_BG = 'site_background_url';
+      const LS_MUSIC = 'site_music_url';
+
+      function setBackground(url){
+        if(!url){
+          // sin url -> restablecer al degradado por defecto
+          bgDiv.style.backgroundImage = '';
+          bgDiv.style.background = getComputedStyle(document.documentElement).getPropertyValue('--default-gradient') || 'linear-gradient(135deg,#1e1e2f,#2a2a40)';
+          localStorage.removeItem(LS_BG);
+          return;
+        }
+        // imagen superpuesta ENCIMA del degradado (con ligera opacidad) --> se usa una capa de gradiente encima de la imagen
+        // así la imagen se "superpone" pero mantiene el color debajo si tiene transparencias.
+        bgDiv.style.background = `linear-gradient(rgba(30,30,47,0.25), rgba(42,42,64,0.25)), url(${url})`;
+        bgDiv.style.backgroundSize = 'cover';
+        bgDiv.style.backgroundPosition = 'center';
+        try{ localStorage.setItem(LS_BG, url); }catch(e){}
+      }
+
+      function setMusic(url){
+        if(!url){
+          audio.pause();
+          audio.removeAttribute('src');
+          musicStatus.textContent = 'Sin música';
+          localStorage.removeItem(LS_MUSIC);
+          return;
+        }
+        audio.src = url;
+        try{ localStorage.setItem(LS_MUSIC, url);}catch(e){}
+        // Intentar reproducir (muchos navegadores bloquean autoplay sin interacción)
+        audio.load();
+        const playPromise = audio.play();
+        if(playPromise !== undefined){
+          playPromise.then(()=>{
+            musicStatus.textContent = 'Reproduciendo';
+          }).catch(()=>{
+            musicStatus.textContent = 'Listo (presiona "Reproducir")';
+          });
+        }
+      }
+
+      // Prioridad: parámetros de la URL -> localStorage -> nada
+      if(queryBg){ setBackground(queryBg); }
+      else { const saved = localStorage.getItem(LS_BG); if(saved) setBackground(saved); }
+
+      if(queryMusic){ setMusic(queryMusic); }
+      else { const savedM = localStorage.getItem(LS_MUSIC); if(savedM) setMusic(savedM); }
+
+      // Controles de la UI (opcional)
+      const bgInput = document.getElementById('bgInput');
+      const setBgBtn = document.getElementById('setBgBtn');
+      const clearBgBtn = document.getElementById('clearBgBtn');
+
+      const musicInput = document.getElementById('musicInput');
+      const setMusicBtn = document.getElementById('setMusicBtn');
+      const clearMusicBtn = document.getElementById('clearMusicBtn');
+      const playMusicBtn = document.getElementById('playMusicBtn');
+
+      setBgBtn.addEventListener('click', ()=>{
+        const url = bgInput.value.trim();
+        if(!url) return alert('Pega la URL de la imagen primero');
+        setBackground(url);
+      });
+      clearBgBtn.addEventListener('click', ()=>{ setBackground(null); bgInput.value = ''; });
+
+      setMusicBtn.addEventListener('click', ()=>{
+        const url = musicInput.value.trim();
+        if(!url) return alert('Pega la URL de audio primero');
+        setMusic(url);
+      });
+      clearMusicBtn.addEventListener('click', ()=>{ setMusic(null); musicInput.value = ''; });
+
+      playMusicBtn.addEventListener('click', ()=>{
+        if(!audio.src){ musicStatus.textContent = 'No hay pista establecida'; return; }
+        if(audio.paused){ audio.play().then(()=> musicStatus.textContent='Reproduciendo').catch(()=> musicStatus.textContent='Reproducción bloqueada (presiona en la página)'); }
+        else{ audio.pause(); musicStatus.textContent='Pausado'; }
+      });
+
+      // Mostrar estado inicial de música
+      audio.addEventListener('ended', ()=> musicStatus.textContent = 'Pausado');
+      audio.addEventListener('pause', ()=> { if(!audio.src) musicStatus.textContent='Sin música'; else musicStatus.textContent='Pausado'; });
+      audio.addEventListener('play', ()=> musicStatus.textContent='Reproduciendo');
+
+      // Soporte extra: si se pasa ?clearbg=1 o ?clearmusic=1 en la URL
+      if(params.get('clearbg') === '1'){ setBackground(null); }
+      if(params.get('clearmusic') === '1'){ setMusic(null); }
+
+      // Para desarrolladores: Console helpful message
+      console.log('Fondo dinámico listo. Usa ?bg=URL para establecer fondo o el panel en la página. Música con ?music=URL.');
+    })();
+  </script></body>
+</html>
