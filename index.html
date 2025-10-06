@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,53 +16,141 @@
       min-height: 100vh;
       margin: 0;
       padding: 40px 20px 80px 20px;
-      background: linear-gradient(135deg, #1e1e2f, #2a2a40); /* fondo por defecto */
+      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
       background-size: cover;
       background-position: center;
-    }/* FOTO DE PERFIL */
-.profile-img {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #fff;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-  margin-bottom: 15px;
-}
+      transition: background 0.5s ease;
+    }
 
-h1 { margin: 0 0 30px 0; font-size: 1.9rem; text-align: center; }
-h2 { font-size: 1.3rem; margin-bottom: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
+    /* --- Tarjetas principales --- */
+    section {
+      margin-bottom: 40px;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      border-radius: 15px;
+      transition: all 0.4s ease;
+      /* Ajusta aquí el blur de las tarjetas (mín 2px - máx 15px) */
+      backdrop-filter: blur(6px);
+    }
 
-section { margin-bottom: 40px; width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; }
+    .redes {
+      background: rgba(255, 140, 0, 0.08);
+      box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
+      border: 1px solid rgba(255, 160, 60, 0.2);
+    }
 
-/* 🔸 Fondos difuminados originales */
-.redes {
-  background: rgba(255, 140, 0, 0.08);
-  box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
-  border: 1px solid rgba(255, 160, 60, 0.2);
-}
-.juegos {
-  background: rgba(0, 150, 255, 0.1);
-  box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
-  border: 1px solid rgba(0, 150, 255, 0.2);
-}
+    .juegos {
+      background: rgba(0, 150, 255, 0.1);
+      box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
+      border: 1px solid rgba(0, 150, 255, 0.2);
+    }
 
-.social-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-.btn { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.1); border: none; border-radius: 12px; padding: 10px 20px; color: white; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
-.redes .btn:hover { background: linear-gradient(135deg, #ff9500, #ff6f00); transform: scale(1.07); }
-.juegos .btn:hover { background: linear-gradient(135deg, #2196f3, #00bcd4); transform: scale(1.07); }
-.btn img { width: 24px; height: 24px; }
+    .acerca {
+      background: rgba(166, 108, 255, 0.2); /* lila translúcido */
+      box-shadow: 0 0 20px rgba(166, 108, 255, 0.15);
+      border: 1px solid rgba(200, 160, 255, 0.3);
+    }
 
-footer { margin-top: 30px; font-size: 0.8rem; color: #aaa; text-align: center; }
+    /* --- Contenido interno de Acerca de mí --- */
+    .acerca-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9); /* fondo negro translúcido */
+      backdrop-filter: blur(5px); /* ajuste del blur (2px min - 15px max) */
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.5s ease;
+    }
 
-@media (max-width: 600px) {
-  h1 { font-size: 1.5rem; }
-  .btn { width: 100%; justify-content: center; }
-}
+    .acerca-panel.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
 
+    .acerca-panel h2 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .acerca-panel p {
+      font-size: 1rem;
+      margin: 5px 0;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .volver-btn {
+      margin-top: 25px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .volver-btn:hover {
+      background: rgba(255,255,255,0.25);
+      transform: scale(1.05);
+    }
+
+    /* --- Foto de perfil --- */
+    .profile-img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      margin-bottom: 15px;
+    }
+
+    /* --- Titulos --- */
+    h1 { margin: 0 0 30px 0; font-size: 1.9rem; text-align: center; }
+    h2 { font-size: 1.3rem; margin-bottom: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
+
+    /* --- Botones --- */
+    .social-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+    .btn { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.1); border: none; border-radius: 12px; padding: 10px 20px; color: white; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
+    .redes .btn:hover { background: linear-gradient(135deg, #ff9500, #ff6f00); transform: scale(1.07); }
+    .juegos .btn:hover { background: linear-gradient(135deg, #2196f3, #00bcd4); transform: scale(1.07); }
+    .acerca .btn:hover { background: linear-gradient(135deg, #b366ff, #7a00ff); transform: scale(1.07); }
+    .btn img { width: 24px; height: 24px; }
+
+    footer { margin-top: 30px; font-size: 0.8rem; color: #aaa; text-align: center; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5rem; }
+      .btn { width: 100%; justify-content: center; }
+    }
   </style>
 </head>
-<body>  <!-- FOTO DE PERFIL -->  <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/d6773195641bb1b2fb0f50c3773dd3e09da8bdff/Profile.jpg" alt="Foto de perfil" class="profile-img" />  <!-- TÍTULO PRINCIPAL -->  <h1>Conecta conmigo 🌐</h1>  <!-- SECCIÓN DE REDES -->  <section class="redes">
+<body>
+
+  <!-- FOTO DE PERFIL -->
+  <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/d6773195641bb1b2fb0f50c3773dd3e09da8bdff/Profile.jpg" alt="Foto de perfil" class="profile-img" />
+
+  <!-- TÍTULO PRINCIPAL -->
+  <h1>Conecta conmigo 🌐</h1>
+
+  <!-- SECCIÓN DE REDES -->
+  <section class="redes">
     <h2>Redes Sociales</h2>
     <div class="social-links">
       <a class="btn" href="https://www.instagram.com/kennykressinr?igsh=MWN1c21weTYyeDJqZw==" target="_blank">
@@ -80,38 +169,73 @@ footer { margin-top: 30px; font-size: 0.8rem; color: #aaa; text-align: center; }
         <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" /> Discord
       </a>
     </div>
-  </section>  <!-- SECCIÓN PERFIL DE JUEGOS -->  <section class="juegos">
+  </section>
+
+  <!-- SECCIÓN PERFIL DE JUEGOS -->
+  <section class="juegos">
     <h2>Perfil de Juegos 🎮</h2>
     <div class="social-links">
       <a class="btn" href="https://www.roblox.com/share?code=5ba74769028bcd4a87e5bbd17f13531c&type=Profile&source=ProfileShare&stamp=1759663952398" target="_blank">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png" alt="Roblox" /> Roblox
       </a>
       <a class="btn" href="https://launch.minecraft.net/profile/KennyKressin" target="_blank">
-        <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/MC.png" alt="Minecraft" /> Minecraft (Bedrock)
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8bqcn8xTGlSw5XjXm8-LKRnIfIa_uW2TCjA&s" alt="Minecraft" /> Minecraft (Bedrock)
       </a>
       <a class="btn" href="https://link.brawlstars.com/invite/friend/es?tag=PYL9UQ880&token=3gzdex7d" target="_blank">
         <img src="https://media.vandal.net/m/69040/brawl-stars-201812201015749_1.jpg" alt="Brawl Stars" /> Brawl Stars
       </a>
       <a class="btn" href="https://ffshare.garena.com/?region=SAC&lang=es" target="_blank">
-        <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/FF.png" alt="Free Fire" /> Free Fire
+        <img src="https://static.wikia.nocookie.net/garena-free-fire/images/5/51/FF.png/revision/latest?cb=20231001103215&path-prefix=es" alt="Free Fire" /> Free Fire
       </a>
     </div>
-  </section>  <!-- PIE DE PÁGINA -->  <footer>© 2025 KennyKressinR</footer>  <script>
+  </section>
+
+  <!-- SECCIÓN ACERCA DE MÍ -->
+  <section class="acerca">
+    <h2>Acerca de mí 😸💭</h2>
+    <div class="social-links">
+      <button class="btn" id="verAcerca">Ver más</button>
+    </div>
+  </section>
+
+  <!-- PANEL INTERNO ACERCA DE MÍ -->
+  <div class="acerca-panel" id="acercaPanel">
+    <h2>Acerca de mí 😸💭</h2>
+    <p><strong>Gustos:</strong></p>
+    <p>Me encantan los videojuegos, sobre todo cuando es jugando con amigos</p>
+    <p>Me encanta la naturaleza</p>
+    <p>Me gustan los gatos tanto como los perros</p>
+    <p><strong>Favoritos:</strong></p>
+    <p>Color azul y lila</p>
+    <p>En comida los ravioles y ñoquis</p>
+    <p>Las flores de color blancas</p>
+    <p><strong>Disgustos:</strong></p>
+    <p>Jajaja no les diré mis debilidades para que no lo usen en mi contra XD</p>
+    <button class="volver-btn" id="volverAcerca">⬅ Volver</button>
+  </div>
+
+  <!-- PIE DE PÁGINA -->
+  <footer>© 2025 KennyKressinR</footer>
+
+  <script>
     /* ---------------------- FONDO DE PÁGINA ---------------------- */
     const fondoURL = 'https://wallpapers-clan.com/wp-content/uploads/2023/10/halloween-spooky-house-jack-o-lantern-wallpaper-scaled.jpg';
     document.body.style.background = `linear-gradient(135deg, rgba(30,30,47,0.3), rgba(42,42,64,0.3)), url(${fondoURL})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
 
-    /* ---------------------- MÚSICA DE FONDO ---------------------- */
-    const musicaYT = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&loop=1&playlist=dQw4w9WgXcQ&controls=0&mute=0';
-    const iframe = document.createElement('iframe');
-    iframe.src = musicaYT;
-    iframe.width = '0';
-    iframe.height = '0';
-    iframe.style.border = '0';
-    iframe.allow = 'autoplay';
-    iframe.allowFullscreen = false;
-    document.body.appendChild(iframe);
-  </script></body>
+    /* ---------------------- PANEL ACERCA DE MÍ ---------------------- */
+    const btnAcerca = document.getElementById('verAcerca');
+    const panelAcerca = document.getElementById('acercaPanel');
+    const btnVolver = document.getElementById('volverAcerca');
+
+    btnAcerca.addEventListener('click', () => {
+      panelAcerca.classList.add('active');
+    });
+
+    btnVolver.addEventListener('click', () => {
+      panelAcerca.classList.remove('active');
+    });
+  </script>
+</body>
 </html>
