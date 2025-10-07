@@ -333,8 +333,17 @@ local tabPlayer   = CreateTab("Player")
 local tabVisuals  = CreateTab("Visuals")
 local tabMisc     = CreateTab("Misc")
 
-for _, t in ipairs(Tabs) do t.Frame.Visible = false end
-Tabs[1].Frame.Visible = tfunction CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
+-- ❌ BORRA ESTA LINEA INCORRECTA:
+-- for _, t in ipairs(Tabs) do t.Frame.Visible = false end Tabs[1].Frame.Visible = tfunction CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
+
+-- ✅ Y PON ESTO EN SU LUGAR:
+for _, t in ipairs(Tabs) do 
+    t.Frame.Visible = false 
+end
+
+Tabs[1].Frame.Visible = true
+
+function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
     local Container = Instance.new("Frame")
     Container.Size = UDim2.new(0, 300, 0, 40)
     Container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
