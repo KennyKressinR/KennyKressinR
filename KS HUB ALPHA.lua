@@ -437,13 +437,22 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- -- =========================
--- SALTO (SLIDER 50 - 60)
+-- =========================
+-- =========================
+-- BRING ITEMS (TOOL DETECTOR + CANTIDAD + ORDEN POR DISTANCIA)
+-- =========================
+local bringLabel = Instance.new("TextLabel")
+bringLabel.Size = UDim2.new(1, 0, 0, 24)
+bringLabel.BackgroundTransparency = 1
+bringLabel.Text = "Bring Items (nombre parcial + cantidad)"
+bringLabel.Font = Enum.Font.Gotham
+bringLabel.TextSize = -- =========================
+-- SALTO (SLIDER 20 - 60)
 -- =========================
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, 0, 0, 24)
 jumpLabel.BackgroundTransparency = 1
-jumpLabel.Text = "Salto: 50"
+jumpLabel.Text = "Salto: 20"
 jumpLabel.Font = Enum.Font.Gotham
 jumpLabel.TextSize = 16
 jumpLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -452,6 +461,7 @@ jumpLabel.Parent = mainScroll
 local jumpBar = Instance.new("Frame")
 jumpBar.Size = UDim2.new(1, 0, 0, 10)
 jumpBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+jumpBar.BackgroundTransparency = 0.1
 jumpBar.BorderSizePixel = 0
 jumpBar.Parent = mainScroll
 local jumpCorner = Instance.new("UICorner")
@@ -461,6 +471,7 @@ jumpCorner.Parent = jumpBar
 local jumpFill = Instance.new("Frame")
 jumpFill.Size = UDim2.new(0, 0, 1, 0)
 jumpFill.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+jumpFill.BackgroundTransparency = 0.1
 jumpFill.BorderSizePixel = 0
 jumpFill.Parent = jumpBar
 local jumpFillCorner = Instance.new("UICorner")
@@ -471,6 +482,7 @@ local jumpKnob = Instance.new("Frame")
 jumpKnob.Size = UDim2.new(0, 16, 0, 16)
 jumpKnob.Position = UDim2.new(0, -8, 0.5, -8)
 jumpKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+jumpKnob.BackgroundTransparency = 0.1
 jumpKnob.BorderSizePixel = 0
 jumpKnob.Parent = jumpBar
 local jumpKnobCorner = Instance.new("UICorner")
@@ -482,11 +494,14 @@ local function setJumpFromX(x)
     local barAbsPos = jumpBar.AbsolutePosition.X
     local barAbsSize = jumpBar.AbsoluteSize.X
     local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
-    local value = math.floor(50 + (60 - 50) * rel) -- rango 50 a 60
+    local value = math.floor(20 + (60 - 20) * rel) -- rango 20 a 60
     jumpFill.Size = UDim2.new(rel, 0, 1, 0)
     jumpKnob.Position = UDim2.new(rel, -8, 0.5, -8)
     jumpLabel.Text = "Salto: " .. tostring(value)
-    setJumpMultiplier(value / 50) -- relativo al base 50
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.JumpPower = value
+    end
 end
 
 jumpBar.InputBegan:Connect(function(input)
@@ -504,27 +519,19 @@ UserInputService.InputChanged:Connect(function(input)
     if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         setJumpFromX(input.Position.X)
     end
-end)
-
--- =========================
--- BRING ITEMS (BUSCAR Y TRAER OBJETO)
--- =========================
-local bringLabel = Instance.new("TextLabel")
-bringLabel.Size = UDim2.new(1, 0, 0, 24)
-bringLabel.BackgroundTransparency = 1
-bringLabel.Text = "Bring Items (escribe nombre parcial)"
-bringLabel.Font = Enum.Font.Gotham
-bringLabel.TextSize = 16
+end)16
 bringLabel.TextColor3 = Color3.new(1, 1, 1)
 bringLabel.Parent = mainScroll
 
+-- Caja de texto para nombre parcial
 local bringBox = Instance.new("TextBox")
 bringBox.Size = UDim2.new(1, 0, 0, 30)
-bringBox.PlaceholderText = "Ej: Gallet"
+bringBox.PlaceholderText = "Ej: Sword"
 bringBox.Font = Enum.Font.Gotham
 bringBox.TextSize = 16
 bringBox.TextColor3 = Color3.new(1, 1, 1)
 bringBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+bringBox.BackgroundTransparency = 0.1 -- 10% más transparente
 bringBox.BorderSizePixel = 0
 bringBox.ClearTextOnFocus = false
 bringBox.Parent = mainScroll
@@ -532,38 +539,86 @@ local bringCorner = Instance.new("UICorner")
 bringCorner.CornerRadius = UDim.new(0, 6)
 bringCorner.Parent = bringBox
 
-createButton(mainScroll, "Bring", function()
-    local query = bringBox.Text
+-- Caja de texto para cantidad
+local amountBox = Instance.new("TextBox")
+amountBox.Size = UDim2.new(1, 0, 0, 30)
+amountBox.PlaceholderText = "Cantidad (ej: 3, vacío = 1)"
+amountBox.Font = Enum.Font.Gotham
+amountBox.TextSize = 16
+amountBox.TextColor3 = Color3.new(1, 1, 1)
+amountBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+amountBox.BackgroundTransparency = 0.1
+amountBox.BorderSizePixel = 0
+amountBox.ClearTextOnFocus = false
+amountBox.Parent = mainScroll
+local amountCorner = Instance.new("UICorner")
+amountCorner.CornerRadius = UDim.new(0, 6)
+amountCorner.Parent = amountBox
+
+-- Botón Bring
+local bringBtn = Instance.new("TextButton")
+bringBtn.Size = UDim2.new(1, 0, 0, 36)
+bringBtn.Text = "Bring"
+bringBtn.Font = Enum.Font.Gotham
+bringBtn.TextSize = 16
+bringBtn.TextColor3 = Color3.new(1, 1, 1)
+bringBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+bringBtn.BackgroundTransparency = 0.1 -- 10% más transparente
+bringBtn.BorderSizePixel = 0
+bringBtn.Parent = mainScroll
+local bringBtnCorner = Instance.new("UICorner")
+bringBtnCorner.CornerRadius = UDim.new(0, 6)
+bringBtnCorner.Parent = bringBtn
+
+bringBtn.MouseButton1Click:Connect(function()
+    local query = bringBox.Text:lower()
+    local amount = tonumber(amountBox.Text) or 1
     if query == "" then
         warn("[KS HUB] No escribiste nada en Bring Items")
         return
     end
-    query = query:lower()
     local root = getRoot(LocalPlayer)
     if not root then
-        warn("[KS HUB] No se encontró HumanoidRootPart para traer objetos")
+        warn("[KS HUB] No se encontró HumanoidRootPart")
         return
     end
 
-    local found = false
+    -- Buscar Tools en workspace que coincidan con el texto
+    local candidates = {}
     for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") or obj:IsA("Model") then
+        if obj:IsA("Tool") then
             if string.find(obj.Name:lower(), query) then
-                found = true
-                local targetCFrame = root.CFrame + Vector3.new(0, 5, 0)
-                if obj:IsA("Model") and obj.PrimaryPart then
-                    obj:SetPrimaryPartCFrame(targetCFrame)
-                elseif obj:IsA("BasePart") then
-                    obj.CFrame = targetCFrame
-                end
-                print("[KS HUB] Bring Items: Traído objeto ->", obj.Name)
-                break
+                local dist = (obj.Handle and (obj.Handle.Position - root.Position).Magnitude) or 9999
+                table.insert(candidates, {tool = obj, dist = dist})
             end
         end
     end
-    if not found then
-        warn("[KS HUB] Bring Items: No se encontró ningún objeto con '" .. query .. "'")
+
+    -- Ordenar por distancia
+    table.sort(candidates, function(a, b) return a.dist < b.dist end)
+
+    -- Traer los primeros N
+    local count = 0
+    for _, data in ipairs(candidates) do
+        if count >= amount then break end
+        local tool = data.tool
+        if tool and tool:IsDescendantOf(workspace) then
+            local targetCFrame = root.CFrame + Vector3.new(0, 5 + count * 2, 0)
+            if tool:FindFirstChild("Handle") then
+                tool.Handle.CFrame = targetCFrame
+            end
+            print("[KS HUB] Bring Items: Traído Tool ->", tool.Name)
+            count = count + 1
+        end
     end
+
+    if count == 0 then
+        warn("[KS HUB] No se encontró ningún Tool con '" .. query .. "'")
+    end
+
+    -- Limpiar inputs
+    bringBox.Text = ""
+    amountBox.Text = ""
 end)
 
 --========================================================
