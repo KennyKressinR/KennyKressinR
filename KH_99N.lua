@@ -145,38 +145,6 @@ Tabs[1].Frame.Visible = true
 print("[KS HUB] Tabs creados correctamente.")
 
 --========================================================--
--- SAFE ZONE (Main)
---========================================================--
--- (Código de Safe Zone con checkbox y prints)
-
---========================================================--
--- TELEPORTS (Game TP)
---========================================================--
--- (Código de Teleports con dropdown y prints)
-
---========================================================--
--- ITEM TP/ESP
---========================================================--
--- (Código de Bring/Drop/AutoDrop por categorías con prints)
--- (Código de Teleport to Item con prints detallados)
--- (Código de Teleport Item to You (Bulk) con prints detallados)
-
---========================================================--
--- ESP (Visuals)
---========================================================--
--- (Código de ESP con toggles por categoría y prints)
-
---========================================================--
--- PLAYER UTILS
---========================================================--
--- (FullBright, WalkSpeed, JumpPower con sliders corregidos y prints)
-
---========================================================--
--- FINAL
---========================================================--
-print("[KS HUB] Inicialización completa. UI interna lista.")
-
---========================================================--
 -- SAFE ZONE SETUP (Main)
 --========================================================--
 local safezoneBaseplates = {}
