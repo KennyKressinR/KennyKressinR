@@ -440,6 +440,7 @@ bringCorner.Parent = bringBox
 local amountBox = Instance.new("TextBox")
 amountBox.Size = UDim2.new(1, 0, 0, 30)
 amountBox.PlaceholderText = "Cantidad (ej: 3, vacío = 1)"
+amountBox.Text = "" 
 amountBox.Font = Enum.Font.Gotham
 amountBox.TextSize = 16
 amountBox.TextColor3 = Color3.new(1, 1, 1)
