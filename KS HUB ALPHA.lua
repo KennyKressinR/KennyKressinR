@@ -341,17 +341,143 @@ for i = 1, 4 do
     loadBtn.MouseButton1Click:Connect(function() loadSlot(i) end)
 end
 
--- Velocidad
-createButton(mainScroll, "Velocidad: 30", function() setSpeed(30) end)
-createButton(mainScroll, "Velocidad: 75", function() setSpeed(75) end)
-createButton(mainScroll, "Velocidad: 150", function() setSpeed(150) end)
+-- =========================
+-- VELOCIDAD (SLIDER 16 - 150)
+-- =========================
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, 0, 0, 24)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Velocidad: 16"
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.TextSize = 16
+speedLabel.TextColor3 = Color3.new(1, 1, 1)
+speedLabel.Parent = mainScroll
 
--- Salto (impulso +30%, +75%, +150%)
-createButton(mainScroll, "Salto +30%", function() setJumpMultiplier(1.3) end)
-createButton(mainScroll, "Salto +75%", function() setJumpMultiplier(1.75) end)
-createButton(mainScroll, "Salto +150%", function() setJumpMultiplier(2.5) end)
+local speedBar = Instance.new("Frame")
+speedBar.Size = UDim2.new(1, 0, 0, 10)
+speedBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+speedBar.BorderSizePixel = 0
+speedBar.Parent = mainScroll
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0, 6)
+speedCorner.Parent = speedBar
 
-print("[KS HUB] Main listo")
+local speedFill = Instance.new("Frame")
+speedFill.Size = UDim2.new(0, 0, 1, 0)
+speedFill.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+speedFill.BorderSizePixel = 0
+speedFill.Parent = speedBar
+local speedFillCorner = Instance.new("UICorner")
+speedFillCorner.CornerRadius = UDim.new(0, 6)
+speedFillCorner.Parent = speedFill
+
+local speedKnob = Instance.new("Frame")
+speedKnob.Size = UDim2.new(0, 16, 0, 16)
+speedKnob.Position = UDim2.new(0, -8, 0.5, -8)
+speedKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+speedKnob.BorderSizePixel = 0
+speedKnob.Parent = speedBar
+local speedKnobCorner = Instance.new("UICorner")
+speedKnobCorner.CornerRadius = UDim.new(1, 0)
+speedKnobCorner.Parent = speedKnob
+
+local draggingSpeed = false
+local function setSpeedFromX(x)
+    local barAbsPos = speedBar.AbsolutePosition.X
+    local barAbsSize = speedBar.AbsoluteSize.X
+    local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
+    local value = math.floor(16 + (150 - 16) * rel)
+    speedFill.Size = UDim2.new(rel, 0, 1, 0)
+    speedKnob.Position = UDim2.new(rel, -8, 0.5, -8)
+    speedLabel.Text = "Velocidad: " .. tostring(value)
+    setSpeed(value)
+end
+
+speedBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingSpeed = true
+        setSpeedFromX(input.Position.X)
+    end
+end)
+speedBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingSpeed = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if draggingSpeed and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        setSpeedFromX(input.Position.X)
+    end
+end)
+
+-- =========================
+-- SALTO (SLIDER 50 - 125)
+-- =========================
+local jumpLabel = Instance.new("TextLabel")
+jumpLabel.Size = UDim2.new(1, 0, 0, 24)
+jumpLabel.BackgroundTransparency = 1
+jumpLabel.Text = "Salto: 50"
+jumpLabel.Font = Enum.Font.Gotham
+jumpLabel.TextSize = 16
+jumpLabel.TextColor3 = Color3.new(1, 1, 1)
+jumpLabel.Parent = mainScroll
+
+local jumpBar = Instance.new("Frame")
+jumpBar.Size = UDim2.new(1, 0, 0, 10)
+jumpBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+jumpBar.BorderSizePixel = 0
+jumpBar.Parent = mainScroll
+local jumpCorner = Instance.new("UICorner")
+jumpCorner.CornerRadius = UDim.new(0, 6)
+jumpCorner.Parent = jumpBar
+
+local jumpFill = Instance.new("Frame")
+jumpFill.Size = UDim2.new(0, 0, 1, 0)
+jumpFill.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+jumpFill.BorderSizePixel = 0
+jumpFill.Parent = jumpBar
+local jumpFillCorner = Instance.new("UICorner")
+jumpFillCorner.CornerRadius = UDim.new(0, 6)
+jumpFillCorner.Parent = jumpFill
+
+local jumpKnob = Instance.new("Frame")
+jumpKnob.Size = UDim2.new(0, 16, 0, 16)
+jumpKnob.Position = UDim2.new(0, -8, 0.5, -8)
+jumpKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+jumpKnob.BorderSizePixel = 0
+jumpKnob.Parent = jumpBar
+local jumpKnobCorner = Instance.new("UICorner")
+jumpKnobCorner.CornerRadius = UDim.new(1, 0)
+jumpKnobCorner.Parent = jumpKnob
+
+local draggingJump = false
+local function setJumpFromX(x)
+    local barAbsPos = jumpBar.AbsolutePosition.X
+    local barAbsSize = jumpBar.AbsoluteSize.X
+    local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
+    local value = math.floor(50 + (125 - 50) * rel)
+    jumpFill.Size = UDim2.new(rel, 0, 1, 0)
+    jumpKnob.Position = UDim2.new(rel, -8, 0.5, -8)
+    jumpLabel.Text = "Salto: " .. tostring(value)
+    setJumpMultiplier(value / 50) -- usamos el valor relativo al base 50
+end
+
+jumpBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingJump = true
+        setJumpFromX(input.Position.X)
+    end
+end)
+jumpBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingJump = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        setJumpFromX(input.Position.X)
+    end
+end)
 
 --========================================================
 -- [ SECCIÓN 5 ] TELEPORT MEJORADO (BUSCADOR + SCROLL + REFRESH)
