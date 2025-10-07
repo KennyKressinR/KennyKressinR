@@ -267,7 +267,7 @@ end)
 createButton(Tabs["Teleport"], "Teleport al Mouse", teleportToMouse)
 
 -- Caja de búsqueda
-local searchBox = Instance.new("TextBox")
+local searchBox = Instance.new("")
 searchBox.Size = UDim2.new(1, 0, 0, 30)
 searchBox.PlaceholderText = "Buscar jugador..."
 searchBox.Font = Enum.Font.Gotham
