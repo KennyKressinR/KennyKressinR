@@ -214,7 +214,7 @@ CountLabel.Name = "CountLabel"
 CountLabel.Size = UDim2.new(0, 200, 0, 36)
 CountLabel.Position = UDim2.new(1, -210, 0, 0)
 CountLabel.BackgroundTransparency = 1
-CountLabel.Text
+CountLabel.Text = "" 
 --========================================================--
 -- PARTE 3: UTILIDADES (ESCANEO, FILTROS, ORDEN)
 --========================================================--
