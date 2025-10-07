@@ -18,6 +18,7 @@ local Mouse = LocalPlayer:GetMouse()
 print("[KS HUB] Servicios cargados")
 
 --========================================================
+--========================================================
 -- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + BOTONES CELESTES)
 --========================================================
 local ScreenGui = Instance.new("ScreenGui")
@@ -53,6 +54,32 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 print("[KS HUB] MainFrame creado")
+
+--========================================================
+-- [ TRANSPARENCIA HUB 25% ] Aplicar a contenedores y botones
+--========================================================
+local function applyHubTransparency(alpha)
+    -- Marco principal
+    MainFrame.BackgroundTransparency = alpha
+
+    -- Botón flotante
+    ToggleButton.BackgroundTransparency = alpha
+
+    -- Pestañas (botones en TabContainer) -> se aplicará más adelante cuando existan
+    if TabContainer then
+        for _, child in ipairs(TabContainer:GetChildren()) do
+            if child:IsA("TextButton") then
+                child.BackgroundTransparency = alpha
+            end
+        end
+    end
+
+    print(string.format("[KS HUB] Transparencia aplicada: %.2f. MainFrame.Visible=%s", alpha, tostring(MainFrame.Visible)))
+end
+
+-- Aplica 25% (0.25) al iniciar
+applyHubTransparency(0.25)
+
 
 -- Título
 local Title = Instance.new("TextLabel")
