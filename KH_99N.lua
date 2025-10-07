@@ -145,6 +145,112 @@ Tabs[1].Frame.Visible = true
 print("[KS HUB] Tabs creados correctamente.")
 
 --========================================================--
+-- KILL AURA (Main Tab)
+--========================================================--
+
+local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local killAuraToggle = false
+local radius = 200
+
+-- Herramientas soportadas y sus damageIDs
+local toolsDamageIDs = {
+    ["Old Axe"] = "1_8982038982",
+    ["Good Axe"] = "112_8982038982",
+    ["Strong Axe"] = "116_8982038982",
+    ["Chainsaw"] = "647_8992824875",
+    ["Spear"] = "196_8999010016"
+}
+
+-- Buscar cualquier herramienta soportada en inventario
+local function getAnyToolWithDamageID()
+    for toolName, damageID in pairs(toolsDamageIDs) do
+        local tool = LocalPlayer:FindFirstChild("Inventory") and LocalPlayer.Inventory:FindFirstChild(toolName)
+        if tool then
+            return tool, damageID
+        end
+    end
+    return nil, nil
+end
+
+-- Equipar herramienta
+local function equipTool(tool)
+    if tool then
+        RemoteEvents.EquipItemHandle:FireServer("FireAllClients", tool)
+        print("[KS HUB] Equipando herramienta:", tool.Name)
+    end
+end
+
+-- Desequipar herramienta
+local function unequipTool(tool)
+    if tool then
+        RemoteEvents.UnequipItemHandle:FireServer("FireAllClients", tool)
+        print("[KS HUB] Desequipando herramienta:", tool.Name)
+    end
+end
+
+-- Loop principal de Kill Aura
+local function killAuraLoop()
+    while killAuraToggle do
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local tool, damageID = getAnyToolWithDamageID()
+            if tool and damageID then
+                equipTool(tool)
+                for _, mob in ipairs(Workspace.Characters:GetChildren()) do
+                    if mob:IsA("Model") and mob ~= character then
+                        local part = mob:FindFirstChildWhichIsA("BasePart")
+                        if part and (part.Position - hrp.Position).Magnitude <= radius then
+                            local ok, err = pcall(function()
+                                RemoteEvents.ToolDamageObject:InvokeServer(
+                                    mob,
+                                    tool,
+                                    damageID,
+                                    CFrame.new(part.Position)
+                                )
+                            end)
+                            if ok then
+                                print("[KS HUB] Atacando mob:", mob.Name, "con", tool.Name)
+                            else
+                                warn("[KS HUB] Error atacando mob:", mob.Name, err)
+                            end
+                        end
+                    end
+                end
+                task.wait(0.1)
+            else
+                warn("[KS HUB] No se encontró herramienta soportada en inventario.")
+                task.wait(1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end
+
+--========================================================--
+-- UI (Main Tab)
+--========================================================--
+CreateSection(tabMain, "Combat")
+
+CreateCheckbox(tabMain, "Kill Aura", function(state)
+    killAuraToggle = state
+    if state then
+        print("[KS HUB] Kill Aura activado.")
+        task.spawn(killAuraLoop)
+    else
+        print("[KS HUB] Kill Aura desactivado.")
+        local tool, _ = getAnyToolWithDamageID()
+        unequipTool(tool)
+    end
+end)
+
+CreateSlider(tabMain, "Kill Aura Radius", 20, 500, 200, function(value)
+    radius = math.clamp(value, 20, 500)
+    print("[KS HUB] Kill Aura radius ajustado a:", radius)
+end)
+
+--========================================================--
 -- SAFE ZONE SETUP (Main)
 --========================================================--
 local safezoneBaseplates = {}
