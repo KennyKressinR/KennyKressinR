@@ -1,6 +1,6 @@
 --========================================================--
 -- KS HUB - 99 Noches
--- Main.lua (versión final con debug)
+-- Main.lua (versión Orion UI)
 --========================================================--
 
 print("[KS HUB] Iniciando...")
@@ -12,56 +12,37 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
--- === UI LIBRARY ===
-local success, lib = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/iiivyne/robloxlua/refs/heads/main/lib.lua"))()
+-- === ORION UI ===
+local success, OrionLib = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 end)
 
-if not success or not lib then
-    warn("[KS HUB] Error cargando librería UI:", lib)
+if not success or not OrionLib then
+    warn("[KS HUB] Error cargando Orion UI:", OrionLib)
     return
 else
-    print("[KS HUB] Librería UI cargada correctamente.")
+    print("[KS HUB] Orion UI cargada correctamente.")
 end
 
--- === INTERFACE ===
-local int
-local ok, err = pcall(function()
-    int = lib:CreateInterface(
-        "99 Nights in the Forest",
-        "script made by lohjc",
-        "https://discord.gg/ZNTHTWx7KE",
-        "bottom left",
-        "royal"
-    )
-end)
-
-if not ok or not int then
-    warn("[KS HUB] Error creando interfaz:", err)
-    return
-else
-    print("[KS HUB] Interfaz creada correctamente.")
-end
+-- Crear ventana principal
+local Window = OrionLib:MakeWindow({
+    Name = "KS HUB - 99 Noches",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "KSHub"
+})
 
 -- === TABS ===
-local main, autofarmss, itemtp, gametp, charactertp, plr, vis, misc
-local ok2, err2 = pcall(function()
-    main        = int:CreateTab("Main","main functions/script utilities","default",true)
-    autofarmss  = int:CreateTab("Auto","auto farm utilities (OP)","op")
-    itemtp      = int:CreateTab("Item TP/ESP","bring items to you","item")
-    gametp      = int:CreateTab("Game TP","goto in-game locations","info")
-    charactertp = int:CreateTab("Mob TP","bring mobs to you","npc")
-    plr         = int:CreateTab("Player","modify your localplayer","player")
-    vis         = int:CreateTab("Visuals","modify your visuals","visuals")
-    misc        = int:CreateTab("Misc","miscellaneous","misc")
-end)
+local main        = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local autofarmss  = Window:MakeTab({Name = "Auto", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local itemtp      = Window:MakeTab({Name = "Item TP/ESP", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local gametp      = Window:MakeTab({Name = "Game TP", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local charactertp = Window:MakeTab({Name = "Mob TP", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local plr         = Window:MakeTab({Name = "Player", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local vis         = Window:MakeTab({Name = "Visuals", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local misc        = Window:MakeTab({Name = "Misc", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
-if not ok2 then
-    warn("[KS HUB] Error creando tabs:", err2)
-    return
-else
-    print("[KS HUB] Tabs creados correctamente.")
-end
+print("[KS HUB] Tabs creados correctamente.")
 
 -- === LOAD MODULES ===
 local function LoadModule(name, tab)
@@ -96,3 +77,6 @@ LoadModule("Stronghold", gametp)
 LoadModule("Extras", misc)
 
 print("[KS HUB] Inicialización completa.")
+
+-- Iniciar Orion
+OrionLib:Init()
