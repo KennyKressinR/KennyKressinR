@@ -492,11 +492,40 @@ end)
 
 
 --========================================================--
--- CHOP AURA (Main Tab)
+--========================================================--
+-- CHOP AURA (Main Tab mejorado)
 --========================================================--
 local chopAuraToggle = false
 local chopRadius = 150
 
+-- Escanea árboles pequeños en Map.Foliage y Map.Landmarks
+local function getAllSmallTrees()
+    local trees = {}
+    local function scan(folder)
+        for _, obj in ipairs(folder:GetChildren()) do
+            if obj:IsA("Model") and obj.Name == "Small Tree" then
+                table.insert(trees, obj)
+            end
+        end
+    end
+    local map = Workspace:FindFirstChild("Map")
+    if map then
+        if map:FindFirstChild("Foliage") then scan(map.Foliage) end
+        if map:FindFirstChild("Landmarks") then scan(map.Landmarks) end
+    end
+    return trees
+end
+
+-- Encuentra el tronco del árbol
+local function findTrunk(tree)
+    for _, part in ipairs(tree:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name == "Trunk" then
+            return part
+        end
+    end
+end
+
+-- Loop de Chop Aura
 local function chopAuraLoop()
     while chopAuraToggle do
         local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -505,24 +534,22 @@ local function chopAuraLoop()
             local tool, damageID = getAnyToolWithDamageID()
             if tool and damageID then
                 equipTool(tool)
-                for _, tree in ipairs(Workspace:GetChildren()) do
-                    if tree:IsA("Model") and tree.Name == "Small Tree" then
-                        local part = tree:FindFirstChildWhichIsA("BasePart")
-                        if part and (part.Position - hrp.Position).Magnitude <= chopRadius then
-                            local ok, err = pcall(function()
-                                RemoteEvents.ToolDamageObject:InvokeServer(
-                                    tree, tool, damageID, CFrame.new(part.Position)
-                                )
-                            end)
-                            if ok then
-                                print("[KS HUB] Talando árbol:", tree.Name)
-                            else
-                                warn("[KS HUB] Error talando árbol:", err)
-                            end
+                for _, tree in ipairs(getAllSmallTrees()) do
+                    local trunk = findTrunk(tree)
+                    if trunk and (trunk.Position - hrp.Position).Magnitude <= chopRadius then
+                        local ok, err = pcall(function()
+                            RemoteEvents.ToolDamageObject:InvokeServer(
+                                tree, tool, damageID, CFrame.new(trunk.Position)
+                            )
+                        end)
+                        if ok then
+                            print("[KS HUB] Talando árbol:", tree.Name)
+                        else
+                            warn("[KS HUB] Error talando árbol:", err)
                         end
                     end
                 end
-                task.wait(0.2)
+                task.wait(0.3)
             else
                 warn("[KS HUB] No se encontró hacha para Chop Aura")
                 task.wait(1)
@@ -533,6 +560,7 @@ local function chopAuraLoop()
     end
 end
 
+-- UI
 CreateSection(tabMain, "Farming")
 CreateCheckbox(tabMain, "Chop Aura", function(state)
     chopAuraToggle = state
@@ -550,9 +578,15 @@ CreateSlider(tabMain, "Chop Aura Radius", 20, 300, 150, function(value)
     chopRadius = math.clamp(value, 20, 300)
     print("[KS HUB] Radio Chop Aura:", chopRadius)
 end)
+
+
+
+
 --========================================================--
 -- SAFE ZONE (Main)
---========================================================--
+--========================================================
+
+--
 local safezoneBaseplates = {}
 local baseplateSize = Vector3.new(1024, 1, 1024)
 local baseY = 100
