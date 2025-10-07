@@ -216,18 +216,26 @@ local function applyTransparency(value)
     local char = LocalPlayer.Character
     if char then
         for _, part in ipairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then part.Transparency = userTransparency end
-        end
-    end
-end
-
---========================================================
--- [ SECCIÓN 4 ] BOTONES MAIN (TELEPORT SLOTS + VELOCIDAD + SALTO)
+            if part:IsA("BasePart") then part.Transp--========================================================
+-- [ SECCIÓN 4 ] MAIN (SCROLL + TELEPORT SLOTS + VELOCIDAD + SALTO)
 --========================================================
 
--- Noclip y AntiDelay
-createButton(Tabs["Main"], "Toggle Noclip", toggleNoclip)
-createButton(Tabs["Main"], "Toggle Anti-Delay", toggleAntiDelay)
+-- Contenedor con scroll para Main
+local mainScroll = Instance.new("ScrollingFrame")
+mainScroll.Size = UDim2.new(1, 0, 1, 0)
+mainScroll.BackgroundTransparency = 1
+mainScroll.ScrollBarThickness = 6
+mainScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+mainScroll.Parent = Tabs["Main"]
+
+local mainLayout = Instance.new("UIListLayout")
+mainLayout.Padding = UDim.new(0, 6)
+mainLayout.SortOrder = Enum.SortOrder.LayoutOrder
+mainLayout.Parent = mainScroll
+
+-- Botones principales
+createButton(mainScroll, "Toggle Noclip", toggleNoclip)
+createButton(mainScroll, "Toggle Anti-Delay", toggleAntiDelay)
 
 -- =========================
 -- TELEPORT SLOTS
@@ -253,7 +261,7 @@ for i = 1, 4 do
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, 0, 0, 36)
     row.BackgroundTransparency = 1
-    row.Parent = Tabs["Main"]
+    row.Parent = mainScroll
 
     local saveBtn = Instance.new("TextButton")
     saveBtn.Size = UDim2.new(0.5, -4, 1, 0)
@@ -262,7 +270,7 @@ for i = 1, 4 do
     saveBtn.Font = Enum.Font.Gotham
     saveBtn.TextSize = 16
     saveBtn.TextColor3 = Color3.new(1, 1, 1)
-    saveBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    saveBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
     saveBtn.BorderSizePixel = 0
     saveBtn.Parent = row
     local saveCorner = Instance.new("UICorner")
@@ -277,13 +285,61 @@ for i = 1, 4 do
     loadBtn.Font = Enum.Font.Gotham
     loadBtn.TextSize = 16
     loadBtn.TextColor3 = Color3.new(1, 1, 1)
-    loadBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    loadBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
     loadBtn.BorderSizePixel = 0
     loadBtn.Parent = row
     local loadCorner = Instance.new("UICorner")
     loadCorner.CornerRadius = UDim.new(0, 6)
     loadCorner.Parent = loadBtn
     loadBtn.MouseButton1Click:Connect(function() loadSlot(i) end)
+end
+
+-- =========================
+-- VELOCIDAD
+-- =========================
+createButton(mainScroll, "Velocidad: 30", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.WalkSpeed = 30 end
+end)
+
+createButton(mainScroll, "Velocidad: 75", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.WalkSpeed = 75 end
+end)
+
+createButton(mainScroll, "Velocidad: 150", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.WalkSpeed = 150 end
+end)
+
+-- =========================
+-- SALTO
+-- =========================
+local function getBaseJump()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    return hum and hum.JumpPower or 50
+end
+
+createButton(mainScroll, "Salto +30%", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.JumpPower = getBaseJump() * 1.3 end
+end)
+
+createButton(mainScroll, "Salto +75%", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.JumpPower = getBaseJump() * 1.75 end
+end)
+
+createButton(mainScroll, "Salto +150%", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.JumpPower = getBaseJump() * 2.5 end
+end)arency = userTransparency end
+        end
+    end
+end
+
+--========================================================
+nction() loadSlot(i) end)
 end
 
 -- =========================
