@@ -237,20 +237,21 @@ local function getValidPart(obj)
     end
 end
 
--- [3.3] Filtro interactuable (ignora edificios)
-local function isHugeAnchored(part)
-    return part and part:IsA("BasePart") and part.Anchored and part.Size.Magnitude >= 20
-end
-
+-- [3.3] Filtro interactuable (ignora edificios grandes)
 local function isInteractable(obj)
-    if obj:IsA("Tool") then return true end
-    if obj:IsA("Model") then
-        local p = getValidPart(obj)
-        return p ~= nil and not isHugeAnchored(p)
+    if obj:IsA("Tool") then 
+        return true 
+    end
+    if obj:IsA("Model") and getValidPart(obj) then 
+        return true 
     end
     if obj:IsA("BasePart") then
-        if obj:IsDescendantOf(workspace.Terrain) then return false end
-        if isHugeAnchored(obj) then return false end
+        if obj:IsDescendantOf(workspace.Terrain) then 
+            return false 
+        end
+        if isHugeAnchored(obj) then 
+            return false 
+        end
         return (not obj.Anchored) or obj.Size.Magnitude < 20
     end
     return false
