@@ -1,8 +1,6 @@
 --========================================================--
--- PARTE 1: BASE Y SERVICIOS
+-- PARTE 1A: SERVICIOS PRINCIPALES
 --========================================================--
-
--- Servicios principales de Roblox
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -14,8 +12,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --========================================================--
 -- PARTE 1B: VARIABLES GLOBALES
 --========================================================--
-
--- Carpeta de Items en el Workspace (ajustable según el juego)
 local itemsFolder =
     Workspace:FindFirstChild("Items")
     or Workspace:FindFirstChild("WorldItems")
@@ -27,11 +23,8 @@ if not itemsFolder then
 end
 
 --========================================================--
--- PARTE 1C: HELPERS DE UI
+-- PARTE 1C: HELPERS DE UI (Botones, Secciones, Sliders, etc.)
 --========================================================--
-
--- Aquí van todas las funciones de creación de UI (CreateTab, CreateSection, etc.)
--- IMPORTANTE: Estas funciones deben estar definidas ANTES de usarlas en otras partes.
 
 function CreateSection(parent, text)
     local Section = Instance.new("TextLabel")
@@ -63,13 +56,12 @@ function CreateButton(parent, text, callback)
     return Btn
 end
 
--- (Aquí irían CreateToggle, CreateSlider, CreateDropdown, etc. — ya los tienes definidos)
+-- (Aquí irían CreateToggle, CreateSlider, CreateDropdown, etc. definidos igual que Button)
 
 --========================================================--
 -- PARTE 1D: HELPER MULTISELECT
 --========================================================--
 
--- NUEVO: Lista multi‑select con highlight y contador
 function CreateMultiSelectList(parent, titleText, options, onSelectionChanged)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0, 300, 0, 180)
@@ -119,7 +111,7 @@ function CreateMultiSelectList(parent, titleText, options, onSelectionChanged)
 
     local function updateCountAndCallback()
         local c = 0
-        for name, s in pairs(selected) do if s then c += 1 end end
+        for name, s in pairs(selected) do if s then c = c + 1 end end
         Count.Text = tostring(c) .. " sel."
         if onSelectionChanged then
             local list = {}
@@ -167,6 +159,88 @@ function CreateMultiSelectList(parent, titleText, options, onSelectionChanged)
     end
 
     return Frame, api
+end
+
+--========================================================--
+-- PARTE 1E: CONTENEDOR PRINCIPAL DEL HUB
+--========================================================--
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KSHUB"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 600, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local TabButtons = Instance.new("Frame")
+TabButtons.Size = UDim2.new(0, 120, 1, 0)
+TabButtons.BackgroundColor3 = Color3.fromRGB(25,25,25)
+TabButtons.Parent = MainFrame
+
+local TabContent = Instance.new("Frame")
+TabContent.Size = UDim2.new(1, -120, 1, 0)
+TabContent.Position = UDim2.new(0, 120, 0, 0)
+TabContent.BackgroundColor3 = Color3.fromRGB(35,35,35)
+TabContent.Parent = MainFrame
+
+--========================================================--
+-- PARTE 1F: SISTEMA DE TABS
+--========================================================--
+
+local tabs = {}
+
+function CreateTab(name)
+    -- Botón de tab en el panel lateral
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.Text = name
+    btn.Parent = TabButtons
+
+    -- Frame de contenido para ese tab
+    local frame = Instance.new("ScrollingFrame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.Visible = false
+    frame.ScrollBarThickness = 6
+    frame.Parent = TabContent
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 6)
+    layout.Parent = frame
+
+    -- Guardar referencia
+    tabs[name] = frame
+
+    -- Evento de click: oculta los demás y muestra este
+    btn.MouseButton1Click:Connect(function()
+        for _, f in pairs(tabs) do
+            f.Visible = false
+        end
+        frame.Visible = true
+    end)
+
+    return frame
+end
+
+-- Al iniciar, mostrar el primer tab creado automáticamente
+local first = true
+local oldCreateTab = CreateTab
+function CreateTab(name)
+    local frame = oldCreateTab(name)
+    if first then
+        frame.Visible = true
+        first = false
+    end
+    return frame
 end
 --========================================================--
 -- PARTE 2: CREACIÓN DE PESTAÑAS DEL HUB
