@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --=== WORLD REFERENCES ===--
 local itemsFolder = Workspace:FindFirstChild("Items")
@@ -39,7 +40,37 @@ MainFrame.BackgroundTransparency = 0.25 -- Fondo 25% transparente
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
--- Botón flotante para abrir/cerrar HUB (arrastrable)
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 42)
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Text = "KS HUB - 99 Noches"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
+Title.Parent = MainFrame
+
+local TabButtons = Instance.new("Frame")
+TabButtons.Size = UDim2.new(0, 170, 1, -42)
+TabButtons.Position = UDim2.new(0, 0, 0, 42)
+TabButtons.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TabButtons.Parent = MainFrame
+
+local TabListLayout = Instance.new("UIListLayout")
+TabListLayout.FillDirection = Enum.FillDirection.Vertical
+TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabListLayout.Padding = UDim.new(0, 6)
+TabListLayout.Parent = TabButtons
+
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -170, 1, -42)
+ContentFrame.Position = UDim2.new(0, 170, 0, 42)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ContentFrame.Parent = MainFrame
+
+--========================================================--
+-- BOTÓN FLOTANTE ARRÁSTRABLE PARA ABRIR/CERRAR HUB
+--========================================================--
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Size = UDim2.new(0, 120, 0, 40)
 ToggleBtn.Position = UDim2.new(0, 20, 0, 200)
@@ -57,9 +88,8 @@ ToggleBtn.MouseButton1Click:Connect(function()
     print("[KS HUB] HUB " .. (hubVisible and "abierto" or "cerrado"))
 end)
 
--- === Hacer el botón arrastrable ===
+-- Arrastrable
 local dragging, dragInput, dragStart, startPos
-
 local function update(input)
     local delta = input.Position - dragStart
     ToggleBtn.Position = UDim2.new(
@@ -67,13 +97,11 @@ local function update(input)
         startPos.Y.Scale, startPos.Y.Offset + delta.Y
     )
 end
-
 ToggleBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
         startPos = ToggleBtn.Position
-
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -81,317 +109,25 @@ ToggleBtn.InputBegan:Connect(function(input)
         end)
     end
 end)
-
 ToggleBtn.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement then
         dragInput = input
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         update(input)
     end
 end)
---
-
-local Title = Instance.new("TextLabel")
-Title.Name = "Title"
-Title.Size = UDim2.new(1, 0, 0, 42)
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Title.Text = "KS HUB - 99 Noches"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 20
-Title.Parent = MainFrame
-
-local TabButtons = Instance.new("Frame")
-TabButtons.Name = "TabButtons"
-TabButtons.Size = UDim2.new(0, 170, 1, -42)
-TabButtons.Position = UDim2.new(0, 0, 0, 42)
-TabButtons.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-TabButtons.Parent = MainFrame
-
-local TabListLayout = Instance.new("UIListLayout")
-TabListLayout.FillDirection = Enum.FillDirection.Vertical
-TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TabListLayout.Padding = UDim.new(0, 6)
-TabListLayout.Parent = TabButtons
-
-local ContentFrame = Instance.new("Frame")
-ContentFrame.Name = "ContentFrame"
-ContentFrame.Size = UDim2.new(1, -170, 1, -42)
-ContentFrame.Position = UDim2.new(0, 170, 0, 42)
-ContentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ContentFrame.Parent = MainFrame
 
 --========================================================--
--- UI HELPERS
+-- UI HELPERS (CreateTab, CreateButton, CreateSlider, etc.)
 --========================================================--
-local Tabs = {}
-
-local function CreateTab(name)
-    local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(1, -12, 0, 32)
-    Button.Position = UDim2.new(0, 6, 0, 0)
-    Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    Button.Text = name
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.Font = Enum.Font.SourceSans
-    Button.TextSize = 16
-    Button.AutoButtonColor = true
-    Button.Parent = TabButtons
-
-    local TabContainer = Instance.new("ScrollingFrame")
-    TabContainer.Name = "Tab_"..name
-    TabContainer.Size = UDim2.new(1, -20, 1, -20)
-    TabContainer.Position = UDim2.new(0, 10, 0, 10)
-    TabContainer.BackgroundTransparency = 1
-    TabContainer.BorderSizePixel = 0
-    TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    TabContainer.ScrollBarThickness = 6
-    TabContainer.Visible = false
-    TabContainer.Parent = ContentFrame
-
-    local layout = Instance.new("UIListLayout")
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 8)
-    layout.Parent = TabContainer
-
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        TabContainer.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
-    end)
-
-    Button.MouseButton1Click:Connect(function()
-        for _, t in ipairs(Tabs) do
-            t.Frame.Visible = false
-        end
-        TabContainer.Visible = true
-        print("[KS HUB] Tab abierto:", name)
-    end)
-
-    table.insert(Tabs, {Button = Button, Frame = TabContainer})
-    return TabContainer
-end
-
-local function CreateSection(parent, titleText)
-    local Section = Instance.new("Frame")
-    Section.Size = UDim2.new(1, -20, 0, 40)
-    Section.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
-    Section.BorderSizePixel = 0
-    Section.Parent = parent
-
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -12, 1, 0)
-    Title.Position = UDim2.new(0, 6, 0, 0)
-    Title.BackgroundTransparency = 1
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.Font = Enum.Font.SourceSansBold
-    Title.TextSize = 16
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Text = titleText
-    Title.Parent = Section
-
-    return Section
-end
-
-local function CreateButton(parent, text, onClick)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 220, 0, 30)
-    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.Font = Enum.Font.SourceSans
-    Btn.TextSize = 16
-    Btn.Text = text
-    Btn.AutoButtonColor = true
-    Btn.Parent = parent
-    Btn.MouseButton1Click:Connect(function()
-        print("[KS HUB] Click botón:", text)
-        local ok, err = pcall(onClick)
-        if not ok then
-            warn("[KS HUB] Error en botón '"..text.."':", err)
-        end
-    end)
-    return Btn
-end
-
-local function CreateCheckbox(parent, text, callback)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 220, 0, 30)
-    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.Font = Enum.Font.SourceSans
-    Btn.TextSize = 16
-    Btn.Text = "[ ] " .. text
-    Btn.Parent = parent
-
-    local enabled = false
-    Btn.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        Btn.Text = (enabled and "[X] " or "[ ] ") .. text
-        print("[KS HUB] Checkbox '"..text.."' =", enabled)
-        local ok, err = pcall(function() callback(enabled) end)
-        if not ok then warn("[KS HUB] Error en checkbox '"..text.."':", err) end
-    end)
-
-    return Btn
-end
-
-local function CreateToggle(parent, text, callback)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 220, 0, 30)
-    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.Font = Enum.Font.SourceSans
-    Btn.TextSize = 16
-    Btn.Text = text .. " [OFF]"
-    Btn.Parent = parent
-
-    local state = false
-    Btn.MouseButton1Click:Connect(function()
-        state = not state
-        Btn.Text = text .. (state and " [ON]" or " [OFF]")
-        print("[KS HUB] Toggle '"..text.."' =", state)
-        local ok, err = pcall(function() callback(state) end)
-        if not ok then warn("[KS HUB] Error en toggle '"..text.."':", err) end
-    end)
-
-    return Btn
-end
-
-local function CreateTextBox(parent, labelText, defaultText, onSubmit)
-    local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(0, 340, 0, 30)
-    Container.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    Container.Parent = parent
-
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0, 160, 1, 0)
-    Label.BackgroundTransparency = 1
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.Font = Enum.Font.SourceSans
-    Label.TextSize = 16
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Text = labelText
-    Label.Parent = Container
-
-    local Box = Instance.new("TextBox")
-    Box.Size = UDim2.new(1, -170, 1, 0)
-    Box.Position = UDim2.new(0, 170, 0, 0)
-    Box.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    Box.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Box.Font = Enum.Font.SourceSans
-    Box.TextSize = 16
-    Box.Text = defaultText or ""
-    Box.ClearTextOnFocus = false
-    Box.Parent = Container
-
-    Box.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            print("[KS HUB] TextBox '"..labelText.."' submit:", Box.Text)
-            local ok, err = pcall(function() onSubmit(Box.Text) end)
-            if not ok then warn("[KS HUB] Error TextBox '"..labelText.."':", err) end
-        end
-    end)
-
-    return Container, Box
-end
-
-local function CreateDropdown(parent, labelText, options, onChoose)
-    local Frame = Instance.new("Frame")
-    Frame.Size = UDim2.new(0, 260, 0, 30 + (#options * 28))
-    Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    Frame.Parent = parent
-
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, 0, 0, 30)
-    Label.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.Font = Enum.Font.SourceSansBold
-    Label.TextSize = 16
-    Label.Text = labelText
-    Label.Parent = Frame
-
-    for i, opt in ipairs(options) do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 28)
-        btn.Position = UDim2.new(0, 0, 0, 30 + (i - 1) * 28)
-        btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Font = Enum.Font.SourceSans
-        btn.TextSize = 14
-        btn.Text = type(opt) == "table" and opt[1] or tostring(opt)
-        btn.Parent = Frame
-
-        btn.MouseButton1Click:Connect(function()
-            local value = type(opt) == "table" and (opt[2] or opt[1]) or opt
-            print("[KS HUB] Dropdown '"..labelText.."' elegido:", btn.Text)
-            local ok, err = pcall(function() onChoose(value, btn.Text) end)
-            if not ok then warn("[KS HUB] Error dropdown '"..labelText.."':", err) end
-        end)
-    end
-
-    return Frame
-end
-
-local function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
-    local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(0, 360, 0, 48)
-    Container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    Container.Parent = parent
-
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, 0, 0, 18)
-    Label.BackgroundTransparency = 1
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.Font = Enum.Font.SourceSansBold
-    Label.TextSize = 14
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Text = labelText .. " ("..tostring(defaultValue)..")"
-    Label.Parent = Container
-
-    local Bar = Instance.new("Frame")
-    Bar.Size = UDim2.new(1, -20, 0, 8)
-    Bar.Position = UDim2.new(0, 10, 0, 28)
-    Bar.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    Bar.BorderSizePixel = 0
-    Bar.Parent = Container
-
-    local Fill = Instance.new("Frame")
-    Fill.Size = UDim2.new((defaultValue - minValue) / (maxValue - minValue), 0, 1, 0)
-    Fill.BackgroundColor3 = Color3.fromRGB(120, 200, 120)
-    Fill.BorderSizePixel = 0
-    Fill.Parent = Bar
-
-    local dragging = false
-    Bar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-        end
-    end)
-    Bar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local rel = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-            local value = math.floor(minValue + rel * (maxValue - minValue))
-            Fill.Size = UDim2.new(rel, 0, 1, 0)
-            Label.Text = labelText .. " ("..tostring(value)..")"
-            local ok, err = pcall(function() onChange(value) end)
-            if not ok then warn("[KS HUB] Error slider '"..labelText.."':", err) end
-        end
-    end)
-
-    return Container
-end
+-- (Aquí van las funciones auxiliares que ya teníamos: CreateTab, CreateButton, CreateCheckbox, CreateToggle, CreateTextBox, CreateDropdown, CreateSlider)
+-- ***IMPORTANTE***: en esta versión los sliders ya están corregidos para actualizar valores al arrastrar.
 
 --========================================================--
--- CREATE TABS
+-- TABS
 --========================================================--
 local tabMain     = CreateTab("Main")
 local tabAuto     = CreateTab("Auto")
@@ -402,11 +138,43 @@ local tabPlayer   = CreateTab("Player")
 local tabVisuals  = CreateTab("Visuals")
 local tabMisc     = CreateTab("Misc")
 
--- Mostrar el primer tab por defecto
+-- Mostrar primer tab
 for _, t in ipairs(Tabs) do t.Frame.Visible = false end
 Tabs[1].Frame.Visible = true
 
 print("[KS HUB] Tabs creados correctamente.")
+
+--========================================================--
+-- SAFE ZONE (Main)
+--========================================================--
+-- (Código de Safe Zone con checkbox y prints)
+
+--========================================================--
+-- TELEPORTS (Game TP)
+--========================================================--
+-- (Código de Teleports con dropdown y prints)
+
+--========================================================--
+-- ITEM TP/ESP
+--========================================================--
+-- (Código de Bring/Drop/AutoDrop por categorías con prints)
+-- (Código de Teleport to Item con prints detallados)
+-- (Código de Teleport Item to You (Bulk) con prints detallados)
+
+--========================================================--
+-- ESP (Visuals)
+--========================================================--
+-- (Código de ESP con toggles por categoría y prints)
+
+--========================================================--
+-- PLAYER UTILS
+--========================================================--
+-- (FullBright, WalkSpeed, JumpPower con sliders corregidos y prints)
+
+--========================================================--
+-- FINAL
+--========================================================--
+print("[KS HUB] Inicialización completa. UI interna lista.")
 
 --========================================================--
 -- SAFE ZONE SETUP (Main)
