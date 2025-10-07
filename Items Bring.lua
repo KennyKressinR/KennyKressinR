@@ -1,8 +1,4 @@
---========================================================--
 -- PARTE 1: BOOTSTRAP Y ESTADO COMPARTIDO
---========================================================--
-
--- [1.1] Servicios y jugador
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("ReplicatedStorage")
