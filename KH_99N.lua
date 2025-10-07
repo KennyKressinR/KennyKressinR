@@ -315,7 +315,26 @@ function CreateDropdown(parent, labelText, options, onChoose)
     return Frame
 end
 
-function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
+
+    return Container
+end
+
+
+
+--========================================================--
+-- TABS
+--========================================================--
+local tabMain     = CreateTab("Main")
+local tabAuto     = CreateTab("Auto")
+local tabItem     = CreateTab("Item TP/ESP")
+local tabGameTP   = CreateTab("Game TP")
+local tabMobTP    = CreateTab("Mob TP")
+local tabPlayer   = CreateTab("Player")
+local tabVisuals  = CreateTab("Visuals")
+local tabMisc     = CreateTab("Misc")
+
+for _, t in ipairs(Tabs) do t.Frame.Visible = false end
+Tabs[1].Frame.Visible = tfunction CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
     local Container = Instance.new("Frame")
     Container.Size = UDim2.new(0, 300, 0, 40)
     Container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -345,46 +364,37 @@ function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onCha
     Fill.Parent = Bar
 
     local dragging = false
+
+    local function update(input)
+        local rel = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+        local value = math.floor(minValue + rel * (maxValue - minValue))
+        Fill.Size = UDim2.new(rel, 0, 1, 0)
+        Label.Text = labelText .. " ("..tostring(value)..")"
+        local ok, err = pcall(function() onChange(value) end)
+        if not ok then warn("[KS HUB] Error slider '"..labelText.."':", err) end
+    end
+
     Bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
+            update(input)
         end
     end)
+
     Bar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local rel = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-            local value = math.floor(minValue + rel * (maxValue - minValue))
-            Fill.Size = UDim2.new(rel, 0, 1, 0)
-            Label.Text = labelText .. " ("..tostring(value)..")"
-            local ok, err = pcall(function() onChange(value) end)
-            if not ok then warn("[KS HUB] Error slider '"..labelText.."':", err) end
+            update(input)
         end
     end)
 
     return Container
 end
-
-
-
---========================================================--
--- TABS
---========================================================--
-local tabMain     = CreateTab("Main")
-local tabAuto     = CreateTab("Auto")
-local tabItem     = CreateTab("Item TP/ESP")
-local tabGameTP   = CreateTab("Game TP")
-local tabMobTP    = CreateTab("Mob TP")
-local tabPlayer   = CreateTab("Player")
-local tabVisuals  = CreateTab("Visuals")
-local tabMisc     = CreateTab("Misc")
-
-for _, t in ipairs(Tabs) do t.Frame.Visible = false end
-Tabs[1].Frame.Visible = true
 print("[KS HUB] Tabs creados correctamente.")
 
 --========================================================--
@@ -480,6 +490,66 @@ CreateSlider(tabMain, "Kill Aura Radius", 20, 500, 200, function(value)
     print("[KS HUB] Radio Kill Aura:", radius)
 end)
 
+
+--========================================================--
+-- CHOP AURA (Main Tab)
+--========================================================--
+local chopAuraToggle = false
+local chopRadius = 150
+
+local function chopAuraLoop()
+    while chopAuraToggle do
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local tool, damageID = getAnyToolWithDamageID()
+            if tool and damageID then
+                equipTool(tool)
+                for _, tree in ipairs(Workspace:GetChildren()) do
+                    if tree:IsA("Model") and tree.Name == "Small Tree" then
+                        local part = tree:FindFirstChildWhichIsA("BasePart")
+                        if part and (part.Position - hrp.Position).Magnitude <= chopRadius then
+                            local ok, err = pcall(function()
+                                RemoteEvents.ToolDamageObject:InvokeServer(
+                                    tree, tool, damageID, CFrame.new(part.Position)
+                                )
+                            end)
+                            if ok then
+                                print("[KS HUB] Talando árbol:", tree.Name)
+                            else
+                                warn("[KS HUB] Error talando árbol:", err)
+                            end
+                        end
+                    end
+                end
+                task.wait(0.2)
+            else
+                warn("[KS HUB] No se encontró hacha para Chop Aura")
+                task.wait(1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end
+
+CreateSection(tabMain, "Farming")
+CreateCheckbox(tabMain, "Chop Aura", function(state)
+    chopAuraToggle = state
+    if state then
+        print("[KS HUB] Chop Aura activado")
+        task.spawn(chopAuraLoop)
+    else
+        print("[KS HUB] Chop Aura desactivado")
+        local tool,_ = getAnyToolWithDamageID()
+        unequipTool(tool)
+    end
+end)
+
+CreateSlider(tabMain, "Chop Aura Radius", 20, 300, 150, function(value)
+    chopRadius = math.clamp(value, 20, 300)
+    print("[KS HUB] Radio Chop Aura:", chopRadius)
+end)
 --========================================================--
 -- SAFE ZONE (Main)
 --========================================================--
