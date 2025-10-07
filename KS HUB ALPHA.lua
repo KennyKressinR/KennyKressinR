@@ -16,8 +16,6 @@ local Mouse = LocalPlayer:GetMouse()
 --========================================================
 -- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + BOTONES CELESTES)
 --========================================================
--- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + BOTONES CELESTES)
---========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
@@ -116,7 +114,7 @@ createTab("Teleport")
 createTab("Visual")
 createTab("Ajustes")
 
--- Mostrar/Ocultar HUB con el botón flotante
+-- Mostrar/Ocultar HUB
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
