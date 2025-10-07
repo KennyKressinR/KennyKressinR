@@ -21,7 +21,7 @@ MainFrame.Size = UDim2.new(0, 500, 0, 350)
 MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
-MainFrame.Visible = false
+MainFrame.Visible = true -- ✅ Ahora se abre automáticamente al ejecutar
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
