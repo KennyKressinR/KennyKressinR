@@ -767,8 +767,9 @@ end)
 --========================================================--
 -- TELEPORTS (Game TP)
 --========================================================--
+
 local function stringToCFrame(str)
-    local x,y,z = str:match("([^,]+),%s*([^,]+),%s*([^,]+)")
+    local x, y, z = str:match("([^,]+),%s*([^,]+),%s*([^,]+)")
     return CFrame.new(tonumber(x), tonumber(y), tonumber(z))
 end
 
@@ -776,6 +777,32 @@ local function teleportToTarget(cf, duration)
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
+
+    if duration and duration > 0 then
+        local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(hrp, info, {CFrame = cf})
+        tween:Play()
+        print("[KS HUB] Teleport con tween a:", cf.Position)
+    else
+        hrp.CFrame = cf
+        print("[KS HUB] Teleport instantáneo a:", cf.Position)
+    end
+end
+
+CreateSection(tabGameTP, "Teleports")
+
+local storyCoords = {
+    { "[campsite] camp site", "0, 8, -0" },
+    { "[safezone] safe zone", "0, 110, -0" },
+    { "[machine] crafting machine", "21, 16, -5" },
+    { "[campfire] fogata central", "0, 19, 0" },
+    { "[tree zone] bosque", "-60, 8, 0" },
+    { "[ufo zone] zona alien", "120, 8, 0" }
+}
+
+CreateDropdown(tabGameTP, "Teleports", storyCoords, function(value, label)
+    teleportToTarget(stringToCFrame(value), 1)
+end)
     
 --========================================================--
 -- ITEM TP/ESP
