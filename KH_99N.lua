@@ -323,7 +323,7 @@ local function teleportInstant(cf)
     end
 end
 
-local function teleportTween(cf, duration)
+local fnction teleportTween(cf, duration)
     local hrp = getHRP()
     if hrp then
         local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
@@ -333,9 +333,8 @@ local function teleportTween(cf, duration)
     end
 end
 
-
 --========================================================--
--- PARTE 4: ITEM TP/ESP
+-- PARTE 4: ITEM TP/ESP (Bring / Drop / AutoDrop)
 --========================================================--
 
 -- Posiciones de referencia para Drop
@@ -361,7 +360,6 @@ local bracket = {
 -- 4B: Funciones base de manipulación de ítems
 --========================================================--
 
--- Bring: teletransporta ítems al HRP
 local function bringItem(name, quantity)
     if not itemsFolder then warn("[KS HUB] Items folder no existe."); return end
     local hrp = getHRP()
@@ -372,7 +370,7 @@ local function bringItem(name, quantity)
             local target = obj:IsA("BasePart") and obj or obj.PrimaryPart
             if target then
                 target.CFrame = hrp.CFrame + Vector3.new(0,3,0)
-                count += 1
+                count = count + 1
                 if count >= quantity then break end
             end
         end
@@ -380,7 +378,6 @@ local function bringItem(name, quantity)
     print("[KS HUB] Bring:", count, name)
 end
 
--- Drop: teletransporta ítems a una posición
 local function dropItemAt(name, quantity, position)
     if not itemsFolder then warn("[KS HUB] Items folder no existe."); return end
     local count = 0
@@ -389,33 +386,12 @@ local function dropItemAt(name, quantity, position)
             local target = obj:IsA("BasePart") and obj or obj.PrimaryPart
             if target then
                 target.CFrame = CFrame.new(position + Vector3.new(0,3,0))
-                count += 1
+                count = count + 1
                 if count >= quantity then break end
             end
         end
     end
     print("[KS HUB] Drop:", count, name, "en", position)
-end
-
--- AutoDrop simple (para un ítem específico)
-local autoDropTimer = 5
-local function toggleAutoDrop(state, name, qty, pos)
-    if state then
-        print("[KS HUB] AutoDrop activado:", name)
-        if toggleAutoDrop._conn then toggleAutoDrop._conn:Disconnect() end
-        toggleAutoDrop._conn = RunService.Heartbeat:Connect(function()
-            local now = tick()
-            if not toggleAutoDrop._last or now - toggleAutoDrop._last >= autoDropTimer then
-                toggleAutoDrop._last = now
-                dropItemAt(name, qty, pos)
-            end
-        end)
-    else
-        if toggleAutoDrop._conn then toggleAutoDrop._conn:Disconnect() end
-        toggleAutoDrop._conn = nil
-        toggleAutoDrop._last = nil
-        print("[KS HUB] AutoDrop desactivado")
-    end
 end
 
 --========================================================--
@@ -424,46 +400,39 @@ end
 
 CreateSection(tabItem, "Bring / Drop por categoría (multi-select)")
 
--- Conexiones de AutoDrop por categoría
 local autoDropConns = {}
+local autoDropTimer = 5
 
 for category, items in pairs(bracket) do
-    -- Sub‑sección por categoría
     CreateSection(tabItem, "Categoría: " .. category)
 
-    -- Lista multi‑select
     local listFrame, listAPI = CreateMultiSelectList(tabItem, "Selecciona ítems de " .. category, items, function(selectedNames)
         print("[KS HUB] Selección ("..category.."):", table.concat(selectedNames, ", "))
     end)
 
-    -- Slider de cantidad
     local qtyValue = 1
     CreateSlider(tabItem, "Cantidad ("..category..")", 1, 50, 1, function(v)
         qtyValue = v
     end)
 
-    -- Botón Bring
     CreateButton(tabItem, "Bring seleccionados ("..category..")", function()
         for _, name in ipairs(listAPI:GetSelected()) do
             bringItem(name, qtyValue)
         end
     end)
 
-    -- Botón Drop Campfire
     CreateButton(tabItem, "Drop Campfire ("..category..")", function()
         for _, name in ipairs(listAPI:GetSelected()) do
             dropItemAt(name, qtyValue, campfireDropPos)
         end
     end)
 
-    -- Botón Drop Machine
     CreateButton(tabItem, "Drop Machine ("..category..")", function()
         for _, name in ipairs(listAPI:GetSelected()) do
             dropItemAt(name, qtyValue, machineDropPos)
         end
     end)
 
-    -- Toggle AutoDrop
     CreateToggle(tabItem, "AutoDrop ("..category..")", function(state)
         autoDropConns[category] = autoDropConns[category] or {}
         if state then
@@ -473,36 +442,39 @@ for category, items in pairs(bracket) do
                 end
                 autoDropConns[category][name] = RunService.Heartbeat:Connect(function()
                     local now = tick()
-                    if not toggleAutoDrop._last or now - toggleAutoDrop._last >= autoDropTimer then
-                        toggleAutoDrop._last = now
+                    if not autoDropConns[category]._last or now - autoDropConns[category]._last >= autoDropTimer then
+                        autoDropConns[category]._last = now
                         dropItemAt(name, qtyValue, campfireDropPos)
                     end
                 end)
             end
         else
             for _, conn in pairs(autoDropConns[category]) do
-                conn:Disconnect()
+                if typeof(conn) == "RBXScriptConnection" then
+                    conn:Disconnect()
+                end
             end
             autoDropConns[category] = {}
         end
     end)
 
-    -- Botón limpiar selección
     CreateButton(tabItem, "Limpiar selección ("..category..")", function()
         listAPI:ClearSelection()
     end)
 end
 
-print("[KS HUB] Item TP/ESP (Bring/Drop/AutoDrop) cargado")
---========================================================--
--- PARTE 5: FARMING (Chop Aura)
---========================================================--
+print("[KS HUB] Item TP/ESP cargado en tabItem")
 
--- Variables de control
+--========================================================--
+-- PARTE 5: FARMING (Chop Aura + Safe Zone)
+--========================================================--
+--========================--
+-- 5A: Chop Aura
+--========================--
+
 local chopAuraToggle = false
 local chopRadius = 150
 
--- Bucle principal de Chop Aura
 local function chopAuraLoop()
     while chopAuraToggle do
         local axe = getAxeTool()
@@ -513,7 +485,6 @@ local function chopAuraLoop()
                 if obj:IsA("Model") and obj.Name:lower():find("tree") then
                     local primary = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
                     if primary and (primary.Position - getHRP().Position).Magnitude <= chopRadius then
-                        -- Intentar talar
                         local ok, err = pcall(function()
                             axe:Activate()
                         end)
@@ -531,9 +502,8 @@ local function chopAuraLoop()
     end
 end
 
--- UI para Chop Aura
 CreateSection(tabMain, "Farming")
-CreateCheckbox(tabMain, "Chop Aura", function(state)
+CreateToggle(tabMain, "Chop Aura", function(state)
     chopAuraToggle = state
     if state then
         print("[KS HUB] Chop Aura activado")
@@ -550,9 +520,9 @@ CreateSlider(tabMain, "Chop Aura Radius", 20, 300, 150, function(value)
     print("[KS HUB] Radio Chop Aura:", chopRadius)
 end)
 
---========================================================--
--- PARTE 5B: SAFE ZONE
---========================================================--
+--========================--
+-- 5B: Safe Zone
+--========================--
 
 local safezoneBaseplates = {}
 local baseplateSize = Vector3.new(1024, 1, 1024)
@@ -577,15 +547,15 @@ for dx = -1,1 do
 end
 print("[KS HUB] Safe Zone baseplates creados")
 
--- UI para Safe Zone
 CreateSection(tabMain, "Safe Zone")
-CreateCheckbox(tabMain, "Show Safe Zone", function(enabled)
+CreateToggle(tabMain, "Mostrar Safe Zone", function(enabled)
     for _,bp in ipairs(safezoneBaseplates) do
         bp.Transparency = enabled and 0.8 or 1
         bp.CanCollide = enabled
     end
     print("[KS HUB] Safe Zone toggled:", enabled)
 end)
+
 --========================================================--
 -- PARTE 6: TELEPORTS (Game TP)
 --========================================================--
