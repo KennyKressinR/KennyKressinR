@@ -237,25 +237,7 @@ local function getValidPart(obj)
     end
 end
 
--- [3.3] Filtro interactuable (ignora edificios grandes)
-local function isInteractable(obj)
-    if obj:IsA("Tool") then 
-        return true 
-    end
-    if obj:IsA("Model") and getValidPart(obj) then 
-        return true 
-    end
-    if obj:IsA("BasePart") then
-        if obj:IsDescendantOf(workspace.Terrain) then 
-            return false 
-        end
-        if isHugeAnchored(obj) then 
-            return false 
-        end
-        return (not obj.Anchored) or obj.Size.Magnitude < 20
-    end
-    return false
-end
+
 
 -- [3.4] Evitar basura
 local function shouldSkip(obj)
