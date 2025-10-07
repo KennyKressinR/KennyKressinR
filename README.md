@@ -1,5 +1,5 @@
 <!--Banner-->
-![KS Banner]([(https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/Image/Portada.png)]) 
+![KS Banner](https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/Image/Portada.png) 
 
 <!--Night Owl image-->
 <div>
@@ -20,7 +20,7 @@
 - 💁‍♂️ Volunteer MOD at **Dev Community**.
 - ✍ I write technical blogs, You can visit my blog site at [DEV](https://dev).
 - ❤ Contributing to Open Source.
-- 💻 Visit my [Portfolio](https://kiran1689.github.io) for more details about me.
+- 💻 Visit my [Portfolio]() for more details about me.
 <!--End Intro-->
 
 <!--Profile Count Badge-->
