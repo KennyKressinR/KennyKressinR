@@ -1,8 +1,6 @@
 --========================================================
--- KS HUB - COMPLETO (AZUL+CELESTE, FULL BRIGHT, ESP, SCROLL EN MAIN)
--- Con prints de depuración y parent en PlayerGui
+-- KS HUB - FINAL COMPLETO
 --========================================================
-
 print("[KS HUB] Script iniciado")
 
 --========================================================
@@ -15,11 +13,16 @@ local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+local function getRoot(plr)
+    local char = plr.Character
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+end
+
 print("[KS HUB] Servicios cargados")
 
 --========================================================
---========================================================
--- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + BOTONES CELESTES)
+-- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + TRANSPARENCIA + PESTAÑAS)
 --========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
@@ -34,7 +37,8 @@ ToggleButton.Position = UDim2.new(1, -70, 1, -70)
 ToggleButton.Text = "≡"
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 24
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 60, 120) -- azul oscuro
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 60, 120)
+ToggleButton.BackgroundTransparency = 0.25 -- HUB 25% transparente
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 local ToggleCorner = Instance.new("UICorner")
@@ -46,7 +50,8 @@ print("[KS HUB] ToggleButton creado")
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80) -- azul oscuro
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80)
+MainFrame.BackgroundTransparency = 0.25 -- HUB 25% transparente
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
@@ -54,32 +59,6 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 print("[KS HUB] MainFrame creado")
-
---========================================================
--- [ TRANSPARENCIA HUB 25% ] Aplicar a contenedores y botones
---========================================================
-local function applyHubTransparency(alpha)
-    -- Marco principal
-    MainFrame.BackgroundTransparency = alpha
-
-    -- Botón flotante
-    ToggleButton.BackgroundTransparency = alpha
-
-    -- Pestañas (botones en TabContainer) -> se aplicará más adelante cuando existan
-    if TabContainer then
-        for _, child in ipairs(TabContainer:GetChildren()) do
-            if child:IsA("TextButton") then
-                child.BackgroundTransparency = alpha
-            end
-        end
-    end
-
-    print(string.format("[KS HUB] Transparencia aplicada: %.2f. MainFrame.Visible=%s", alpha, tostring(MainFrame.Visible)))
-end
-
--- Aplica 25% (0.25) al iniciar
-applyHubTransparency(0.25)
-
 
 -- Título
 local Title = Instance.new("TextLabel")
@@ -118,7 +97,8 @@ local function createTab(name)
     tabButton.Font = Enum.Font.Gotham
     tabButton.TextSize = 16
     tabButton.TextColor3 = Color3.new(1, 1, 1)
-    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
+    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    tabButton.BackgroundTransparency = 0.1 -- 10% más transparente
     tabButton.BorderSizePixel = 0
     tabButton.Parent = TabContainer
     local tabCorner = Instance.new("UICorner")
@@ -149,13 +129,13 @@ createTab("Teleport")
 createTab("Visual")
 createTab("Ajustes")
 
--- Mostrar/Ocultar HUB con el botón flotante
+-- Mostrar/Ocultar HUB
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
     print("[KS HUB] Toggle HUB:", MainFrame.Visible)
 end)
 
--- Función para crear botones (celeste)
+-- Función para crear botones
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -163,7 +143,8 @@ local function createButton(parent, text, callback)
     button.Font = Enum.Font.Gotham
     button.TextSize = 16
     button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
+    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    button.BackgroundTransparency = 0.1 -- 10% más transparente
     button.BorderSizePixel = 0
     button.Parent = parent
     local corner = Instance.new("UICorner")
@@ -172,9 +153,7 @@ local function createButton(parent, text, callback)
     button.MouseButton1Click:Connect(function()
         print("[KS HUB] Botón pulsado:", text)
         local ok, err = pcall(callback)
-        if not ok then
-            warn("[KS HUB] Error en callback de botón '" .. text .. "': " .. tostring(err))
-        end
+        if not ok then warn("[KS HUB] Error en botón:", err) end
     end)
     return button
 end
@@ -184,10 +163,15 @@ print("[KS HUB] GUI principal lista")
 --========================================================
 -- [ SECCIÓN 3 ] FUNCIONES DEL HUB
 --========================================================
-local function getRoot(plr)
-    local char = plr.Character
+local function getHumanoid()
+    local char = LocalPlayer.Character
     if not char then return nil end
-    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+    return char:FindFirstChildOfClass("Humanoid")
+end
+
+local function setSpeed(v)
+    local hum = getHumanoid()
+    if hum then hum.WalkSpeed = v print("[KS HUB] WalkSpeed =", v) end
 end
 
 local function teleportToMouse()
@@ -221,10 +205,8 @@ local function toggleNoclip()
             local char = LocalPlayer.Character
             if char then
                 for _, part in ipairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end 
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
             end
         end)
         print("[KS HUB] Noclip ON")
@@ -261,38 +243,10 @@ local function toggleAntiDelay()
     print("[KS HUB] Anti-Delay:", antiDelay and "ON" or "OFF")
 end
 
--- Velocidad y salto helpers
-local function getHumanoid()
-    local char = LocalPlayer.Character
-    if not char then return nil end
-    return char:FindFirstChildOfClass("Humanoid")
-end
-
-local function setSpeed(v)
-    local hum = getHumanoid()
-    if hum then hum.WalkSpeed = v print("[KS HUB] WalkSpeed =", v) else warn("[KS HUB] Humanoid no encontrado para WalkSpeed") end
-end
-
-local function getBaseJump()
-    local hum = getHumanoid()
-    if hum and hum.JumpPower and hum.JumpPower > 0 then return hum.JumpPower end
-    return 50
-end
-
-local function setJumpMultiplier(mult)
-    local hum = getHumanoid()
-    if hum then
-        hum.JumpPower = getBaseJump() * mult
-        print("[KS HUB] JumpPower mult =", mult, "=>", hum.JumpPower)
-    else
-        warn("[KS HUB] Humanoid no encontrado para JumpPower")
-    end
-end
-
 print("[KS HUB] Funciones listas")
 
 --========================================================
--- [ SECCIÓN 4 ] MAIN (SCROLL + TELEPORT SLOTS + VELOCIDAD + SALTO)
+-- [ SECCIÓN 4 ] MAIN (SLIDERS + UTILIDADES + BRING ITEMS)
 --========================================================
 local mainScroll = Instance.new("ScrollingFrame")
 mainScroll.Size = UDim2.new(1, 0, 1, 0)
@@ -306,67 +260,9 @@ mainLayout.Padding = UDim.new(0, 6)
 mainLayout.SortOrder = Enum.SortOrder.LayoutOrder
 mainLayout.Parent = mainScroll
 
--- Botones principales
+-- Botones base
 createButton(mainScroll, "Toggle Noclip", toggleNoclip)
 createButton(mainScroll, "Toggle Anti-Delay", toggleAntiDelay)
-
--- Teleport Slots
-local savedSlots = {nil, nil, nil, nil}
-local function saveSlot(i)
-    local root = getRoot(LocalPlayer)
-    if root then
-        savedSlots[i] = root.CFrame
-        print("[KS HUB] Guardado slot", i)
-    else
-        warn("[KS HUB] No se pudo guardar slot", i, "(Root nulo)")
-    end
-end
-local function loadSlot(i)
-    local root = getRoot(LocalPlayer)
-    if root and savedSlots[i] then
-        LocalPlayer.Character:PivotTo(savedSlots[i])
-        print("[KS HUB] Cargado slot", i)
-    else
-        warn("[KS HUB] Slot", i, "vacío o Root nulo")
-    end
-end
-
-for i = 1, 4 do
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, 0, 0, 36)
-    row.BackgroundTransparency = 1
-    row.Parent = mainScroll
-
-    local saveBtn = Instance.new("TextButton")
-    saveBtn.Size = UDim2.new(0.5, -4, 1, 0)
-    saveBtn.Position = UDim2.new(0, 0, 0, 0)
-    saveBtn.Text = "Save" .. i
-    saveBtn.Font = Enum.Font.Gotham
-    saveBtn.TextSize = 16
-    saveBtn.TextColor3 = Color3.new(1, 1, 1)
-    saveBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    saveBtn.BorderSizePixel = 0
-    saveBtn.Parent = row
-    local saveCorner = Instance.new("UICorner")
-    saveCorner.CornerRadius = UDim.new(0, 6)
-    saveCorner.Parent = saveBtn
-    saveBtn.MouseButton1Click:Connect(function() saveSlot(i) end)
-
-    local loadBtn = Instance.new("TextButton")
-    loadBtn.Size = UDim2.new(0.5, -4, 1, 0)
-    loadBtn.Position = UDim2.new(0.5, 4, 0, 0)
-    loadBtn.Text = "Load" .. i
-    loadBtn.Font = Enum.Font.Gotham
-    loadBtn.TextSize = 16
-    loadBtn.TextColor3 = Color3.new(1, 1, 1)
-    loadBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    loadBtn.BorderSizePixel = 0
-    loadBtn.Parent = row
-    local loadCorner = Instance.new("UICorner")
-    loadCorner.CornerRadius = UDim.new(0, 6)
-    loadCorner.Parent = loadBtn
-    loadBtn.MouseButton1Click:Connect(function() loadSlot(i) end)
-end
 
 -- =========================
 -- VELOCIDAD (SLIDER 16 - 150)
@@ -383,6 +279,7 @@ speedLabel.Parent = mainScroll
 local speedBar = Instance.new("Frame")
 speedBar.Size = UDim2.new(1, 0, 0, 10)
 speedBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+speedBar.BackgroundTransparency = 0.1
 speedBar.BorderSizePixel = 0
 speedBar.Parent = mainScroll
 local speedCorner = Instance.new("UICorner")
@@ -392,6 +289,7 @@ speedCorner.Parent = speedBar
 local speedFill = Instance.new("Frame")
 speedFill.Size = UDim2.new(0, 0, 1, 0)
 speedFill.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+speedFill.BackgroundTransparency = 0.1
 speedFill.BorderSizePixel = 0
 speedFill.Parent = speedBar
 local speedFillCorner = Instance.new("UICorner")
@@ -402,6 +300,7 @@ local speedKnob = Instance.new("Frame")
 speedKnob.Size = UDim2.new(0, 16, 0, 16)
 speedKnob.Position = UDim2.new(0, -8, 0.5, -8)
 speedKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+speedKnob.BackgroundTransparency = 0.1
 speedKnob.BorderSizePixel = 0
 speedKnob.Parent = speedBar
 local speedKnobCorner = Instance.new("UICorner")
@@ -438,15 +337,6 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- =========================
--- =========================
--- BRING ITEMS (TOOL DETECTOR + CANTIDAD + ORDEN POR DISTANCIA)
--- =========================
-local bringLabel = Instance.new("TextLabel")
-bringLabel.Size = UDim2.new(1, 0, 0, 24)
-bringLabel.BackgroundTransparency = 1
-bringLabel.Text = "Bring Items (nombre parcial + cantidad)"
-bringLabel.Font = Enum.Font.Gotham
-bringLabel.TextSize = -- =========================
 -- SALTO (SLIDER 20 - 60)
 -- =========================
 local jumpLabel = Instance.new("TextLabel")
@@ -498,10 +388,8 @@ local function setJumpFromX(x)
     jumpFill.Size = UDim2.new(rel, 0, 1, 0)
     jumpKnob.Position = UDim2.new(rel, -8, 0.5, -8)
     jumpLabel.Text = "Salto: " .. tostring(value)
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.JumpPower = value
-    end
+    local hum = getHumanoid()
+    if hum then hum.JumpPower = value print("[KS HUB] JumpPower =", value) end
 end
 
 jumpBar.InputBegan:Connect(function(input)
@@ -519,11 +407,20 @@ UserInputService.InputChanged:Connect(function(input)
     if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         setJumpFromX(input.Position.X)
     end
-end)16
+end)
+
+-- =========================
+-- BRING ITEMS (TOOLS + CANTIDAD + ORDEN POR DISTANCIA)
+-- =========================
+local bringLabel = Instance.new("TextLabel")
+bringLabel.Size = UDim2.new(1, 0, 0, 24)
+bringLabel.BackgroundTransparency = 1
+bringLabel.Text = "Bring Items (nombre parcial + cantidad)"
+bringLabel.Font = Enum.Font.Gotham
+bringLabel.TextSize = 16
 bringLabel.TextColor3 = Color3.new(1, 1, 1)
 bringLabel.Parent = mainScroll
 
--- Caja de texto para nombre parcial
 local bringBox = Instance.new("TextBox")
 bringBox.Size = UDim2.new(1, 0, 0, 30)
 bringBox.PlaceholderText = "Ej: Sword"
@@ -531,7 +428,7 @@ bringBox.Font = Enum.Font.Gotham
 bringBox.TextSize = 16
 bringBox.TextColor3 = Color3.new(1, 1, 1)
 bringBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-bringBox.BackgroundTransparency = 0.1 -- 10% más transparente
+bringBox.BackgroundTransparency = 0.1
 bringBox.BorderSizePixel = 0
 bringBox.ClearTextOnFocus = false
 bringBox.Parent = mainScroll
@@ -539,7 +436,6 @@ local bringCorner = Instance.new("UICorner")
 bringCorner.CornerRadius = UDim.new(0, 6)
 bringCorner.Parent = bringBox
 
--- Caja de texto para cantidad
 local amountBox = Instance.new("TextBox")
 amountBox.Size = UDim2.new(1, 0, 0, 30)
 amountBox.PlaceholderText = "Cantidad (ej: 3, vacío = 1)"
@@ -555,7 +451,6 @@ local amountCorner = Instance.new("UICorner")
 amountCorner.CornerRadius = UDim.new(0, 6)
 amountCorner.Parent = amountBox
 
--- Botón Bring
 local bringBtn = Instance.new("TextButton")
 bringBtn.Size = UDim2.new(1, 0, 0, 36)
 bringBtn.Text = "Bring"
@@ -563,7 +458,7 @@ bringBtn.Font = Enum.Font.Gotham
 bringBtn.TextSize = 16
 bringBtn.TextColor3 = Color3.new(1, 1, 1)
 bringBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-bringBtn.BackgroundTransparency = 0.1 -- 10% más transparente
+bringBtn.BackgroundTransparency = 0.1
 bringBtn.BorderSizePixel = 0
 bringBtn.Parent = mainScroll
 local bringBtnCorner = Instance.new("UICorner")
@@ -571,33 +466,27 @@ bringBtnCorner.CornerRadius = UDim.new(0, 6)
 bringBtnCorner.Parent = bringBtn
 
 bringBtn.MouseButton1Click:Connect(function()
-    local query = bringBox.Text:lower()
+    local query = string.lower(bringBox.Text or "")
     local amount = tonumber(amountBox.Text) or 1
-    if query == "" then
-        warn("[KS HUB] No escribiste nada en Bring Items")
-        return
-    end
+    if query == "" then warn("[KS HUB] Bring Items: query vacío"); return end
     local root = getRoot(LocalPlayer)
-    if not root then
-        warn("[KS HUB] No se encontró HumanoidRootPart")
-        return
-    end
+    if not root then warn("[KS HUB] Bring Items: Root nulo"); return end
 
-    -- Buscar Tools en workspace que coincidan con el texto
     local candidates = {}
     for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Tool") then
-            if string.find(obj.Name:lower(), query) then
-                local dist = (obj.Handle and (obj.Handle.Position - root.Position).Magnitude) or 9999
-                table.insert(candidates, {tool = obj, dist = dist})
+        if obj:IsA("Tool") and string.find(string.lower(obj.Name), query) then
+            local dist = 999999
+            if obj:FindFirstChild("Handle") then
+                dist = (obj.Handle.Position - root.Position).Magnitude
+            elseif obj.Parent and obj.Parent:IsA("Model") and obj.Parent.PrimaryPart then
+                dist = (obj.Parent.PrimaryPart.Position - root.Position).Magnitude
             end
+            table.insert(candidates, {tool = obj, dist = dist})
         end
     end
 
-    -- Ordenar por distancia
     table.sort(candidates, function(a, b) return a.dist < b.dist end)
 
-    -- Traer los primeros N
     local count = 0
     for _, data in ipairs(candidates) do
         if count >= amount then break end
@@ -606,6 +495,11 @@ bringBtn.MouseButton1Click:Connect(function()
             local targetCFrame = root.CFrame + Vector3.new(0, 5 + count * 2, 0)
             if tool:FindFirstChild("Handle") then
                 tool.Handle.CFrame = targetCFrame
+            else
+                -- fallback si no hay Handle (raro en Tools)
+                if tool:IsA("Model") and tool.PrimaryPart then
+                    tool:PivotTo(targetCFrame)
+                end
             end
             print("[KS HUB] Bring Items: Traído Tool ->", tool.Name)
             count = count + 1
@@ -613,28 +507,28 @@ bringBtn.MouseButton1Click:Connect(function()
     end
 
     if count == 0 then
-        warn("[KS HUB] No se encontró ningún Tool con '" .. query .. "'")
+        warn("[KS HUB] Bring Items: No se encontró ningún Tool con '" .. query .. "'")
     end
 
-    -- Limpiar inputs
     bringBox.Text = ""
     amountBox.Text = ""
 end)
 
+print("[KS HUB] Main listo")
+
 --========================================================
--- [ SECCIÓN 5 ] TELEPORT MEJORADO (BUSCADOR + SCROLL + REFRESH)
+-- [ SECCIÓN 5 ] TELEPORT (BUSCADOR + SCROLL)
 --========================================================
 createButton(Tabs["Teleport"], "Teleport al Mouse", teleportToMouse)
 
--- Caja de búsqueda
 local searchBox = Instance.new("TextBox")
 searchBox.Size = UDim2.new(1, 0, 0, 30)
-searchBox.Text = "" -- vacío, NO "TextBox"
 searchBox.PlaceholderText = "Buscar jugador..."
 searchBox.Font = Enum.Font.Gotham
 searchBox.TextSize = 16
 searchBox.TextColor3 = Color3.new(1, 1, 1)
 searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+searchBox.BackgroundTransparency = 0.1
 searchBox.BorderSizePixel = 0
 searchBox.ClearTextOnFocus = false
 searchBox.Parent = Tabs["Teleport"]
@@ -642,7 +536,6 @@ local searchCorner = Instance.new("UICorner")
 searchCorner.CornerRadius = UDim.new(0, 6)
 searchCorner.Parent = searchBox
 
--- Botón de refrescar
 local refreshBtn = Instance.new("TextButton")
 refreshBtn.Size = UDim2.new(1, 0, 0, 30)
 refreshBtn.Text = "Actualizar lista de jugadores"
@@ -650,15 +543,15 @@ refreshBtn.Font = Enum.Font.Gotham
 refreshBtn.TextSize = 16
 refreshBtn.TextColor3 = Color3.new(1, 1, 1)
 refreshBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+refreshBtn.BackgroundTransparency = 0.1
 refreshBtn.BorderSizePixel = 0
 refreshBtn.Parent = Tabs["Teleport"]
 local refreshCorner = Instance.new("UICorner")
 refreshCorner.CornerRadius = UDim.new(0, 6)
 refreshCorner.Parent = refreshBtn
 
--- Lista con scroll
 local playerScroll = Instance.new("ScrollingFrame")
-playerScroll.Size = UDim2.new(1, 0, 1, -100) -- espacio para controles
+playerScroll.Size = UDim2.new(1, 0, 1, -70)
 playerScroll.Position = UDim2.new(0, 0, 0, 70)
 playerScroll.BackgroundTransparency = 1
 playerScroll.ScrollBarThickness = 6
@@ -671,12 +564,10 @@ scrollLayout.Padding = UDim.new(0, 6)
 scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scrollLayout.Parent = playerScroll
 
--- Poblar lista
 local function populatePlayerList(filter)
     for _, child in ipairs(playerScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
-
     local list = {}
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then table.insert(list, plr) end
@@ -697,10 +588,9 @@ local function populatePlayerList(filter)
             btn.TextSize = 16
             btn.TextColor3 = Color3.new(1, 1, 1)
             btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            btn.BackgroundTransparency = 0.1
             btn.BorderSizePixel = 0
-            btn.AutoButtonColor = true
             btn.Parent = playerScroll
-
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 6)
             corner.Parent = btn
@@ -723,7 +613,6 @@ Players.PlayerAdded:Connect(function() populatePlayerList(searchBox.Text) end)
 Players.PlayerRemoving:Connect(function() populatePlayerList(searchBox.Text) end)
 
 populatePlayerList("")
-
 print("[KS HUB] Teleport listo")
 
 --========================================================
@@ -749,16 +638,17 @@ createButton(Tabs["Visual"], "Toggle Full Bright", function()
     end
 end)
 
--- ESP Jugadores (Highlight por jugador)
+-- ESP Jugadores (Highlight)
 local espEnabled = false
 local espConnections = {}
+
 local function addHighlightToCharacter(char)
     if not char then return end
     if char:FindFirstChild("KS_ESP_Highlight") then return end
     local h = Instance.new("Highlight")
     h.Name = "KS_ESP_Highlight"
     h.FillTransparency = 1
-    h.OutlineColor = Color3.fromRGB(0, 255, 255) -- celeste
+    h.OutlineColor = Color3.fromRGB(0, 255, 255)
     h.Adornee = char
     h.Parent = char
 end
@@ -799,11 +689,10 @@ local function toggleESP()
 end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
-
 print("[KS HUB] Visual listo")
 
 --========================================================
--- [ SECCIÓN 7 ] AJUSTES (UTILIDADES)
+-- [ SECCIÓN 7 ] AJUSTES
 --========================================================
 createButton(Tabs["Ajustes"], "Cerrar HUB", function()
     MainFrame.Visible = false
@@ -818,7 +707,7 @@ end)
 print("[KS HUB] Ajustes listo")
 
 --========================================================
--- [ SECCIÓN 8 ] INICIALIZACIÓN DE PESTAÑA POR DEFECTO
+-- [ SECCIÓN 8 ] INICIALIZACIÓN
 --========================================================
 for name, frame in pairs(Tabs) do
     frame.Visible = (name == "Main")
