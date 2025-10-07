@@ -506,6 +506,66 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- =========================
+-- BRING ITEMS (BUSCAR Y TRAER OBJETO)
+-- =========================
+local bringLabel = Instance.new("TextLabel")
+bringLabel.Size = UDim2.new(1, 0, 0, 24)
+bringLabel.BackgroundTransparency = 1
+bringLabel.Text = "Bring Items (escribe nombre parcial)"
+bringLabel.Font = Enum.Font.Gotham
+bringLabel.TextSize = 16
+bringLabel.TextColor3 = Color3.new(1, 1, 1)
+bringLabel.Parent = mainScroll
+
+local bringBox = Instance.new("TextBox")
+bringBox.Size = UDim2.new(1, 0, 0, 30)
+bringBox.PlaceholderText = "Ej: Gallet"
+bringBox.Font = Enum.Font.Gotham
+bringBox.TextSize = 16
+bringBox.TextColor3 = Color3.new(1, 1, 1)
+bringBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+bringBox.BorderSizePixel = 0
+bringBox.ClearTextOnFocus = false
+bringBox.Parent = mainScroll
+local bringCorner = Instance.new("UICorner")
+bringCorner.CornerRadius = UDim.new(0, 6)
+bringCorner.Parent = bringBox
+
+createButton(mainScroll, "Bring", function()
+    local query = bringBox.Text
+    if query == "" then
+        warn("[KS HUB] No escribiste nada en Bring Items")
+        return
+    end
+    query = query:lower()
+    local root = getRoot(LocalPlayer)
+    if not root then
+        warn("[KS HUB] No se encontró HumanoidRootPart para traer objetos")
+        return
+    end
+
+    local found = false
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") or obj:IsA("Model") then
+            if string.find(obj.Name:lower(), query) then
+                found = true
+                local targetCFrame = root.CFrame + Vector3.new(0, 5, 0)
+                if obj:IsA("Model") and obj.PrimaryPart then
+                    obj:SetPrimaryPartCFrame(targetCFrame)
+                elseif obj:IsA("BasePart") then
+                    obj.CFrame = targetCFrame
+                end
+                print("[KS HUB] Bring Items: Traído objeto ->", obj.Name)
+                break
+            end
+        end
+    end
+    if not found then
+        warn("[KS HUB] Bring Items: No se encontró ningún objeto con '" .. query .. "'")
+    end
+end)
+
 --========================================================
 -- [ SECCIÓN 5 ] TELEPORT MEJORADO (BUSCADOR + SCROLL + REFRESH)
 --========================================================
