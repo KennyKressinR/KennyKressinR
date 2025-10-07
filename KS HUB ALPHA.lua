@@ -13,21 +13,22 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 --========================================================
--- [ SECCIÓN 2 ] GUI PRINCIPAL
+--========================================================
+-- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + BOTONES CELESTES)
 --========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = game:GetService("CoreGui")
 
--- Botón flotante para abrir/cerrar
+-- Botón flotante
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 60, 0, 60)
 ToggleButton.Position = UDim2.new(1, -70, 1, -70)
 ToggleButton.Text = "≡"
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 24
-ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 60, 120) -- azul oscuro
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 local ToggleCorner = Instance.new("UICorner")
@@ -38,7 +39,7 @@ ToggleCorner.Parent = ToggleButton
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80) -- azul oscuro
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
@@ -83,7 +84,7 @@ local function createTab(name)
     tabButton.Font = Enum.Font.Gotham
     tabButton.TextSize = 16
     tabButton.TextColor3 = Color3.new(1, 1, 1)
-    tabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
     tabButton.BorderSizePixel = 0
     tabButton.Parent = TabContainer
     local tabCorner = Instance.new("UICorner")
@@ -118,7 +119,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Utilidad: crear botón
+-- Función para crear botones (celeste)
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -126,7 +127,7 @@ local function createButton(parent, text, callback)
     button.Font = Enum.Font.Gotham
     button.TextSize = 16
     button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
     button.BorderSizePixel = 0
     button.Parent = parent
     local corner = Instance.new("UICorner")
