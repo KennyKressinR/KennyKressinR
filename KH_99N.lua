@@ -877,36 +877,7 @@ local function toggleAutoDrop(state, name, qty, pos)
     end
 end
 
--- Secciones por categoría
-CreateSection(tabItem, "Bring / Drop por categoría")
-for category, items in pairs(bracket) do
-    local selectedName = nil
-    CreateDropdown(tabItem, "Seleccionar "..category, items, function(val, label)
-        selectedName = val
-        print("[KS HUB] Seleccionado:", val, "en", category)
-    end)
 
-    local qtyValue = 1
-    CreateSlider(tabItem, "Cantidad "..category, 1, 50, 1, function(v)
-        qtyValue = v
-    end)
-
-    CreateButton(tabItem, "Bring "..category, function()
-        if selectedName then bringItem(selectedName, qtyValue) end
-    end)
-
-    CreateButton(tabItem, "Drop en Campfire ("..category..")", function()
-        if selectedName then dropItemAt(selectedName, qtyValue, campfireDropPos) end
-    end)
-
-    CreateButton(tabItem, "Drop en Machine ("..category..")", function()
-        if selectedName then dropItemAt(selectedName, qtyValue, machineDropPos) end
-    end)
-
-    CreateToggle(tabItem, "AutoDrop "..category.." (Campfire)", function(state)
-        if selectedName then toggleAutoDrop(state, selectedName, qtyValue, campfireDropPos) end
-    end)
-end
 
 print("[KS HUB] Item TP/ESP (Bring/Drop/AutoDrop) cargado")
 
@@ -918,7 +889,98 @@ CreateSection(tabItem, "Teleport to Item")
 local itemNames = {
     "Revolver", "MedKit", "Alien Chest", "Berry", "Bolt", "Broken Fan",
     "Carrot", "Coal", "Coin Stack", "Hologram Emitter", "Item Chest",
-    "Laser Fence Blueprint", "Log", "Old Flashlight", "Old Radio",
+   -- Secciones por categoría con MultiSelect
+CreateSection(tabItem, "Bring / Drop por categoría (multi-select)")
+
+-- Conexiones de AutoDrop por categoría y por ítem
+local autoDropConns = {}  -- autoDropConns[category][itemName] = connection
+
+for category, items in pairs(bracket) do
+    -- Título limpio por categoría
+    CreateSection(tabItem, "Categoría: " .. category)
+
+    -- Lista multi-select
+    local listFrame, listAPI = CreateMultiSelectList(tabItem, "Selecciona ítems de " .. category, items, function(selectedNames)
+        print("[KS HUB] Selección ("..category.."):", table.concat(selectedNames, ", "))
+    end)
+
+    -- Cantidad por categoría
+    local qtyValue = 1
+    CreateSlider(tabItem, "Cantidad ("..category..")", 1, 50, 1, function(v)
+        qtyValue = v
+    end)
+
+    -- Botón Bring para todos los seleccionados
+    CreateButton(tabItem, "Bring seleccionados ("..category..")", function()
+        local selected = listAPI:GetSelected()
+        if #selected == 0 then
+            warn("[KS HUB] Nada seleccionado en "..category)
+            return
+        end
+        for _, name in ipairs(selected) do
+            bringItem(name, qtyValue)
+        end
+    end)
+
+    -- Drop en Campfire para todos los seleccionados
+    CreateButton(tabItem, "Drop Campfire ("..category..")", function()
+        local selected = listAPI:GetSelected()
+        if #selected == 0 then return end
+        for _, name in ipairs(selected) do
+            dropItemAt(name, qtyValue, campfireDropPos)
+        end
+    end)
+
+    -- Drop en Machine para todos los seleccionados
+    CreateButton(tabItem, "Drop Machine ("..category..")", function()
+        local selected = listAPI:GetSelected()
+        if #selected == 0 then return end
+        for _, name in ipairs(selected) do
+            dropItemAt(name, qtyValue, machineDropPos)
+        end
+    end)
+
+    -- AutoDrop para todos los seleccionados de la categoría
+    CreateToggle(tabItem, "AutoDrop ("..category..")", function(state)
+        autoDropConns[category] = autoDropConns[category] or {}
+        local selected = listAPI:GetSelected()
+
+        if state then
+            if #selected == 0 then
+                warn("[KS HUB] Activa AutoDrop sin selección en "..category)
+            end
+            for _, name in ipairs(selected) do
+                if autoDropConns[category][name] then
+                    autoDropConns[category][name]:Disconnect()
+                    autoDropConns[category][name] = nil
+                end
+                autoDropConns[category][name] = RunService.Heartbeat:Connect(function()
+                    local now = tick()
+                    if not toggleAutoDrop._last or now - toggleAutoDrop._last >= 5 then
+                        toggleAutoDrop._last = now
+                        dropItemAt(name, qtyValue, campfireDropPos)
+                    end
+                end)
+            end
+            print("[KS HUB] AutoDrop ON ("..category..") para:", table.concat(selected, ", "))
+        else
+            if autoDropConns[category] then
+                for name, conn in pairs(autoDropConns[category]) do
+                    conn:Disconnect()
+                end
+                autoDropConns[category] = {}
+            end
+            print("[KS HUB] AutoDrop OFF ("..category..")")
+        end
+    end)
+
+    -- Botón limpiar selección
+    CreateButton(tabItem, "Limpiar selección ("..category..")", function()
+        listAPI:ClearSelection()
+    end)
+end
+
+print("[KS HUB] Bring/Drop multi-select por categoría cargado") "Laser Fence Blueprint", "Log", "Old Flashlight", "Old Radio",
     "Sheet Metal", "Bandage", "Rifle"
 }
 
