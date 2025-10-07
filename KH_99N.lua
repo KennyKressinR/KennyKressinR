@@ -929,7 +929,7 @@ for category, items in pairs(bracket) do
     end)
 end
 
-print("[KS HUB] Item TP/ESP (Bring/Drop/AutoDrop) cargado")    if duration and duration > 0 then
+print("[KS HUB] Item TP/ESP (Bring/Drop/AutoDrop) cargado") 
         local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
         local tween = TweenService:Create(hrp, info, {CFrame = cf})
         tween:Play()
