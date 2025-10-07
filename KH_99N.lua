@@ -231,77 +231,50 @@ function CreateTab(name)
     return frame
 end
 
--- Al iniciar, mostrar el primer tab creado automáticamente
-local first = true
-local oldCreateTab = CreateTab
-function CreateTab(name)
-    local frame = oldCreateTab(name)
-    if first then
-        frame.Visible = true
-        first = false
-    end
-    return frame
-end
---========================================================--
--- PARTE 2: CREACIÓN DE PESTAÑAS DEL HUB
---========================================================--
-
--- Aquí asumimos que ya tienes creado el "Window" o "Library" de tu UI en la Parte 1.
--- Ejemplo: local Window = Library:CreateWindow("KS HUB")
 
 --========================================================--
+-- PARTE 2: CREACIÓN DE PESTAÑAS DEL HUB (Standalone)
+--========================================================--
+
 -- PESTAÑA PRINCIPAL (Main)
---========================================================--
-local tabMain = CreateTab("Main")
--- Aquí irán funciones generales como Chop Aura, Safe Zone, etc.
+local tabMain   = CreateTab("Main")
+CreateSection(tabMain, "Opciones principales")
+-- Aquí se cargan Chop Aura + Safe Zone (Parte 5)
 
---========================================================--
 -- PESTAÑA DE ITEMS (Item TP/ESP)
---========================================================--
-local tabItem = Window:CreateTab("Item TP/ESP")
--- Aquí irán Bring, Drop, AutoDrop, AutoCook, AutoFuel, etc.
+local tabItem   = CreateTab("Item TP/ESP")
+CreateSection(tabItem, "Gestión de Items")
+-- Aquí se cargan Bring, Drop, AutoDrop con MultiSelect (Parte 4)
 
---========================================================--
--- PESTAÑA DE ESP (Visualización de objetos/jugadores)
---========================================================--
-local tabESP = Window:CreateTab("ESP")
--- Aquí irán toggles y sliders para mostrar objetos, jugadores, mobs, etc.
+-- PESTAÑA DE ESP
+local tabESP    = CreateTab("ESP")
+CreateSection(tabESP, "Visualización")
+-- Aquí se cargarán toggles de ESP (puedes añadirlos después)
 
---========================================================--
 -- PESTAÑA DE TELEPORTS (Game TP)
---========================================================--
-local tabGameTP = Window:CreateTab("Game TP")
--- Aquí irán los teleports predefinidos (campfire, safezone, machine, etc.)
+local tabGameTP = CreateTab("Game TP")
+CreateSection(tabGameTP, "Teleports")
+-- Aquí se cargan los dropdowns de teleports (Parte 6)
 
---========================================================--
 -- PESTAÑA DE AUTOMATIZACIÓN (Auto)
---========================================================--
-local tabAuto = Window:CreateTab("Auto")
--- Aquí irán AutoCook, AutoFuel y cualquier otra automatización futura.
+local tabAuto   = CreateTab("Auto")
+CreateSection(tabAuto, "Automatización")
+-- Aquí se cargan AutoCook + AutoFuel (Parte 7)
 
---========================================================--
--- PESTAÑA DE JUGADOR (Player Utils)
---========================================================--
-local tabPlayer = Window:CreateTab("Player")
--- Aquí irán sliders de WalkSpeed, JumpPower, FullBright, etc.
+-- PESTAÑA DE JUGADOR (Player)
+local tabPlayer = CreateTab("Player")
+CreateSection(tabPlayer, "Opciones de Jugador")
+-- Aquí se cargan sliders de WalkSpeed, JumpPower, FullBright, etc.==============--
 
 --========================================================--
 -- PARTE 3: FUNCIONES GENERALES
 --========================================================--
 
---========================================================--
--- 3A: Obtener HumanoidRootPart del jugador
---========================================================--
 local function getHRP()
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     return char:FindFirstChild("HumanoidRootPart")
 end
 
---========================================================--
--- 3B: Detección de herramientas (para Chop Aura, combate, etc.)
---========================================================--
-
--- Devuelve cualquier herramienta con un atributo "damageId"
 local function getAnyToolWithDamageID()
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if not backpack then return nil end
@@ -313,7 +286,6 @@ local function getAnyToolWithDamageID()
     return nil
 end
 
--- Devuelve un hacha (para Chop Aura)
 local function getAxeTool()
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if not backpack then return nil end
@@ -324,10 +296,6 @@ local function getAxeTool()
     end
     return nil
 end
-
---========================================================--
--- 3C: Equipar y desequipar herramientas
---========================================================--
 
 local function equipTool(tool)
     if not tool then return end
@@ -347,11 +315,6 @@ local function unequipTool(tool)
     end
 end
 
---========================================================--
--- 3D: Funciones de utilidad varias
---========================================================--
-
--- Teletransportar al HRP a una posición (instantáneo)
 local function teleportInstant(cf)
     local hrp = getHRP()
     if hrp then
@@ -360,7 +323,6 @@ local function teleportInstant(cf)
     end
 end
 
--- Teletransportar con tween (animado)
 local function teleportTween(cf, duration)
     local hrp = getHRP()
     if hrp then
@@ -370,6 +332,8 @@ local function teleportTween(cf, duration)
         print("[KS HUB] Teleport con tween a:", cf.Position)
     end
 end
+
+
 --========================================================--
 -- PARTE 4: ITEM TP/ESP
 --========================================================--
