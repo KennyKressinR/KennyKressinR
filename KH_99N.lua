@@ -39,7 +39,7 @@ MainFrame.BackgroundTransparency = 0.25 -- Fondo 25% transparente
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
--- Botón flotante para abrir/cerrar HUB
+-- Botón flotante para abrir/cerrar HUB (arrastrable)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Size = UDim2.new(0, 120, 0, 40)
 ToggleBtn.Position = UDim2.new(0, 20, 0, 200)
@@ -56,6 +56,44 @@ ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = hubVisible
     print("[KS HUB] HUB " .. (hubVisible and "abierto" or "cerrado"))
 end)
+
+-- === Hacer el botón arrastrable ===
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    ToggleBtn.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+end
+
+ToggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleBtn.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+ToggleBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+--
 
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
