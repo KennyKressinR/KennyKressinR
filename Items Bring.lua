@@ -1,4 +1,8 @@
+--========================================================--
 -- PARTE 1: BOOTSTRAP Y ESTADO COMPARTIDO
+--========================================================--
+
+-- [1.1] Servicios y jugador
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("ReplicatedStorage")
@@ -19,15 +23,16 @@ HUB.state = {
 
 -- [1.4] Paleta visual y layout
 local COLORS = {
-    bg = Color3.fromRGB(18,18,18),
-    panel = Color3.fromRGB(30,30,30),
-    title = Color3.fromRGB(42,42,42),
-    accent = Color3.fromRGB(70,130,180),
-    btn = Color3.fromRGB(52,52,52),
-    btnHover = Color3.fromRGB(62,62,62),
-    good = Color3.fromRGB(60,120,60),
-    warn = Color3.fromRGB(180,120,60)
+    bg = Color3.fromRGB(18, 18, 18),
+    panel = Color3.fromRGB(30, 30, 30),
+    title = Color3.fromRGB(42, 42, 42),
+    accent = Color3.fromRGB(70, 130, 180),
+    btn = Color3.fromRGB(52, 52, 52),
+    btnHover = Color3.fromRGB(62, 62, 62),
+    good = Color3.fromRGB(60, 120, 60),
+    warn = Color3.fromRGB(180, 120, 60)
 }
+
 local MARGINS = {
     outer = 10,
     inner = 8,
