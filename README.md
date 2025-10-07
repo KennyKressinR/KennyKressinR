@@ -1,5 +1,5 @@
 <!--Banner-->
-![Kiran1689 Banner Image]([(https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/Image/Portada.png)]) 
+![KS Banner]([(https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/refs/heads/main/Image/Portada.png)]) 
 
 <!--Night Owl image-->
 <div>
