@@ -1,13 +1,25 @@
 --========================================================--
 -- KS HUB - 99 Noches
--- ItemESP.lua (ESP de ítems por categorías)
+-- ItemTP.lua (Bring Items avanzado con posiciones especiales)
 --========================================================--
 
-local ItemESP = {}
+local ItemTP = {}
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Referencias
+local itemsFolder = Workspace:WaitForChild("Items")
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local remoteConsume = remoteEvents:WaitForChild("RequestConsumeItem")
+
+-- Posiciones especiales
+local campfireDropPos = Vector3.new(0, 19, 0)
+local machineDropPos  = Vector3.new(21, 16, -5)
 
 --========================================================--
--- BLOQUE: Categorías (usando tu bracket)
+-- BLOQUE: Categorías de ítems (usando tu bracket)
 --========================================================--
 local bracket = {
     weapons     = { "Laser Sword","Raygun","Kunai","Katana","Spear" },
@@ -21,81 +33,78 @@ local bracket = {
     misc_tools  = { "Good Sack","Old Flashlight","Old Radio","Giant Sack","Strong Flashlight","Chainsaw" }
 }
 
--- Colores por categoría
-local colors = {
-    weapons     = Color3.fromRGB(255, 0, 0),     -- rojo
-    minifoods   = Color3.fromRGB(0, 255, 0),     -- verde
-    meat        = Color3.fromRGB(255, 165, 0),   -- naranja
-    armor       = Color3.fromRGB(0, 191, 255),   -- celeste
-    ["guns/ammo"] = Color3.fromRGB(255, 255, 0), -- amarillo
-    materials   = Color3.fromRGB(128, 128, 128), -- gris
-    pelts       = Color3.fromRGB(160, 82, 45),   -- marrón
-    misc_tools  = Color3.fromRGB(255, 20, 147)   -- fucsia
-}
-
 --========================================================--
 -- BLOQUE: Funciones Auxiliares
 --========================================================--
-local function createESP(obj, color)
-    if obj:FindFirstChild("ESP") then return end
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "ESP"
-    billboard.Size = UDim2.new(0, 100, 0, 20)
-    billboard.Adornee = obj:IsA("Model") and obj.PrimaryPart or obj
-    billboard.AlwaysOnTop = true
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = color
-    label.TextStrokeTransparency = 0.5
-    label.Text = obj.Name
-    label.Font = Enum.Font.SourceSansBold
-    label.TextScaled = true
-    label.Parent = billboard
-
-    billboard.Parent = obj
+local function getHRP()
+    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 end
 
-local function removeESP()
-    for _, obj in ipairs(Workspace.Items:GetChildren()) do
-        local esp = obj:FindFirstChild("ESP")
-        if esp then esp:Destroy() end
+-- Traer ítems al jugador
+local function bringItem(name, quantity)
+    local hrp = getHRP()
+    if not hrp then return end
+    local count = 0
+    for _, obj in ipairs(itemsFolder:GetChildren()) do
+        if obj.Name == name then
+            local target = obj:IsA("BasePart") and obj or obj.PrimaryPart
+            if target then
+                target.CFrame = hrp.CFrame + Vector3.new(0,3,0)
+                count += 1
+                if count >= quantity then break end
+            end
+        end
     end
+    print("[KS HUB] Bring completado: "..count.." de "..name)
+end
+
+-- Aparecer ítems en posiciones especiales
+local function dropItemAt(name, quantity, position)
+    local count = 0
+    for _, obj in ipairs(itemsFolder:GetChildren()) do
+        if obj.Name == name then
+            local target = obj:IsA("BasePart") and obj or obj.PrimaryPart
+            if target then
+                target.CFrame = CFrame.new(position + Vector3.new(0,3,0))
+                count += 1
+                if count >= quantity then break end
+            end
+        end
+    end
+    print("[KS HUB] Drop completado: "..count.." de "..name.." en "..tostring(position))
 end
 
 --========================================================--
 -- BLOQUE: Inicialización del Tab
 --========================================================--
-function ItemESP.Init(tab)
-    local sec = tab:NewSection("Item ESP por Categorías")
-
-    sec:NewToggle("Activar ESP", "Muestra ítems categorizados", function(state)
-        if state then
-            for category, items in pairs(bracket) do
-                for _, name in ipairs(items) do
-                    for _, obj in ipairs(Workspace.Items:GetChildren()) do
-                        if obj.Name == name then
-                            createESP(obj, colors[category] or Color3.new(1,1,1))
-                        end
-                    end
-                end
+function ItemTP.Init(tab)
+    for category, items in pairs(bracket) do
+        local sec = tab:NewSection("Bring "..category)
+        local selected = nil
+        sec:NewDropdown("Seleccionar "..category, "Elige un ítem", items, function(val)
+            selected = val
+        end)
+        sec:NewSlider("Cantidad "..category, "Cuántos traer", 50, 1, function(val)
+            _G["Qty_"..category] = val
+        end)
+        sec:NewButton("Bring "..category, "Trae al jugador", function()
+            if selected then
+                bringItem(selected, _G["Qty_"..category] or 1)
+            else
+                warn("Debes seleccionar un ítem en "..category)
             end
-
-            -- Detectar nuevos ítems que aparezcan
-            Workspace.Items.ChildAdded:Connect(function(obj)
-                for category, items in pairs(bracket) do
-                    for _, name in ipairs(items) do
-                        if obj.Name == name then
-                            createESP(obj, colors[category] or Color3.new(1,1,1))
-                        end
-                    end
-                end
-            end)
-        else
-            removeESP()
-        end
-    end)
+        end)
+        sec:NewButton("Drop en Campfire", "Aparece en la fogata", function()
+            if selected then
+                dropItemAt(selected, _G["Qty_"..category] or 1, campfireDropPos)
+            end
+        end)
+        sec:NewButton("Drop en Machine", "Aparece en la máquina", function()
+            if selected then
+                dropItemAt(selected, _G["Qty_"..category] or 1, machineDropPos)
+            end
+        end)
+    end
 end
 
-return ItemESP
+return ItemTP
