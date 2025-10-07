@@ -337,12 +337,13 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- =========================
--- SALTO (SLIDER 20 - 60)
+-- =========================
+-- SALTO (SLIDER 32 - 75)
 -- =========================
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, 0, 0, 24)
 jumpLabel.BackgroundTransparency = 1
-jumpLabel.Text = "Salto: 20"
+jumpLabel.Text = "Salto: 32"
 jumpLabel.Font = Enum.Font.Gotham
 jumpLabel.TextSize = 16
 jumpLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -384,12 +385,15 @@ local function setJumpFromX(x)
     local barAbsPos = jumpBar.AbsolutePosition.X
     local barAbsSize = jumpBar.AbsoluteSize.X
     local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
-    local value = math.floor(20 + (60 - 20) * rel) -- rango 20 a 60
+    local value = math.floor(32 + (75 - 32) * rel) -- rango 32 a 75
     jumpFill.Size = UDim2.new(rel, 0, 1, 0)
     jumpKnob.Position = UDim2.new(rel, -8, 0.5, -8)
     jumpLabel.Text = "Salto: " .. tostring(value)
     local hum = getHumanoid()
-    if hum then hum.JumpPower = value print("[KS HUB] JumpPower =", value) end
+    if hum then
+        hum.JumpPower = value
+        print("[KS HUB] JumpPower =", value)
+    end
 end
 
 jumpBar.InputBegan:Connect(function(input)
@@ -408,6 +412,7 @@ UserInputService.InputChanged:Connect(function(input)
         setJumpFromX(input.Position.X)
     end
 end)
+
 
 -- =========================
 -- BRING ITEMS (TOOLS + CANTIDAD + ORDEN POR DISTANCIA)
