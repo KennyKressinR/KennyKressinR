@@ -337,8 +337,28 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- =========================
+
+
+
 -- =========================
--- SALTO (SLIDER 32 - 75)
+-- BRING ITEMS (TOOLS + CANTIDAD + ORDEN POR DISTANCIA)
+-- =========================
+local bringLabel = Instance.new("TextLabel")
+bringLabel.Size = UDim2.new(1, 0, 0, 24)
+bringLabel.BackgroundTransparency = 1
+bringLabel.Text = "Bring Items (nombre parcial + cantidad)"
+bringLabel.Font = Enum.Font.Gotham
+bringLabel.TextSize = 16
+bringLabel.TextColor3 = Color3.new(1, 1, 1)
+bringLabel.Parent = mainScroll
+
+local bringBox = Instance.new("TextBox")
+bringBox.Size = UDim2.new(1, 0, 0, 30)
+bringBox.Text = "" 
+bringBox.PlaceholderText = "Ej: Sword"
+bringBox.Font = Enum.Font.Gotham
+bringBox.Text-- =========================
+-- SALTO (SLIDER 32 - 100)
 -- =========================
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, 0, 0, 24)
@@ -385,7 +405,7 @@ local function setJumpFromX(x)
     local barAbsPos = jumpBar.AbsolutePosition.X
     local barAbsSize = jumpBar.AbsoluteSize.X
     local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
-    local value = math.floor(32 + (75 - 32) * rel) -- rango 32 a 75
+    local value = math.floor(32 + (100 - 32) * rel) -- rango 32 a 100
     jumpFill.Size = UDim2.new(rel, 0, 1, 0)
     jumpKnob.Position = UDim2.new(rel, -8, 0.5, -8)
     jumpLabel.Text = "Salto: " .. tostring(value)
@@ -411,27 +431,7 @@ UserInputService.InputChanged:Connect(function(input)
     if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         setJumpFromX(input.Position.X)
     end
-end)
-
-
--- =========================
--- BRING ITEMS (TOOLS + CANTIDAD + ORDEN POR DISTANCIA)
--- =========================
-local bringLabel = Instance.new("TextLabel")
-bringLabel.Size = UDim2.new(1, 0, 0, 24)
-bringLabel.BackgroundTransparency = 1
-bringLabel.Text = "Bring Items (nombre parcial + cantidad)"
-bringLabel.Font = Enum.Font.Gotham
-bringLabel.TextSize = 16
-bringLabel.TextColor3 = Color3.new(1, 1, 1)
-bringLabel.Parent = mainScroll
-
-local bringBox = Instance.new("TextBox")
-bringBox.Size = UDim2.new(1, 0, 0, 30)
-bringBox.Text = "" 
-bringBox.PlaceholderText = "Ej: Sword"
-bringBox.Font = Enum.Font.Gotham
-bringBox.TextSize = 16
+end)Size = 16
 bringBox.TextColor3 = Color3.new(1, 1, 1)
 bringBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 bringBox.BackgroundTransparency = 0.1
