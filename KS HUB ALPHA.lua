@@ -138,10 +138,6 @@ local function createButton(parent, text, callback)
     button.MouseButton1Click:Connect(callback)
     return button
 end
--- Mostrar/Ocultar HUB
-ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
 
 --========================================================
 -- [ SECCIÓN 3 ] FUNCIONES DEL HUB
