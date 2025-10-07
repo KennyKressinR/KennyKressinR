@@ -197,7 +197,7 @@ local function toggleNoclip()
                     if part:IsA("BasePart") then
                         part.CanCollide = false
                     end
-                end
+                end 
             end
         end)
         print("[KS HUB] Noclip ON")
@@ -410,8 +410,8 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- =========================
--- SALTO (SLIDER 50 - 125)
+-- -- =========================
+-- SALTO (SLIDER 50 - 60)
 -- =========================
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, 0, 0, 24)
@@ -455,11 +455,11 @@ local function setJumpFromX(x)
     local barAbsPos = jumpBar.AbsolutePosition.X
     local barAbsSize = jumpBar.AbsoluteSize.X
     local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
-    local value = math.floor(50 + (125 - 50) * rel)
+    local value = math.floor(50 + (60 - 50) * rel) -- rango 50 a 60
     jumpFill.Size = UDim2.new(rel, 0, 1, 0)
     jumpKnob.Position = UDim2.new(rel, -8, 0.5, -8)
     jumpLabel.Text = "Salto: " .. tostring(value)
-    setJumpMultiplier(value / 50) -- usamos el valor relativo al base 50
+    setJumpMultiplier(value / 50) -- relativo al base 50
 end
 
 jumpBar.InputBegan:Connect(function(input)
