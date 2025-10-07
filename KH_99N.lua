@@ -35,8 +35,27 @@ MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 680, 0, 460)
 MainFrame.Position = UDim2.new(0.5, -340, 0.5, -230)
 MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+MainFrame.BackgroundTransparency = 0.25 -- Fondo 25% transparente
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
+
+-- Botón flotante para abrir/cerrar HUB
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 120, 0, 40)
+ToggleBtn.Position = UDim2.new(0, 20, 0, 200)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.TextSize = 16
+ToggleBtn.Text = "Toggle HUB"
+ToggleBtn.Parent = ScreenGui
+
+local hubVisible = true
+ToggleBtn.MouseButton1Click:Connect(function()
+    hubVisible = not hubVisible
+    MainFrame.Visible = hubVisible
+    print("[KS HUB] HUB " .. (hubVisible and "abierto" or "cerrado"))
+end)
 
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
