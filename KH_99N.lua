@@ -1,8 +1,6 @@
 --========================================================--
--- KS HUB - 99 Noches
--- Main.lua (UI interna sin dependencias externas + debug)
+-- KS HUB - 99 Noches (Reescrito)
 --========================================================--
-
 print("[KS HUB] Iniciando...")
 
 --=== SERVICES ===--
@@ -17,7 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --=== WORLD REFERENCES ===--
 local itemsFolder = Workspace:FindFirstChild("Items")
 if not itemsFolder then
-    warn("[KS HUB] No se encontró workspace.Items. ESP/Bring dependerán de este folder.")
+    warn("[KS HUB] No se encontró workspace.Items")
 else
     print("[KS HUB] Items folder detectado:", itemsFolder:GetFullName())
 end
@@ -33,51 +31,51 @@ ScreenGui.Parent = game:GetService("CoreGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 680, 0, 460)
-MainFrame.Position = UDim2.new(0.5, -340, 0.5, -230)
+MainFrame.Size = UDim2.new(0, 500, 0, 350) -- más pequeño
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-MainFrame.BackgroundTransparency = 0.25 -- Fondo 25% transparente
+MainFrame.BackgroundTransparency = 0.2
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
-Title.Size = UDim2.new(1, 0, 0, 42)
+Title.Size = UDim2.new(1, 0, 0, 36)
 Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 Title.Text = "KS HUB - 99 Noches"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 20
+Title.TextSize = 18
 Title.Parent = MainFrame
 
 local TabButtons = Instance.new("Frame")
-TabButtons.Size = UDim2.new(0, 170, 1, -42)
-TabButtons.Position = UDim2.new(0, 0, 0, 42)
+TabButtons.Size = UDim2.new(0, 140, 1, -36)
+TabButtons.Position = UDim2.new(0, 0, 0, 36)
 TabButtons.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 TabButtons.Parent = MainFrame
 
 local TabListLayout = Instance.new("UIListLayout")
 TabListLayout.FillDirection = Enum.FillDirection.Vertical
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TabListLayout.Padding = UDim.new(0, 6)
+TabListLayout.Padding = UDim.new(0, 4)
 TabListLayout.Parent = TabButtons
 
 local ContentFrame = Instance.new("Frame")
-ContentFrame.Size = UDim2.new(1, -170, 1, -42)
-ContentFrame.Position = UDim2.new(0, 170, 0, 42)
+ContentFrame.Size = UDim2.new(1, -140, 1, -36)
+ContentFrame.Position = UDim2.new(0, 140, 0, 36)
 ContentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 ContentFrame.Parent = MainFrame
 
 --========================================================--
--- BOTÓN FLOTANTE ARRÁSTRABLE PARA ABRIR/CERRAR HUB
+-- BOTÓN FLOTANTE
 --========================================================--
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 120, 0, 40)
-ToggleBtn.Position = UDim2.new(0, 20, 0, 200)
+ToggleBtn.Size = UDim2.new(0, 100, 0, 32)
+ToggleBtn.Position = UDim2.new(0, 20, 0, 150)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.TextSize = 16
+ToggleBtn.TextSize = 14
 ToggleBtn.Text = "Toggle HUB"
 ToggleBtn.Parent = ScreenGui
 
@@ -121,28 +119,24 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 --========================================================--
---========================================================--
 -- UI HELPERS
 --========================================================--
-
 local Tabs = {}
 
 function CreateTab(name)
     local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(1, -12, 0, 32)
-    Button.Position = UDim2.new(0, 6, 0, 0)
+    Button.Size = UDim2.new(1, -8, 0, 28)
     Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     Button.Text = name
     Button.TextColor3 = Color3.fromRGB(255, 255, 255)
     Button.Font = Enum.Font.SourceSans
-    Button.TextSize = 16
-    Button.AutoButtonColor = true
+    Button.TextSize = 14
     Button.Parent = TabButtons
 
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Name = "Tab_"..name
-    TabContainer.Size = UDim2.new(1, -20, 1, -20)
-    TabContainer.Position = UDim2.new(0, 10, 0, 10)
+    TabContainer.Size = UDim2.new(1, -10, 1, -10)
+    TabContainer.Position = UDim2.new(0, 5, 0, 5)
     TabContainer.BackgroundTransparency = 1
     TabContainer.BorderSizePixel = 0
     TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -153,7 +147,7 @@ function CreateTab(name)
     local layout = Instance.new("UIListLayout")
     layout.FillDirection = Enum.FillDirection.Vertical
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 8)
+    layout.Padding = UDim.new(0, 6)
     layout.Parent = TabContainer
 
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -173,53 +167,42 @@ function CreateTab(name)
 end
 
 function CreateSection(parent, titleText)
-    local Section = Instance.new("Frame")
-    Section.Size = UDim2.new(1, -20, 0, 40)
+    local Section = Instance.new("TextLabel")
+    Section.Size = UDim2.new(1, -10, 0, 24)
     Section.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
-    Section.BorderSizePixel = 0
+    Section.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Section.Font = Enum.Font.SourceSansBold
+    Section.TextSize = 14
+    Section.TextXAlignment = Enum.TextXAlignment.Left
+    Section.Text = "  "..titleText
     Section.Parent = parent
-
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -12, 1, 0)
-    Title.Position = UDim2.new(0, 6, 0, 0)
-    Title.BackgroundTransparency = 1
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.Font = Enum.Font.SourceSansBold
-    Title.TextSize = 16
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Text = titleText
-    Title.Parent = Section
-
     return Section
 end
 
 function CreateButton(parent, text, onClick)
     local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 220, 0, 30)
+    Btn.Size = UDim2.new(0, 200, 0, 26)
     Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     Btn.Font = Enum.Font.SourceSans
-    Btn.TextSize = 16
+    Btn.TextSize = 14
     Btn.Text = text
-    Btn.AutoButtonColor = true
     Btn.Parent = parent
     Btn.MouseButton1Click:Connect(function()
         print("[KS HUB] Click botón:", text)
         local ok, err = pcall(onClick)
-        if not ok then
-            warn("[KS HUB] Error en botón '"..text.."':", err)
-        end
+        if not ok then warn("[KS HUB] Error en botón '"..text.."':", err) end
     end)
     return Btn
 end
 
 function CreateCheckbox(parent, text, callback)
     local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 220, 0, 30)
+    Btn.Size = UDim2.new(0, 200, 0, 26)
     Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     Btn.Font = Enum.Font.SourceSans
-    Btn.TextSize = 16
+    Btn.TextSize = 14
     Btn.Text = "[ ] " .. text
     Btn.Parent = parent
 
@@ -237,11 +220,11 @@ end
 
 function CreateToggle(parent, text, callback)
     local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 220, 0, 30)
+    Btn.Size = UDim2.new(0, 200, 0, 26)
     Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     Btn.Font = Enum.Font.SourceSans
-    Btn.TextSize = 16
+    Btn.TextSize = 14
     Btn.Text = text .. " [OFF]"
     Btn.Parent = parent
 
@@ -259,27 +242,27 @@ end
 
 function CreateTextBox(parent, labelText, defaultText, onSubmit)
     local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(0, 340, 0, 30)
+    Container.Size = UDim2.new(0, 300, 0, 26)
     Container.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     Container.Parent = parent
 
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0, 160, 1, 0)
+    Label.Size = UDim2.new(0, 120, 1, 0)
     Label.BackgroundTransparency = 1
     Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     Label.Font = Enum.Font.SourceSans
-    Label.TextSize = 16
+    Label.TextSize = 14
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Text = labelText
     Label.Parent = Container
 
     local Box = Instance.new("TextBox")
-    Box.Size = UDim2.new(1, -170, 1, 0)
-    Box.Position = UDim2.new(0, 170, 0, 0)
+    Box.Size = UDim2.new(1, -130, 1, 0)
+    Box.Position = UDim2.new(0, 130, 0, 0)
     Box.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     Box.TextColor3 = Color3.fromRGB(255, 255, 255)
     Box.Font = Enum.Font.SourceSans
-    Box.TextSize = 16
+    Box.TextSize = 14
     Box.Text = defaultText or ""
     Box.ClearTextOnFocus = false
     Box.Parent = Container
@@ -297,24 +280,27 @@ end
 
 function CreateDropdown(parent, labelText, options, onChoose)
     local Frame = Instance.new("Frame")
-    Frame.Size = UDim2.new(0, 260, 0, 30 + (#options * 28))
+    Frame.Size = UDim2.new(0, 240, 0, 30 + (#options * 24))
     Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     Frame.Parent = parent
 
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, 0, 0, 30)
+    Label.Size = UDim2.new(1, 0, 0, 26)
     Label.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
     Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     Label.Font = Enum.Font.SourceSansBold
-    Label.TextSize = 16
+    Label.TextSize = 14
     Label.Text = labelText
     Label.Parent = Frame
 
     for i, opt in ipairs(options) do
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 28)
-        btn.Position = UDim2.new(0, 0, 0, 30 + (i - 1) * 28)
+        btn.Size = UDim2.new(1, 0, 0, 22)
+        btn.Position = UDim2.new(0, 0, 0, 26 + (i - 1) * 22)
         btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 14
         btn.Text = type(opt) == "table" and opt[1] or tostring(opt)
         btn.Parent = Frame
 
@@ -331,7 +317,7 @@ end
 
 function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
     local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(0, 360, 0, 48)
+    Container.Size = UDim2.new(0, 300, 0, 40)
     Container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     Container.Parent = parent
 
@@ -347,7 +333,7 @@ function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onCha
 
     local Bar = Instance.new("Frame")
     Bar.Size = UDim2.new(1, -20, 0, 8)
-    Bar.Position = UDim2.new(0, 10, 0, 28)
+    Bar.Position = UDim2.new(0, 10, 0, 24)
     Bar.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
     Bar.BorderSizePixel = 0
     Bar.Parent = Container
@@ -382,6 +368,9 @@ function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onCha
 
     return Container
 end
+
+
+
 --========================================================--
 -- TABS
 --========================================================--
@@ -396,18 +385,15 @@ local tabMisc     = CreateTab("Misc")
 
 for _, t in ipairs(Tabs) do t.Frame.Visible = false end
 Tabs[1].Frame.Visible = true
-
 print("[KS HUB] Tabs creados correctamente.")
 
 --========================================================--
 -- KILL AURA (Main Tab)
 --========================================================--
-
 local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local killAuraToggle = false
 local radius = 200
 
--- Herramientas soportadas y sus damageIDs
 local toolsDamageIDs = {
     ["Old Axe"] = "1_8982038982",
     ["Good Axe"] = "112_8982038982",
@@ -416,68 +402,58 @@ local toolsDamageIDs = {
     ["Spear"] = "196_8999010016"
 }
 
--- Buscar cualquier herramienta soportada en inventario
 local function getAnyToolWithDamageID()
+    local inv = LocalPlayer:FindFirstChild("Inventory")
+    if not inv then return nil,nil end
     for toolName, damageID in pairs(toolsDamageIDs) do
-        local inv = LocalPlayer:FindFirstChild("Inventory")
-        if inv then
-            local tool = inv:FindFirstChild(toolName)
-            if tool then
-                return tool, damageID
-            end
-        end
+        local tool = inv:FindFirstChild(toolName)
+        if tool then return tool, damageID end
     end
-    return nil, nil
+    return nil,nil
 end
 
--- Equipar herramienta
 local function equipTool(tool)
     if tool then
         RemoteEvents.EquipItemHandle:FireServer("FireAllClients", tool)
-        print("[KS HUB] Equipando herramienta:", tool.Name)
+        print("[KS HUB] Equipando:", tool.Name)
     end
 end
 
--- Desequipar herramienta
 local function unequipTool(tool)
     if tool then
         RemoteEvents.UnequipItemHandle:FireServer("FireAllClients", tool)
-        print("[KS HUB] Desequipando herramienta:", tool.Name)
+        print("[KS HUB] Desequipando:", tool.Name)
     end
 end
 
--- Loop principal de Kill Aura
 local function killAuraLoop()
     while killAuraToggle do
-        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local hrp = character:FindFirstChild("HumanoidRootPart")
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
         if hrp then
             local tool, damageID = getAnyToolWithDamageID()
             if tool and damageID then
                 equipTool(tool)
                 for _, mob in ipairs(Workspace.Characters:GetChildren()) do
-                    if mob:IsA("Model") and mob ~= character then
+                    if mob:IsA("Model") and mob ~= char then
                         local part = mob:FindFirstChildWhichIsA("BasePart")
                         if part and (part.Position - hrp.Position).Magnitude <= radius then
                             local ok, err = pcall(function()
                                 RemoteEvents.ToolDamageObject:InvokeServer(
-                                    mob,
-                                    tool,
-                                    damageID,
-                                    CFrame.new(part.Position)
+                                    mob, tool, damageID, CFrame.new(part.Position)
                                 )
                             end)
                             if ok then
-                                print("[KS HUB] Atacando mob:", mob.Name, "con", tool.Name)
+                                print("[KS HUB] Atacando:", mob.Name, "con", tool.Name)
                             else
-                                warn("[KS HUB] Error atacando mob:", mob.Name, err)
+                                warn("[KS HUB] Error atacando:", mob.Name, err)
                             end
                         end
                     end
                 end
                 task.wait(0.1)
             else
-                warn("[KS HUB] No se encontró herramienta soportada en inventario.")
+                warn("[KS HUB] No se encontró herramienta soportada")
                 task.wait(1)
             end
         else
@@ -486,37 +462,35 @@ local function killAuraLoop()
     end
 end
 
--- UI en Main Tab
 CreateSection(tabMain, "Combat")
-
 CreateCheckbox(tabMain, "Kill Aura", function(state)
     killAuraToggle = state
     if state then
-        print("[KS HUB] Kill Aura activado.")
+        print("[KS HUB] Kill Aura activado")
         task.spawn(killAuraLoop)
     else
-        print("[KS HUB] Kill Aura desactivado.")
-        local tool, _ = getAnyToolWithDamageID()
+        print("[KS HUB] Kill Aura desactivado")
+        local tool,_ = getAnyToolWithDamageID()
         unequipTool(tool)
     end
 end)
 
 CreateSlider(tabMain, "Kill Aura Radius", 20, 500, 200, function(value)
     radius = math.clamp(value, 20, 500)
-    print("[KS HUB] Kill Aura radius ajustado a:", radius)
+    print("[KS HUB] Radio Kill Aura:", radius)
 end)
 
 --========================================================--
 -- SAFE ZONE (Main)
 --========================================================--
 local safezoneBaseplates = {}
-local baseplateSize = Vector3.new(2048, 1, 2048)
+local baseplateSize = Vector3.new(1024, 1, 1024)
 local baseY = 100
 local centerPos = Vector3.new(0, baseY, 0)
 
-for dx = -1, 1 do
-    for dz = -1, 1 do
-        local pos = centerPos + Vector3.new(dx * baseplateSize.X, 0, dz * baseplateSize.Z)
+for dx = -1,1 do
+    for dz = -1,1 do
+        local pos = centerPos + Vector3.new(dx*baseplateSize.X,0,dz*baseplateSize.Z)
         local baseplate = Instance.new("Part")
         baseplate.Name = "SafeZoneBaseplate"
         baseplate.Size = baseplateSize
@@ -524,18 +498,18 @@ for dx = -1, 1 do
         baseplate.Anchored = true
         baseplate.CanCollide = true
         baseplate.Transparency = 1
-        baseplate.Color = Color3.fromRGB(255, 255, 255)
+        baseplate.Color = Color3.fromRGB(255,255,255)
         baseplate.Parent = Workspace
         table.insert(safezoneBaseplates, baseplate)
     end
 end
-print("[KS HUB] Safe Zone baseplates creados.")
+print("[KS HUB] Safe Zone baseplates creados")
 
 CreateSection(tabMain, "Safe Zone")
 CreateCheckbox(tabMain, "Show Safe Zone", function(enabled)
-    for _, baseplate in ipairs(safezoneBaseplates) do
-        baseplate.Transparency = enabled and 0.8 or 1
-        baseplate.CanCollide = enabled
+    for _,bp in ipairs(safezoneBaseplates) do
+        bp.Transparency = enabled and 0.8 or 1
+        bp.CanCollide = enabled
     end
     print("[KS HUB] Safe Zone toggled:", enabled)
 end)
@@ -544,7 +518,7 @@ end)
 -- TELEPORTS (Game TP)
 --========================================================--
 local function stringToCFrame(str)
-    local x, y, z = str:match("([^,]+),%s*([^,]+),%s*([^,]+)")
+    local x,y,z = str:match("([^,]+),%s*([^,]+),%s*([^,]+)")
     return CFrame.new(tonumber(x), tonumber(y), tonumber(z))
 end
 
@@ -552,7 +526,6 @@ local function teleportToTarget(cf, duration)
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-
     if duration and duration > 0 then
         local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
         local tween = TweenService:Create(hrp, info, {CFrame = cf})
@@ -574,7 +547,9 @@ CreateDropdown(tabGameTP, "Teleports", storyCoords, function(value, label)
 end)
 
 --========================================================--
---========================================================--
+-- Fin de Parte 2
+-- La Parte 3 continuará con: ITEM TP/ESP + ESP + Player Utils + Final
+--========================================================----========================================================--
 -- ITEM TP/ESP
 --========================================================--
 
@@ -613,11 +588,7 @@ local function bringItem(name, quantity)
             end
         end
     end
-    if count > 0 then
-        print("[KS HUB] Se trajo correctamente", count, name)
-    else
-        warn("[KS HUB] No se encontró", name)
-    end
+    print("[KS HUB] Bring:", count, name)
 end
 
 local function dropItemAt(name, quantity, position)
@@ -633,11 +604,7 @@ local function dropItemAt(name, quantity, position)
             end
         end
     end
-    if count > 0 then
-        print("[KS HUB] Drop:", count, name, "en", position)
-    else
-        warn("[KS HUB] No se encontró", name, "para dropear")
-    end
+    print("[KS HUB] Drop:", count, name, "en", position)
 end
 
 -- AutoDrop
@@ -645,7 +612,7 @@ local autoDropConnection
 local autoDropTimer = 5
 local function toggleAutoDrop(state, name, qty, pos)
     if state then
-        print("[KS HUB] AutoDrop activado para:", name, "cada", autoDropTimer, "s")
+        print("[KS HUB] AutoDrop activado:", name)
         if autoDropConnection then autoDropConnection:Disconnect() end
         autoDropConnection = RunService.Heartbeat:Connect(function()
             local now = tick()
@@ -668,7 +635,7 @@ for category, items in pairs(bracket) do
     local selectedName = nil
     CreateDropdown(tabItem, "Seleccionar "..category, items, function(val, label)
         selectedName = val
-        print("[KS HUB] Seleccionado:", val, "en categoría", category)
+        print("[KS HUB] Seleccionado:", val, "en", category)
     end)
 
     local qtyValue = 1
@@ -677,40 +644,23 @@ for category, items in pairs(bracket) do
     end)
 
     CreateButton(tabItem, "Bring "..category, function()
-        if selectedName then
-            bringItem(selectedName, qtyValue)
-        else
-            warn("[KS HUB] Selecciona un ítem en "..category.." antes de Bring.")
-        end
+        if selectedName then bringItem(selectedName, qtyValue) end
     end)
 
     CreateButton(tabItem, "Drop en Campfire ("..category..")", function()
-        if selectedName then
-            dropItemAt(selectedName, qtyValue, campfireDropPos)
-        else
-            warn("[KS HUB] Selecciona un ítem en "..category.." antes del Drop Campfire.")
-        end
+        if selectedName then dropItemAt(selectedName, qtyValue, campfireDropPos) end
     end)
 
     CreateButton(tabItem, "Drop en Machine ("..category..")", function()
-        if selectedName then
-            dropItemAt(selectedName, qtyValue, machineDropPos)
-        else
-            warn("[KS HUB] Selecciona un ítem en "..category.." antes del Drop Machine.")
-        end
+        if selectedName then dropItemAt(selectedName, qtyValue, machineDropPos) end
     end)
 
     CreateToggle(tabItem, "AutoDrop "..category.." (Campfire)", function(state)
-        if selectedName then
-            toggleAutoDrop(state, selectedName, qtyValue, camp)
-                CreateToggle(tabItem, "AutoDrop "..category.." (Campfire)", function(state)
-        if selectedName then
-            toggleAutoDrop(state, selectedName, qtyValue, campfireDropPos)
-        else
-            warn("[KS HUB] Selecciona un ítem en "..category.." antes de AutoDrop.")
-        end
+        if selectedName then toggleAutoDrop(state, selectedName, qtyValue, campfireDropPos) end
     end)
 end
+
+print("[KS HUB] Item TP/ESP (Bring/Drop/AutoDrop) cargado")
 
 --========================================================--
 -- TELEPORT TO ITEM
@@ -814,7 +764,7 @@ CreateDropdown(tabItem, "Teleport Item (Bulk)", possibleItems, function(itemName
     teleportItem(itemName)
 end)
 
---========================================================--
+print("[KS HUB] Item TP/ESP (Teleport to Item + Bulk) cargado")
 --========================================================--
 -- ESP (Visuals)
 --========================================================--
@@ -922,20 +872,21 @@ for category, _ in pairs(bracket) do
                     for _, name in ipairs(bracket[category]) do
                         if obj.Name == name then
                             obj.ESP:Destroy()
-                                            end
+                        end
                     end
                 end
             end
         end
     end)
-            end
---========================================================--
--- (Bloque de ESP con toggles por categoría y prints)
+end
+
+print("[KS HUB] ESP cargado")
 
 --========================================================--
 -- PLAYER UTILS
 --========================================================--
 CreateSection(tabPlayer, "Player utils")
+
 CreateButton(tabPlayer, "FullBright", function()
     local lighting = game:GetService("Lighting")
     lighting.Brightness = 2
