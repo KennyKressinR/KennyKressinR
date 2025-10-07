@@ -8,7 +8,7 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- GUI Principal
+-- ============ GUI PRINCIPAL ============
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
@@ -23,16 +23,16 @@ ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 24
 ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.AutoButtonColor = true
 ToggleButton.Parent = ScreenGui
 
 local ToggleCorner = Instance.new("UICorner")
 ToggleCorner.CornerRadius = UDim.new(1, 0)
 ToggleCorner.Parent = ToggleButton
 
--- Marco principal
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 520, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 520, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
@@ -42,7 +42,6 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 
--- Título
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
@@ -65,14 +64,13 @@ TabLayout.Padding = UDim.new(0, 6)
 TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabLayout.Parent = TabContainer
 
--- Contenedor de contenido
+-- Contenido
 local ContentFrame = Instance.new("Frame")
 ContentFrame.Size = UDim2.new(1, -130, 1, -50)
 ContentFrame.Position = UDim2.new(0, 130, 0, 50)
 ContentFrame.BackgroundTransparency = 1
 ContentFrame.Parent = MainFrame
 
--- Función para crear pestañas
 local function createTab(name)
     local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(1, 0, 0, 36)
@@ -120,7 +118,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Función para crear botones
+-- Utilidad: crear botón
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -130,6 +128,7 @@ local function createButton(parent, text, callback)
     button.TextColor3 = Color3.new(1, 1, 1)
     button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     button.BorderSizePixel = 0
+    button.AutoButtonColor = true
     button.Parent = parent
 
     local corner = Instance.new("UICorner")
@@ -137,28 +136,31 @@ local function createButton(parent, text, callback)
     corner.Parent = button
 
     button.MouseButton1Click:Connect(callback)
+    return button
 end
 
--- =========================
--- FUNCIONES DEL HUB
--- =========================
+-- ============ FUNCIONES ============
+local function getRoot(plr)
+    local char = plr.Character
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+end
 
--- Teleport al mouse
+-- Teleport al mouse (nota: en móvil, usa donde toques la pantalla si hay raycast válido)
 local function teleportToMouse()
-    if Mouse.Hit then
-        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            root.CFrame = Mouse.Hit + Vector3.new(0, 3, 0)
-        end
+    local root = getRoot(LocalPlayer)
+    if root and Mouse.Hit then
+        root.CFrame = Mouse.Hit + Vector3.new(0, 3, 0)
     end
 end
 
--- Teleport a jugador
+-- Teleport a jugador robusto
 local function teleportToPlayer(player)
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local targetRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if root and targetRoot then
-        root.CFrame = targetRoot.CFrame + Vector3.new(0, 3, 0)
+    local myRoot = getRoot(LocalPlayer)
+    local targetRoot = getRoot(player)
+    if myRoot and targetRoot then
+        -- Usa PivotTo para mayor estabilidad
+        LocalPlayer.Character:PivotTo(targetRoot.CFrame + Vector3.new(0, 3, 0))
     end
 end
 
@@ -169,8 +171,9 @@ local function toggleNoclip()
     noclip = not noclip
     if noclip then
         noclipConnection = RunService.Stepped:Connect(function()
-            if LocalPlayer.Character then
-                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.CanCollide = false
                     end
@@ -180,66 +183,85 @@ local function toggleNoclip()
     else
         if noclipConnection then
             noclipConnection:Disconnect()
+            noclipConnection = nil
         end
-    end
-end
-
--- Guardar / Cargar posición
-local savedPosition
-local function savePosition()
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if root then
-        savedPosition = root.CFrame
-    end
-end
-
-local function loadPosition()
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if root and savedPosition then
-        root.CFrame = savedPosition
-    end
-end
-
--- Anti-delay para ProximityPrompt
-local antiDelay = false
-local originalDurations = {}
-local function toggleAntiDelay()
-    antiDelay = not antiDelay
-    for _, prompt in pairs(workspace:GetDescendants()) do
-        if prompt:IsA("ProximityPrompt") then
-            if antiDelay then
-                originalDurations[prompt] = prompt.HoldDuration
-                prompt.HoldDuration = 0
-            else
-                if originalDurations[prompt] then
-                    prompt.HoldDuration = originalDurations[prompt]
+        -- Restaurar colisiones
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
                 end
             end
         end
     end
 end
 
--- =========================
--- BOTONES POR SECCIÓN
--- =========================
+-- Guardar/Cargar posición
+local savedCFrame
+local function savePosition()
+    local root = getRoot(LocalPlayer)
+    if root then
+        savedCFrame = root.CFrame
+    end
+end
+local function loadPosition()
+    local root = getRoot(LocalPlayer)
+    if root and savedCFrame then
+        LocalPlayer.Character:PivotTo(savedCFrame)
+    end
+end
 
--- Main
-createButton(Tabs["Main"], "Toggle Noclip", toggleNoclip)
-createButton(Tabs["Main"], "Guardar Posición", savePosition)
-createButton(Tabs["Main"], "Cargar Posición", loadPosition)
-createButton(Tabs["Main"], "Toggle Anti-Delay", toggleAntiDelay)
+-- Anti-delay ProximityPrompt
+local antiDelay = false
+local originalDurations = {}
+local function toggleAntiDelay()
+    antiDelay = not antiDelay
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            if antiDelay then
+                originalDurations[obj] = obj.HoldDuration
+                obj.HoldDuration = 0
+            else
+                if originalDurations[obj] ~= nil then
+                    obj.HoldDuration = originalDurations[obj]
+                end
+            end
+        end
+    end
+    if not antiDelay then
+        originalDurations = {}
+    end
+end
 
--- Teleport
+-- Transparencia configurable
+local userTransparency = 0
+local function applyTransparency(value)
+    userTransparency = math.clamp(value, 0, 1)
+    local char = LocalPlayer.Character
+    if not char then return end
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = userTransparency
+        end
+    end
+end
+
+-- ============ SECCIÓN MAIN ============
+local noclipBtn = createButton(Tabs["Main"], "Toggle Noclip", toggleNoclip)
+local saveBtn = createButton(Tabs["Main"], "Guardar Posición", savePosition)
+local loadBtn = createButton(Tabs["Main"], "Cargar Posición", loadPosition)
+local antiDelayBtn = createButton(Tabs["Main"], "Toggle Anti-Delay", toggleAntiDelay)
+
+-- ============ SECCIÓN TELEPORT ============
 createButton(Tabs["Teleport"], "Teleport al Mouse", teleportToMouse)
 
--- Botones por sección (continuación)
-
--- Lista de jugadores con scroll
+-- Scrolling de jugadores
 local playerScroll = Instance.new("ScrollingFrame")
-playerScroll.Size = UDim2.new(1, 0, 0, 200)
-playerScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-playerScroll.ScrollBarThickness = 6
+playerScroll.Size = UDim2.new(1, 0, 1, -44)
 playerScroll.BackgroundTransparency = 1
+playerScroll.ScrollBarThickness = 6
+playerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 playerScroll.Parent = Tabs["Teleport"]
 
 local scrollLayout = Instance.new("UIListLayout")
@@ -247,65 +269,146 @@ scrollLayout.Padding = UDim.new(0, 6)
 scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scrollLayout.Parent = playerScroll
 
--- Función para actualizar la lista de jugadores
-local function updatePlayerList()
-    playerScroll:ClearAllChildren()
-    scrollLayout.Parent = playerScroll
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, 0, 0, 36)
-            btn.Text = "Teleport a: " .. player.Name
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 16
-            btn.TextColor3 = Color3.new(1, 1, 1)
-            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-            btn.BorderSizePixel = 0
-            btn.Parent = playerScroll
+local refreshPlayersBtn = createButton(Tabs["Teleport"], "Actualizar lista de jugadores", function()
+    -- Solo para dar opción manual si el servidor es grande
+    task.defer(function()
+        local function updatePlayerList()
+            -- Borra solo botones (mantén el layout)
+            for _, child in ipairs(playerScroll:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer then
+                    local btn = Instance.new("TextButton")
+                    btn.Size = UDim2.new(1, 0, 0, 36)
+                    btn.Text = "Teleport a: " .. plr.DisplayName .. " (" .. plr.Name .. ")"
+                    btn.Font = Enum.Font.Gotham
+                    btn.TextSize = 16
+                    btn.TextColor3 = Color3.new(1, 1, 1)
+                    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+                    btn.BorderSizePixel = 0
+                    btn.AutoButtonColor = true
+                    btn.Parent = playerScroll
 
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 6)
-            corner.Parent = btn
+                    local corner = Instance.new("UICorner")
+                    corner.CornerRadius = UDim.new(0, 6)
+                    corner.Parent = btn
 
-            btn.MouseButton1Click:Connect(function()
-                teleportToPlayer(player)
-            end)
+                    btn.MouseButton1Click:Connect(function()
+                        teleportToPlayer(plr)
+                    end)
+                end
+            end
         end
-    end
-    playerScroll.CanvasSize = UDim2.new(0, 0, 0, scrollLayout.AbsoluteContentSize.Y)
+        updatePlayerList()
+    end)
+end)
+
+-- Poblado inicial y eventos dinámicos
+local function updatePlayerListDynamic()
+    -- Reutiliza el botón de refresh internamente
+    refreshPlayersBtn:Activate()
 end
 
--- Actualizar al iniciar y cuando se une alguien
-updatePlayerList()
-Players.PlayerAdded:Connect(updatePlayerList)
-Players.PlayerRemoving:Connect(updatePlayerList)
+-- Llamada inicial
+updatePlayerListDynamic()
+-- Actualiza cuando se une/va alguien
+Players.PlayerAdded:Connect(updatePlayerListDynamic)
+Players.PlayerRemoving:Connect(updatePlayerListDynamic)
 
--- Visual (puedes expandir esta sección con efectos visuales)
-createButton(Tabs["Visual"], "Transparencia ON", function()
-    if LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0.5
-            end
-        end
+-- ============ SECCIÓN VISUAL ============
+createButton(Tabs["Visual"], "Transparencia 50%", function()
+    applyTransparency(0.5)
+end)
+createButton(Tabs["Visual"], "Transparencia 0%", function()
+    applyTransparency(0)
+end)
+
+-- ============ SECCIÓN AJUSTES ============
+-- Slider de transparencia (0 a 1)
+local sliderLabel = Instance.new("TextLabel")
+sliderLabel.Size = UDim2.new(1, 0, 0, 24)
+sliderLabel.BackgroundTransparency = 1
+sliderLabel.Text = "Transparencia (arrastrar): " .. tostring(userTransparency)
+sliderLabel.Font = Enum.Font.Gotham
+sliderLabel.TextSize = 16
+sliderLabel.TextColor3 = Color3.new(1, 1, 1)
+sliderLabel.Parent = Tabs["Ajustes"]
+
+local sliderBar = Instance.new("Frame")
+sliderBar.Size = UDim2.new(1, 0, 0, 10)
+sliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+sliderBar.BorderSizePixel = 0
+sliderBar.Parent = Tabs["Ajustes"]
+
+local sliderCorner = Instance.new("UICorner")
+sliderCorner.CornerRadius = UDim.new(0, 6)
+sliderCorner.Parent = sliderBar
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(0, 0, 1, 0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBar
+
+local sliderFillCorner = Instance.new("UICorner")
+sliderFillCorner.CornerRadius = UDim.new(0, 6)
+sliderFillCorner.Parent = sliderFill
+
+local sliderKnob = Instance.new("Frame")
+sliderKnob.Size = UDim2.new(0, 16, 0, 16)
+sliderKnob.Position = UDim2.new(0, -8, 0.5, -8)
+sliderKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+sliderKnob.BorderSizePixel = 0
+sliderKnob.Parent = sliderBar
+
+local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(1, 0)
+knobCorner.Parent = sliderKnob
+
+local dragging = false
+local function setSliderFromX(x)
+    local barAbsPos = sliderBar.AbsolutePosition.X
+    local barAbsSize = sliderBar.AbsoluteSize.X
+    local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
+    sliderFill.Size = UDim2.new(rel, 0, 1, 0)
+    sliderKnob.Position = UDim2.new(rel, -8, 0.5, -8)
+    applyTransparency(rel)
+    sliderLabel.Text = "Transparencia (arrastrar): " .. string.format("%.2f", rel)
+end
+
+sliderBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        setSliderFromX(input.Position.X)
+    end
+end)
+sliderBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        setSliderFromX(input.Position.X)
     end
 end)
 
-createButton(Tabs["Visual"], "Transparencia OFF", function()
-    if LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0
-            end
-        end
-    end
-end)
+-- Presets rápidos
+createButton(Tabs["Ajustes"], "Transparencia 25%", function() setSliderFromX(sliderBar.AbsolutePosition.X + sliderBar.AbsoluteSize.X * 0.25) end)
+createButton(Tabs["Ajustes"], "Transparencia 75%", function() setSliderFromX(sliderBar.AbsolutePosition.X + sliderBar.AbsoluteSize.X * 0.75) end)
 
--- Ajustes
+-- Botones útiles
 createButton(Tabs["Ajustes"], "Cerrar HUB", function()
     MainFrame.Visible = false
 end)
-
 createButton(Tabs["Ajustes"], "Resetear Personaje", function()
     LocalPlayer:LoadCharacter()
 end)
+
+-- Mostrar por defecto la pestaña Main
+for name, frame in pairs(Tabs) do
+    frame.Visible = (name == "Main")
+end
