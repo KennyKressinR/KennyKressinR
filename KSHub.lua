@@ -1,5 +1,11 @@
-print("KS HUB cargado")
--- tu código aquí...
+--========================================================
+-- KS HUB - FINAL COMPLETO
+--========================================================
+print("[KS HUB] Script iniciado")
+
+--========================================================
+-- [ SECCIÓN 1 ] SERVICIOS Y VARIABLES
+--========================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -13,16 +19,21 @@ local function getRoot(plr)
     return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 end
 
+local function getHumanoid()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    return char:FindFirstChildOfClass("Humanoid")
+end
+
 print("[KS HUB] Servicios cargados")
 
 --========================================================
--- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + TRANSPARENCIA + PESTAÑAS)
+-- [ SECCIÓN 2 ] GUI PRINCIPAL
 --========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-print("[KS HUB] ScreenGui parentado a PlayerGui")
 
 -- Botón flotante
 local ToggleButton = Instance.new("TextButton")
@@ -32,27 +43,25 @@ ToggleButton.Text = "≡"
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 24
 ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 60, 120)
-ToggleButton.BackgroundTransparency = 0.25 -- HUB 25% transparente
+ToggleButton.BackgroundTransparency = 0.25
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 local ToggleCorner = Instance.new("UICorner")
 ToggleCorner.CornerRadius = UDim.new(1, 0)
 ToggleCorner.Parent = ToggleButton
-print("[KS HUB] ToggleButton creado")
 
 -- Marco principal
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80)
-MainFrame.BackgroundTransparency = 0.25 -- HUB 25% transparente
+MainFrame.BackgroundTransparency = 0.25
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
-print("[KS HUB] MainFrame creado")
 
 -- Título
 local Title = Instance.new("TextLabel")
@@ -92,7 +101,7 @@ local function createTab(name)
     tabButton.TextSize = 16
     tabButton.TextColor3 = Color3.new(1, 1, 1)
     tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    tabButton.BackgroundTransparency = 0.1 -- 10% más transparente
+    tabButton.BackgroundTransparency = 0.1
     tabButton.BorderSizePixel = 0
     tabButton.Parent = TabContainer
     local tabCorner = Instance.new("UICorner")
@@ -113,7 +122,6 @@ local function createTab(name)
     tabButton.MouseButton1Click:Connect(function()
         for _, frame in pairs(Tabs) do frame.Visible = false end
         sectionFrame.Visible = true
-        print("[KS HUB] Pestaña abierta:", name)
     end)
 end
 
@@ -126,7 +134,6 @@ createTab("Ajustes")
 -- Mostrar/Ocultar HUB
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
-    print("[KS HUB] Toggle HUB:", MainFrame.Visible)
 end)
 
 -- Función para crear botones
@@ -138,61 +145,37 @@ local function createButton(parent, text, callback)
     button.TextSize = 16
     button.TextColor3 = Color3.new(1, 1, 1)
     button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    button.BackgroundTransparency = 0.1 -- 10% más transparente
+    button.BackgroundTransparency = 0.1
     button.BorderSizePixel = 0
     button.Parent = parent
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = button
     button.MouseButton1Click:Connect(function()
-        print("[KS HUB] Botón pulsado:", text)
         local ok, err = pcall(callback)
         if not ok then warn("[KS HUB] Error en botón:", err) end
     end)
     return button
 end
 
-print("[KS HUB] GUI principal lista")
-
 --========================================================
--- [ SECCIÓN 3 ] FUNCIONES DEL HUB
 --========================================================
-local function getHumanoid()
-    local char = LocalPlayer.Character
-    if not char then return nil end
-    return char:FindFirstChildOfClass("Humanoid")
-end
+-- [ SECCIÓN 4 ] MAIN (SLIDERS + UTILIDADES + BRING ITEMS)
+--========================================================
+local mainScroll = Instance.new("ScrollingFrame")
+mainScroll.Size = UDim2.new(1, 0, 1, 0)
+mainScroll.BackgroundTransparency = 1
+mainScroll.ScrollBarThickness = 6
+mainScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+mainScroll.Parent = Tabs["Main"]
 
-local function setSpeed(v)
-    local hum = getHumanoid()
-    if hum then hum.WalkSpeed = v print("[KS HUB] WalkSpeed =", v) end
-end
+local mainLayout = Instance.new("UIListLayout")
+mainLayout.Padding = UDim.new(0, 6)
+mainLayout.SortOrder = Enum.SortOrder.LayoutOrder
+mainLayout.Parent = mainScroll
 
-local function teleportToMouse()
-    local root = getRoot(LocalPlayer)
-    if root and Mouse and Mouse.Hit then
-        root.CFrame = Mouse.Hit + Vector3.new(0, 3, 0)
-        print("[KS HUB] Teleport al mouse ejecutado")
-    else
-        warn("[KS HUB] Teleport al mouse no disponible (Root o Mouse.Hit nulo)")
-    end
-end
-
-local function teleportToPlayer(player)
-    local myRoot = getRoot(LocalPlayer)
-    local targetRoot = getRoot(player)
-    if myRoot and targetRoot then
-        LocalPlayer.Character:PivotTo(targetRoot.CFrame + Vector3.new(0, 3, 0))
-        print("[KS HUB] Teleport a jugador:", player.Name)
-    else
-        warn("[KS HUB] No se pudo teletransportar a", player and player.Name or "nil")
-    end
-end
-
--- Noclip
-local noclip = false
-local noclipConnection
-local function toggleNoclip()
+-- Botones base
+createButton(mainScroll, "Toggle Noclip", function()
     noclip = not noclip
     if noclip then
         noclipConnection = RunService.Stepped:Connect(function()
@@ -214,12 +197,9 @@ local function toggleNoclip()
         end
         print("[KS HUB] Noclip OFF")
     end
-end
+end)
 
--- Anti-delay ProximityPrompt
-local antiDelay = false
-local originalDurations = {}
-local function toggleAntiDelay()
+createButton(mainScroll, "Toggle Anti-Delay", function()
     antiDelay = not antiDelay
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("ProximityPrompt") then
@@ -235,28 +215,7 @@ local function toggleAntiDelay()
     end
     if not antiDelay then originalDurations = {} end
     print("[KS HUB] Anti-Delay:", antiDelay and "ON" or "OFF")
-end
-
-print("[KS HUB] Funciones listas")
-
---========================================================
--- [ SECCIÓN 4 ] MAIN (SLIDERS + UTILIDADES + BRING ITEMS)
---========================================================
-local mainScroll = Instance.new("ScrollingFrame")
-mainScroll.Size = UDim2.new(1, 0, 1, 0)
-mainScroll.BackgroundTransparency = 1
-mainScroll.ScrollBarThickness = 6
-mainScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-mainScroll.Parent = Tabs["Main"]
-
-local mainLayout = Instance.new("UIListLayout")
-mainLayout.Padding = UDim.new(0, 6)
-mainLayout.SortOrder = Enum.SortOrder.LayoutOrder
-mainLayout.Parent = mainScroll
-
--- Botones base
-createButton(mainScroll, "Toggle Noclip", toggleNoclip)
-createButton(mainScroll, "Toggle Anti-Delay", toggleAntiDelay)
+end)
 
 -- =========================
 -- VELOCIDAD (SLIDER 16 - 150)
@@ -310,7 +269,8 @@ local function setSpeedFromX(x)
     speedFill.Size = UDim2.new(rel, 0, 1, 0)
     speedKnob.Position = UDim2.new(rel, -8, 0.5, -8)
     speedLabel.Text = "Velocidad: " .. tostring(value)
-    setSpeed(value)
+    local hum = getHumanoid()
+    if hum then hum.WalkSpeed = value end
 end
 
 speedBar.InputBegan:Connect(function(input)
@@ -331,27 +291,6 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- =========================
-
-
-
--- =========================
--- BRING ITEMS (TOOLS + CANTIDAD + ORDEN POR DISTANCIA)
--- =========================
-local bringLabel = Instance.new("TextLabel")
-bringLabel.Size = UDim2.new(1, 0, 0, 24)
-bringLabel.BackgroundTransparency = 1
-bringLabel.Text = "Bring Items (nombre parcial + cantidad)"
-bringLabel.Font = Enum.Font.Gotham
-bringLabel.TextSize = 16
-bringLabel.TextColor3 = Color3.new(1, 1, 1)
-bringLabel.Parent = mainScroll
-
-local bringBox = Instance.new("TextBox")
-bringBox.Size = UDim2.new(1, 0, 0, 30)
-bringBox.Text = "" 
-bringBox.PlaceholderText = "Ej: Sword"
-bringBox.Font = Enum.Font.Gotham
-bringBox.Text-- =========================
 -- SALTO (SLIDER 32 - 100)
 -- =========================
 local jumpLabel = Instance.new("TextLabel")
@@ -404,28 +343,49 @@ local function setJumpFromX(x)
     jumpKnob.Position = UDim2.new(rel, -8, 0.5, -8)
     jumpLabel.Text = "Salto: " .. tostring(value)
     local hum = getHumanoid()
-    if hum then
-        hum.JumpPower = value
-        print("[KS HUB] JumpPower =", value)
-    end
+    if hum then hum.JumpPower = value end
 end
 
 jumpBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
         draggingJump = true
         setJumpFromX(input.Position.X)
     end
 end)
+
 jumpBar.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
         draggingJump = false
     end
 end)
+
 UserInputService.InputChanged:Connect(function(input)
-    if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+    if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch) then
         setJumpFromX(input.Position.X)
     end
-end)Size = 16
+end)
+
+-- =========================
+-- BRING ITEMS (TOOLS + CANTIDAD + ORDEN POR DISTANCIA)
+-- =========================
+local bringLabel = Instance.new("TextLabel")
+bringLabel.Size = UDim2.new(1, 0, 0, 24)
+bringLabel.BackgroundTransparency = 1
+bringLabel.Text = "Bring Items (nombre parcial + cantidad)"
+bringLabel.Font = Enum.Font.Gotham
+bringLabel.TextSize = 16
+bringLabel.TextColor3 = Color3.new(1, 1, 1)
+bringLabel.Parent = mainScroll
+
+local bringBox = Instance.new("TextBox")
+bringBox.Size = UDim2.new(1, 0, 0, 30)
+bringBox.Text = "" -- vacío desde inicio
+bringBox.PlaceholderText = "Ej: Sword"
+bringBox.Font = Enum.Font.Gotham
+bringBox.TextSize = 16
 bringBox.TextColor3 = Color3.new(1, 1, 1)
 bringBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 bringBox.BackgroundTransparency = 0.1
@@ -438,8 +398,8 @@ bringCorner.Parent = bringBox
 
 local amountBox = Instance.new("TextBox")
 amountBox.Size = UDim2.new(1, 0, 0, 30)
+amountBox.Text = "" -- vacío desde inicio
 amountBox.PlaceholderText = "Cantidad (ej: 3, vacío = 1)"
-amountBox.Text = "" 
 amountBox.Font = Enum.Font.Gotham
 amountBox.TextSize = 16
 amountBox.TextColor3 = Color3.new(1, 1, 1)
@@ -479,8 +439,8 @@ bringBtn.MouseButton1Click:Connect(function()
             local dist = 999999
             if obj:FindFirstChild("Handle") then
                 dist = (obj.Handle.Position - root.Position).Magnitude
-            elseif obj.Parent and obj.Parent:IsA("Model") and obj.Parent.PrimaryPart then
-                dist = (obj.Parent.PrimaryPart.Position - root.Position).Magnitude
+            elseif obj:IsA("Model") and obj.PrimaryPart then
+                dist = (obj.PrimaryPart.Position - root.Position).Magnitude
             end
             table.insert(candidates, {tool = obj, dist = dist})
         end
@@ -496,11 +456,8 @@ bringBtn.MouseButton1Click:Connect(function()
             local targetCFrame = root.CFrame + Vector3.new(0, 5 + count * 2, 0)
             if tool:FindFirstChild("Handle") then
                 tool.Handle.CFrame = targetCFrame
-            else
-                -- fallback si no hay Handle (raro en Tools)
-                if tool:IsA("Model") and tool.PrimaryPart then
-                    tool:PivotTo(targetCFrame)
-                end
+            elseif tool:IsA("Model") and tool.PrimaryPart then
+                tool:PivotTo(targetCFrame)
             end
             print("[KS HUB] Bring Items: Traído Tool ->", tool.Name)
             count = count + 1
@@ -515,15 +472,24 @@ bringBtn.MouseButton1Click:Connect(function()
     amountBox.Text = ""
 end)
 
-print("[KS HUB] Main listo")
 
 --========================================================
 -- [ SECCIÓN 5 ] TELEPORT (BUSCADOR + SCROLL)
 --========================================================
-createButton(Tabs["Teleport"], "Teleport al Mouse", teleportToMouse)
+createButton(Tabs["Teleport"], "Teleport al Mouse", function()
+    local root = getRoot(LocalPlayer)
+    if root and Mouse and Mouse.Hit then
+        root.CFrame = Mouse.Hit + Vector3.new(0, 3, 0)
+        print("[KS HUB] Teleport al mouse ejecutado")
+    else
+        warn("[KS HUB] Teleport al mouse no disponible")
+    end
+end)
 
+-- Caja de búsqueda
 local searchBox = Instance.new("TextBox")
 searchBox.Size = UDim2.new(1, 0, 0, 30)
+searchBox.Text = "" -- vacío desde inicio
 searchBox.PlaceholderText = "Buscar jugador..."
 searchBox.Font = Enum.Font.Gotham
 searchBox.TextSize = 16
@@ -537,6 +503,7 @@ local searchCorner = Instance.new("UICorner")
 searchCorner.CornerRadius = UDim.new(0, 6)
 searchCorner.Parent = searchBox
 
+-- Botón refresh
 local refreshBtn = Instance.new("TextButton")
 refreshBtn.Size = UDim2.new(1, 0, 0, 30)
 refreshBtn.Text = "Actualizar lista de jugadores"
@@ -551,13 +518,13 @@ local refreshCorner = Instance.new("UICorner")
 refreshCorner.CornerRadius = UDim.new(0, 6)
 refreshCorner.Parent = refreshBtn
 
+-- Scroll de jugadores
 local playerScroll = Instance.new("ScrollingFrame")
 playerScroll.Size = UDim2.new(1, 0, 1, -70)
 playerScroll.Position = UDim2.new(0, 0, 0, 70)
 playerScroll.BackgroundTransparency = 1
 playerScroll.ScrollBarThickness = 6
 playerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-playerScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 playerScroll.Parent = Tabs["Teleport"]
 
 local scrollLayout = Instance.new("UIListLayout")
@@ -565,6 +532,7 @@ scrollLayout.Padding = UDim.new(0, 6)
 scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scrollLayout.Parent = playerScroll
 
+-- Función para poblar lista de jugadores
 local function populatePlayerList(filter)
     for _, child in ipairs(playerScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -597,11 +565,15 @@ local function populatePlayerList(filter)
             corner.Parent = btn
 
             btn.MouseButton1Click:Connect(function()
-                teleportToPlayer(plr)
+                local myRoot = getRoot(LocalPlayer)
+                local targetRoot = getRoot(plr)
+                if myRoot and targetRoot then
+                    LocalPlayer.Character:PivotTo(targetRoot.CFrame + Vector3.new(0, 3, 0))
+                    print("[KS HUB] Teleport a jugador:", plr.Name)
+                end
             end)
         end
     end
-    print("[KS HUB] Lista de jugadores poblada. Filtro:", filter == "" and "(todos)" or filter)
 end
 
 searchBox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -614,7 +586,6 @@ Players.PlayerAdded:Connect(function() populatePlayerList(searchBox.Text) end)
 Players.PlayerRemoving:Connect(function() populatePlayerList(searchBox.Text) end)
 
 populatePlayerList("")
-print("[KS HUB] Teleport listo")
 
 --========================================================
 -- [ SECCIÓN 6 ] VISUAL (FULL BRIGHT + ESP)
@@ -639,7 +610,7 @@ createButton(Tabs["Visual"], "Toggle Full Bright", function()
     end
 end)
 
--- ESP Jugadores (Highlight)
+-- ESP Jugadores
 local espEnabled = false
 local espConnections = {}
 
@@ -690,7 +661,6 @@ local function toggleESP()
 end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
-print("[KS HUB] Visual listo")
 
 --========================================================
 -- [ SECCIÓN 7 ] AJUSTES
@@ -704,8 +674,6 @@ createButton(Tabs["Ajustes"], "Resetear Personaje", function()
     LocalPlayer:LoadCharacter()
     print("[KS HUB] Personaje reseteado")
 end)
-
-print("[KS HUB] Ajustes listo")
 
 --========================================================
 -- [ SECCIÓN 8 ] INICIALIZACIÓN
