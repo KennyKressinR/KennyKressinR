@@ -776,27 +776,7 @@ local function teleportToTarget(cf, duration)
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    if duration and duration > 0 then
-        local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
-        local tween = TweenService:Create(hrp, info, {CFrame = cf})
-        tween:Play()
-        print("[KS HUB] Teleport con tween a:", cf.Position)
-    else
-        hrp.CFrame = cf
-        print("[KS HUB] Teleport instantáneo a:", cf.Position)
-    end
-end
-
-CreateSection(tabGameTP, "Teleports")
-local storyCoords = {
-    { "[campsite] camp site", "0, 8, -0" },
-    { "[safezone] safe zone", "0, 110, -0" }
-}
-CreateDropdown(tabGameTP, "Teleports", storyCoords, function(value, label)
-    teleportToTarget(stringToCFrame(value), 1)
-end)
-
-print("[KS HUB] Teleports cargados correctamente.") 
+    
 --========================================================--
 -- ITEM TP/ESP
 --========================================================--
@@ -815,6 +795,17 @@ local bracket = {
     pelts       = { "Alpha Wolf Pelt","Bear Pelt","Wolf Pelt","Bunny Foot" },
     misc_tools  = { "Good Sack","Old Flashlight","Old Radio","Giant Sack","Strong Flashlight","Chainsaw" }
 }
+
+local Workspace = game:GetService("Workspace")
+local itemsFolder =
+    Workspace:FindFirstChild("Items")
+    or Workspace:FindFirstChild("WorldItems")
+    or Workspace:FindFirstChild("Drops")
+    or Workspace:FindFirstChild("ItemsFolder")
+
+if not itemsFolder then
+    warn("[KS HUB] itemsFolder no encontrado. Ajusta el nombre según el juego.")
+end
 
 local function getHRP()
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -855,14 +846,12 @@ local function dropItemAt(name, quantity, position)
     print("[KS HUB] Drop:", count, name, "en", position)
 end
 
--- AutoDrop
-local autoDropConnection
 local autoDropTimer = 5
 local function toggleAutoDrop(state, name, qty, pos)
     if state then
         print("[KS HUB] AutoDrop activado:", name)
-        if autoDropConnection then autoDropConnection:Disconnect() end
-        autoDropConnection = RunService.Heartbeat:Connect(function()
+        if toggleAutoDrop._conn then toggleAutoDrop._conn:Disconnect() end
+        toggleAutoDrop._conn = RunService.Heartbeat:Connect(function()
             local now = tick()
             if not toggleAutoDrop._last or now - toggleAutoDrop._last >= autoDropTimer then
                 toggleAutoDrop._last = now
@@ -870,16 +859,102 @@ local function toggleAutoDrop(state, name, qty, pos)
             end
         end)
     else
-        if autoDropConnection then autoDropConnection:Disconnect() end
-        autoDropConnection = nil
+        if toggleAutoDrop._conn then toggleAutoDrop._conn:Disconnect() end
+        toggleAutoDrop._conn = nil
         toggleAutoDrop._last = nil
         print("[KS HUB] AutoDrop desactivado")
     end
 end
 
+-- Secciones por categoría con MultiSelect
+CreateSection(tabItem, "Bring / Drop por categoría (multi-select)")
+
+local autoDropConns = {}
+
+for category, items in pairs(bracket) do
+    CreateSection(tabItem, "Categoría: " .. category)
+
+    local listFrame, listAPI = CreateMultiSelectList(tabItem, "Selecciona ítems de " .. category, items, function(selectedNames)
+        print("[KS HUB] Selección ("..category.."):", table.concat(selectedNames, ", "))
+    end)
+
+    local qtyValue = 1
+    CreateSlider(tabItem, "Cantidad ("..category..")", 1, 50, 1, function(v)
+        qtyValue = v
+    end)
+
+    CreateButton(tabItem, "Bring seleccionados ("..category..")", function()
+        for _, name in ipairs(listAPI:GetSelected()) do
+            bringItem(name, qtyValue)
+        end
+    end)
+
+    CreateButton(tabItem, "Drop Campfire ("..category..")", function()
+        for _, name in ipairs(listAPI:GetSelected()) do
+            dropItemAt(name, qtyValue, campfireDropPos)
+        end
+    end)
+
+    CreateButton(tabItem, "Drop Machine ("..category..")", function()
+        for _, name in ipairs(listAPI:GetSelected()) do
+            dropItemAt(name, qtyValue, machineDropPos)
+        end
+    end)
+
+    CreateToggle(tabItem, "AutoDrop ("..category..")", function(state)
+        autoDropConns[category] = autoDropConns[category] or {}
+        if state then
+            for _, name in ipairs(listAPI:GetSelected()) do
+                if autoDropConns[category][name] then
+                    autoDropConns[category][name]:Disconnect()
+                end
+                autoDropConns[category][name] = RunService.Heartbeat:Connect(function()
+                    local now = tick()
+                    if not toggleAutoDrop._last or now - toggleAutoDrop._last >= autoDropTimer then
+                        toggleAutoDrop._last = now
+                        dropItemAt(name, qtyValue, campfireDropPos)
+                    end
+                end)
+            end
+        else
+            for _, conn in pairs(autoDropConns[category]) do
+                conn:Disconnect()
+            end
+            autoDropConns[category] = {}
+        end
+    end)
+
+    CreateButton(tabItem, "Limpiar selección ("..category..")", function()
+        listAPI:ClearSelection()
+    end)
+end
+
+print("[KS HUB] Item TP/ESP (Bring/Drop/AutoDrop) cargado")    if duration and duration > 0 then
+        local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(hrp, info, {CFrame = cf})
+        tween:Play()
+        print("[KS HUB] Teleport con tween a:", cf.Position)
+    else
+        hrp.CFrame = cf
+        print("[KS HUB] Teleport instantáneo a:", cf.Position)
+    end
+end
+
+CreateSection(tabGameTP, "Teleports")
+local storyCoords = {
+    { "[campsite] camp site", "0, 8, -0" },
+    { "[safezone] safe zone", "0, 110, -0" }
+}
+CreateDropdown(tabGameTP, "Teleports", storyCoords, function(value, label)
+    teleportToTarget(stringToCFrame(value), 1)
+end)
+
+print("[KS HUB] Teleports cargados correctamente.") 
+--========================================================--
+-- ITEM TP/ESP
+--========================================================--
 
 
-print("[KS HUB] Item TP/ESP (Bring/Drop/AutoDrop) cargado")
 
 --========================================================--
 -- TELEPORT TO ITEM
