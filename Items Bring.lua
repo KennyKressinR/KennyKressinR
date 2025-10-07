@@ -237,7 +237,37 @@ local function getValidPart(obj)
     end
 end
 
+-- [3.3] Filtro interactuable (ignora edificios grandes)
+local function isInteractable(obj)
+    -- Si es Tool siempre es válido
+    if obj:IsA("Tool") then 
+        return true 
+    end
 
+    -- Si es Model con parte válida y no es un bloque gigante anclado
+    if obj:IsA("Model") then
+        local p = getValidPart(obj)
+        if p and not isHugeAnchored(p) then
+            return true
+        else
+            return false
+        end
+    end
+
+    -- Si es BasePart, descartamos terreno y bloques enormes anclados
+    if obj:IsA("BasePart") then
+        if obj:IsDescendantOf(workspace.Terrain) then 
+            return false 
+        end
+        if isHugeAnchored(obj) then 
+            return false 
+        end
+        return (not obj.Anchored) or obj.Size.Magnitude < 20
+    end
+
+    -- Todo lo demás no se considera interactuable
+    return false
+end
 
 -- [3.4] Evitar basura
 local function shouldSkip(obj)
