@@ -1,11 +1,4 @@
---========================================================
--- KS HUB - FINAL COMPLETO
---========================================================
 print("[KS HUB] Script iniciado")
-
---========================================================
--- [ SECCIÓN 1 ] SERVICIOS Y VARIABLES
---========================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
