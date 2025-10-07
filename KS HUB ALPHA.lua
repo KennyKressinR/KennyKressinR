@@ -221,10 +221,73 @@ local function applyTransparency(value)
 end
 
 --========================================================
--- [ SECCIÓN 4 ] BOTONES MAIN (CONTINUACIÓN)
+-- [ SECCIÓN 4 ] BOTONES MAIN (TELEPORT SLOTS + VELOCIDAD + SALTO)
 --========================================================
 
--- Velocidad del jugador (30, 75, 150)
+-- Noclip y AntiDelay
+createButton(Tabs["Main"], "Toggle Noclip", toggleNoclip)
+createButton(Tabs["Main"], "Toggle Anti-Delay", toggleAntiDelay)
+
+-- =========================
+-- TELEPORT SLOTS
+-- =========================
+local savedSlots = {nil, nil, nil, nil}
+
+local function saveSlot(i)
+    local root = getRoot(LocalPlayer)
+    if root then
+        savedSlots[i] = root.CFrame
+    end
+end
+
+local function loadSlot(i)
+    local root = getRoot(LocalPlayer)
+    if root and savedSlots[i] then
+        LocalPlayer.Character:PivotTo(savedSlots[i])
+    end
+end
+
+-- Crear 4 filas de botones Save/Load
+for i = 1, 4 do
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundTransparency = 1
+    row.Parent = Tabs["Main"]
+
+    local saveBtn = Instance.new("TextButton")
+    saveBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    saveBtn.Position = UDim2.new(0, 0, 0, 0)
+    saveBtn.Text = "Save" .. i
+    saveBtn.Font = Enum.Font.Gotham
+    saveBtn.TextSize = 16
+    saveBtn.TextColor3 = Color3.new(1, 1, 1)
+    saveBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    saveBtn.BorderSizePixel = 0
+    saveBtn.Parent = row
+    local saveCorner = Instance.new("UICorner")
+    saveCorner.CornerRadius = UDim.new(0, 6)
+    saveCorner.Parent = saveBtn
+    saveBtn.MouseButton1Click:Connect(function() saveSlot(i) end)
+
+    local loadBtn = Instance.new("TextButton")
+    loadBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    loadBtn.Position = UDim2.new(0.5, 4, 0, 0)
+    loadBtn.Text = "Load" .. i
+    loadBtn.Font = Enum.Font.Gotham
+    loadBtn.TextSize = 16
+    loadBtn.TextColor3 = Color3.new(1, 1, 1)
+    loadBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    loadBtn.BorderSizePixel = 0
+    loadBtn.Parent = row
+    local loadCorner = Instance.new("UICorner")
+    loadCorner.CornerRadius = UDim.new(0, 6)
+    loadCorner.Parent = loadBtn
+    loadBtn.MouseButton1Click:Connect(function() loadSlot(i) end)
+end
+
+-- =========================
+-- VELOCIDAD
+-- =========================
 createButton(Tabs["Main"], "Velocidad: 30", function()
     local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
     if hum then hum.WalkSpeed = 30 end
@@ -238,11 +301,12 @@ createButton(Tabs["Main"], "Velocidad: 150", function()
     if hum then hum.WalkSpeed = 150 end
 end)
 
--- Impulso de salto (+30%, +75%, +150%)
+-- =========================
+-- SALTO
+-- =========================
 local function getBaseJump()
     local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
     if not hum then return 50 end
-    -- Usa JumpPower como base actual
     return hum.JumpPower > 0 and hum.JumpPower or 50
 end
 
@@ -463,6 +527,7 @@ createButton(Tabs["Visual"], "Transparencia 100%", function()
 end)
 
 --========================================================
+--========================================================
 -- [ SECCIÓN 7 ] AJUSTES (SLIDER + PRESETS + UTILIDADES)
 --========================================================
 
@@ -511,7 +576,7 @@ local function setSliderFromX(x)
     local rel = math.clamp((x - barAbsPos) / barAbsSize, 0, 1)
     sliderFill.Size = UDim2.new(rel, 0, 1, 0)
     sliderKnob.Position = UDim2.new(rel, -8, 0.5, -8)
-    applyTransparency(rel)
+    applyTransparency(rel) -- ✅ Aplica en tiempo real
     sliderLabel.Text = "Transparencia (arrastrar): " .. string.format("%.2f", rel)
 end
 
@@ -531,7 +596,6 @@ UserInputService.InputChanged:Connect(function(input)
         setSliderFromX(input.Position.X)
     end
 end)
-
 -- Presets rápidos de transparencia en Ajustes
 createButton(Tabs["Ajustes"], "Transparencia 25%", function()
     local x = sliderBar.AbsolutePosition.X + sliderBar.AbsoluteSize.X * 0.25
