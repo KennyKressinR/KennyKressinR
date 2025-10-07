@@ -1,110 +1,67 @@
 --========================================================--
 -- KS HUB - 99 Noches
--- ItemTP.lua (Bring Items avanzado con posiciones especiales)
+-- Main.lua (adaptado a int:CreateTab + debug)
 --========================================================--
 
-local ItemTP = {}
+-- Servicios
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
--- Referencias
-local itemsFolder = Workspace:WaitForChild("Items")
-local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
-local remoteConsume = remoteEvents:WaitForChild("RequestConsumeItem")
+print("[KS HUB] Iniciando...")
 
--- Posiciones especiales
-local campfireDropPos = Vector3.new(0, 19, 0)
-local machineDropPos  = Vector3.new(21, 16, -5)
+-- UI principal (asumo que ya tienes 'int' inicializado antes de esto)
+local success, err = pcall(function()
+    -- Tabs
+    main        = int:CreateTab("Main","main functions/script utilities","default",true)
+    autofarmss  = int:CreateTab("Auto","auto farm utilities (OP)","op")
+    itemtp      = int:CreateTab("Item TP/ESP","bring items to you","item")
+    gametp      = int:CreateTab("Game TP","goto in-game locations","info")
+    charactertp = int:CreateTab("Mob TP","bring mobs to you","npc")
+    plr         = int:CreateTab("Player","modify your localplayer","player")
+    vis         = int:CreateTab("Visuals","modify your visuals","visuals")
+    misc        = int:CreateTab("Misc","miscellaneous","misc")
+end)
 
---========================================================--
--- BLOQUE: Categorías de ítems (usando tu bracket)
---========================================================--
-local bracket = {
-    weapons     = { "Laser Sword","Raygun","Kunai","Katana","Spear" },
-    minifoods   = { "Apple","Berry","Carrot" },
-    meat        = { "Steak","Cooked Steak","Cooked Morsel","Morsel" },
-    armor       = { "Leather Body","Iron Body","Thorn Body" },
-    ["guns/ammo"] = { "Rifle","Revolver","Raygun","Tactical Shotgun","Revolver Ammo","Rifle Ammo" },
-    materials   = { "Log","Coal","Fuel Canister","UFO Junk","UFO Component","Bandage","MedKit",
-                    "Old Car Engine","Broken Fan","Old Microwave","Old Radio","Sheet Metal" },
-    pelts       = { "Alpha Wolf Pelt","Bear Pelt","Wolf Pelt","Bunny Foot" },
-    misc_tools  = { "Good Sack","Old Flashlight","Old Radio","Giant Sack","Strong Flashlight","Chainsaw" }
-}
-
---========================================================--
--- BLOQUE: Funciones Auxiliares
---========================================================--
-local function getHRP()
-    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-end
-
--- Traer ítems al jugador
-local function bringItem(name, quantity)
-    local hrp = getHRP()
-    if not hrp then return end
-    local count = 0
-    for _, obj in ipairs(itemsFolder:GetChildren()) do
-        if obj.Name == name then
-            local target = obj:IsA("BasePart") and obj or obj.PrimaryPart
-            if target then
-                target.CFrame = hrp.CFrame + Vector3.new(0,3,0)
-                count += 1
-                if count >= quantity then break end
-            end
-        end
-    end
-    print("[KS HUB] Bring completado: "..count.." de "..name)
-end
-
--- Aparecer ítems en posiciones especiales
-local function dropItemAt(name, quantity, position)
-    local count = 0
-    for _, obj in ipairs(itemsFolder:GetChildren()) do
-        if obj.Name == name then
-            local target = obj:IsA("BasePart") and obj or obj.PrimaryPart
-            if target then
-                target.CFrame = CFrame.new(position + Vector3.new(0,3,0))
-                count += 1
-                if count >= quantity then break end
-            end
-        end
-    end
-    print("[KS HUB] Drop completado: "..count.." de "..name.." en "..tostring(position))
+if not success then
+    warn("[KS HUB] Error creando tabs:", err)
+    return
+else
+    print("[KS HUB] Tabs creados correctamente.")
 end
 
 --========================================================--
--- BLOQUE: Inicialización del Tab
+-- Cargar módulos
 --========================================================--
-function ItemTP.Init(tab)
-    for category, items in pairs(bracket) do
-        local sec = tab:NewSection("Bring "..category)
-        local selected = nil
-        sec:NewDropdown("Seleccionar "..category, "Elige un ítem", items, function(val)
-            selected = val
-        end)
-        sec:NewSlider("Cantidad "..category, "Cuántos traer", 50, 1, function(val)
-            _G["Qty_"..category] = val
-        end)
-        sec:NewButton("Bring "..category, "Trae al jugador", function()
-            if selected then
-                bringItem(selected, _G["Qty_"..category] or 1)
+local function LoadModule(name, tab)
+    local ok, module = pcall(function()
+        return require(script.Modules[name])
+    end)
+    if ok and module then
+        print("[KS HUB] Módulo cargado:", name)
+        if module.Init then
+            local ok2, err2 = pcall(function()
+                module.Init(tab)
+            end)
+            if ok2 then
+                print("[KS HUB] Módulo inicializado:", name)
             else
-                warn("Debes seleccionar un ítem en "..category)
+                warn("[KS HUB] Error inicializando módulo:", name, err2)
             end
-        end)
-        sec:NewButton("Drop en Campfire", "Aparece en la fogata", function()
-            if selected then
-                dropItemAt(selected, _G["Qty_"..category] or 1, campfireDropPos)
-            end
-        end)
-        sec:NewButton("Drop en Machine", "Aparece en la máquina", function()
-            if selected then
-                dropItemAt(selected, _G["Qty_"..category] or 1, machineDropPos)
-            end
-        end)
+        end
+    else
+        warn("[KS HUB] Error cargando módulo:", name, module)
     end
 end
 
-return ItemTP
+-- Inicializar cada módulo en su tab
+LoadModule("ItemTP", itemtp)
+LoadModule("ItemESP", vis)
+LoadModule("Teleports", gametp)
+LoadModule("Player", plr)
+LoadModule("Visuals", vis)
+LoadModule("AutoFarm", autofarmss)
+LoadModule("Stronghold", gametp)
+LoadModule("Extras", misc)
+
+print("[KS HUB] Inicialización completa.")
