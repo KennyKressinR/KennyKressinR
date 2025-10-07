@@ -1,26 +1,27 @@
--- KS HUB Reescrito desde cero
--- Autor: Reorganizado por Copilot
--- Versión: Limpia, modular, con interfaz mejorada
+--// KS HUB Rehecho desde 0
+--// Autor: Reorganizado por Copilot
+--// Versión: Limpia, modular y funcional
 
+-- Servicios
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- Crear GUI principal
+-- GUI principal
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = game:GetService("CoreGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 600, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Size = UDim2.new(0, 500, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
@@ -29,44 +30,48 @@ UICorner.Parent = MainFrame
 
 -- Título
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
 Title.Text = "KS HUB"
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 24
+Title.TextSize = 22
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Parent = MainFrame
 
 -- Contenedor de botones
 local ButtonContainer = Instance.new("Frame")
 ButtonContainer.Size = UDim2.new(1, -40, 1, -60)
-ButtonContainer.Position = UDim2.new(0, 20, 0, 60)
+ButtonContainer.Position = UDim2.new(0, 20, 0, 50)
 ButtonContainer.BackgroundTransparency = 1
 ButtonContainer.Parent = MainFrame
 
 local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.Padding = UDim.new(0, 8)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Parent = ButtonContainer
 
 -- Función para crear botones
 local function createButton(text, callback)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 40)
+    button.Size = UDim2.new(1, 0, 0, 36)
     button.Text = text
     button.Font = Enum.Font.Gotham
-    button.TextSize = 18
+    button.TextSize = 16
     button.TextColor3 = Color3.new(1, 1, 1)
     button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     button.BorderSizePixel = 0
     button.Parent = ButtonContainer
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = button
 
     button.MouseButton1Click:Connect(callback)
 end
+
+-- =========================
+-- FUNCIONES DEL HUB
+-- =========================
 
 -- Teleport al mouse
 local function teleportToMouse()
@@ -78,17 +83,18 @@ local function teleportToMouse()
     end
 end
 
--- Noclip toggle
+-- Noclip
 local noclip = false
 local noclipConnection
-
 local function toggleNoclip()
     noclip = not noclip
     if noclip then
         noclipConnection = RunService.Stepped:Connect(function()
-            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
+            if LocalPlayer.Character then
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
                 end
             end
         end)
@@ -99,9 +105,8 @@ local function toggleNoclip()
     end
 end
 
--- Guardar/Cargar posición
+-- Guardar / Cargar posición
 local savedPosition
-
 local function savePosition()
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if root then
@@ -119,7 +124,6 @@ end
 -- Anti-delay para ProximityPrompt
 local antiDelay = false
 local originalDurations = {}
-
 local function toggleAntiDelay()
     antiDelay = not antiDelay
     for _, prompt in pairs(workspace:GetDescendants()) do
@@ -136,20 +140,21 @@ local function toggleAntiDelay()
     end
 end
 
+-- =========================
+-- BOTONES DEL HUB
+-- =========================
 createButton("Teleport al Mouse", teleportToMouse)
 createButton("Toggle Noclip", toggleNoclip)
 createButton("Guardar Posición", savePosition)
 createButton("Cargar Posición", loadPosition)
 createButton("Toggle Anti-Delay", toggleAntiDelay)
 
-MainFrame.Visible = false
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
+-- =========================
+-- TECLA PARA MOSTRAR/OCULTAR
+-- =========================
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
     if input.KeyCode == Enum.KeyCode.RightShift then
         MainFrame.Visible = not MainFrame.Visible
     end
 end)
-
-
-
