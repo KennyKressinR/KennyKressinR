@@ -423,6 +423,7 @@ bringLabel.Parent = mainScroll
 
 local bringBox = Instance.new("TextBox")
 bringBox.Size = UDim2.new(1, 0, 0, 30)
+bringBox.Text = "" 
 bringBox.PlaceholderText = "Ej: Sword"
 bringBox.Font = Enum.Font.Gotham
 bringBox.TextSize = 16
