@@ -14,12 +14,33 @@ local Mouse = LocalPlayer:GetMouse()
 
 --========================================================
 --========================================================
--- [ SECCIÓN 2 ] GUI PRINCIPAL (AZUL + BOTONES CELESTES)
+--========================================================
+-- KS HUB - COMPLETO CON PRINTS DE DEPURACIÓN
+--========================================================
+
+print("[KS HUB] Iniciando script...")
+
+--========================================================
+-- [ SECCIÓN 1 ] SERVICIOS Y VARIABLES
+--========================================================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+print("[KS HUB] Servicios cargados correctamente.")
+
+--========================================================
+-- [ SECCIÓN 2 ] GUI PRINCIPAL
 --========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = game:GetService("CoreGui")
+
+print("[KS HUB] ScreenGui creado y parentado a CoreGui.")
 
 -- Botón flotante
 local ToggleButton = Instance.new("TextButton")
@@ -28,24 +49,28 @@ ToggleButton.Position = UDim2.new(1, -70, 1, -70)
 ToggleButton.Text = "≡"
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 24
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 60, 120) -- azul oscuro
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 60, 120)
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 local ToggleCorner = Instance.new("UICorner")
 ToggleCorner.CornerRadius = UDim.new(1, 0)
 ToggleCorner.Parent = ToggleButton
 
+print("[KS HUB] Botón flotante creado.")
+
 -- Marco principal
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80) -- azul oscuro
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80)
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
+
+print("[KS HUB] Marco principal creado.")
 
 -- Título
 local Title = Instance.new("TextLabel")
@@ -84,7 +109,7 @@ local function createTab(name)
     tabButton.Font = Enum.Font.Gotham
     tabButton.TextSize = 16
     tabButton.TextColor3 = Color3.new(1, 1, 1)
-    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
+    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
     tabButton.BorderSizePixel = 0
     tabButton.Parent = TabContainer
     local tabCorner = Instance.new("UICorner")
@@ -105,6 +130,7 @@ local function createTab(name)
     tabButton.MouseButton1Click:Connect(function()
         for _, frame in pairs(Tabs) do frame.Visible = false end
         sectionFrame.Visible = true
+        print("[KS HUB] Pestaña abierta:", name)
     end)
 end
 
@@ -114,12 +140,13 @@ createTab("Teleport")
 createTab("Visual")
 createTab("Ajustes")
 
--- Mostrar/Ocultar HUB
+-- Mostrar/Ocultar HUB con el botón flotante
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
+    print("[KS HUB] Toggle HUB:", MainFrame.Visible)
 end)
 
--- Función para crear botones (celeste)
+-- Función para crear botones
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -127,15 +154,20 @@ local function createButton(parent, text, callback)
     button.Font = Enum.Font.Gotham
     button.TextSize = 16
     button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- celeste
+    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
     button.BorderSizePixel = 0
     button.Parent = parent
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = button
-    button.MouseButton1Click:Connect(callback)
+    button.MouseButton1Click:Connect(function()
+        print("[KS HUB] Botón pulsado:", text)
+        callback()
+    end)
     return button
 end
+
+print("[KS HUB] GUI principal lista.")
 
 --========================================================
 -- [ SECCIÓN 3 ] FUNCIONES DEL HUB
