@@ -267,8 +267,9 @@ end)
 createButton(Tabs["Teleport"], "Teleport al Mouse", teleportToMouse)
 
 -- Caja de búsqueda
-local searchBox = Instance.new("")
+local searchBox = Instance.new("TextBox")
 searchBox.Size = UDim2.new(1, 0, 0, 30)
+searchBox.Text = "" -- ✅ Importante: vacío, no "TextBox"
 searchBox.PlaceholderText = "Buscar jugador..."
 searchBox.Font = Enum.Font.Gotham
 searchBox.TextSize = 16
@@ -277,29 +278,101 @@ searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 searchBox.BorderSizePixel = 0
 searchBox.ClearTextOnFocus = false
 searchBox.Parent = Tabs["Teleport"]
+
 local searchCorner = Instance.new("UICorner")
 searchCorner.CornerRadius = UDim.new(0, 6)
 searchCorner.Parent = searchBox
 
--- Controles de la lista (barra superior con refrescar)
-local controlBar = Instance.new("Frame")
-controlBar.Size = UDim2.new(1, 0, 0, 34)
-controlBar.BackgroundTransparency = 1
-controlBar.Parent = Tabs["Teleport"]
-
+-- Botón de refrescar lista
 local refreshBtn = Instance.new("TextButton")
-refreshBtn.Size = UDim2.new(0, 140, 1, 0)
-refreshBtn.Position = UDim2.new(1, -140, 0, 0)
-refreshBtn.Text = "Actualizar lista"
+refreshBtn.Size = UDim2.new(1, 0, 0, 30)
+refreshBtn.Text = "Actualizar lista de jugadores"
 refreshBtn.Font = Enum.Font.Gotham
 refreshBtn.TextSize = 16
 refreshBtn.TextColor3 = Color3.new(1, 1, 1)
 refreshBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 refreshBtn.BorderSizePixel = 0
-refreshBtn.Parent = controlBar
+refreshBtn.Parent = Tabs["Teleport"]
+
 local refreshCorner = Instance.new("UICorner")
 refreshCorner.CornerRadius = UDim.new(0, 6)
 refreshCorner.Parent = refreshBtn
+
+-- Scrolling de jugadores
+local playerScroll = Instance.new("ScrollingFrame")
+playerScroll.Size = UDim2.new(1, 0, 1, -100) -- Ajustado para dejar espacio a los controles
+playerScroll.Position = UDim2.new(0, 0, 0, 70)
+playerScroll.BackgroundTransparency = 1
+playerScroll.ScrollBarThickness = 6
+playerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+playerScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+playerScroll.Parent = Tabs["Teleport"]
+
+local scrollLayout = Instance.new("UIListLayout")
+scrollLayout.Padding = UDim.new(0, 6)
+scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+scrollLayout.Parent = playerScroll
+
+-- Función para poblar lista con filtro
+local function populatePlayerList(filter)
+    for _, child in ipairs(playerScroll:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+
+    local list = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then table.insert(list, plr) end
+    end
+    table.sort(list, function(a, b) return a.DisplayName:lower() < b.DisplayName:lower() end)
+
+    for _, plr in ipairs(list) do
+        local match = true
+        if filter and filter ~= "" then
+            local f = filter:lower()
+            match = (string.find(plr.Name:lower(), f) ~= nil) or (string.find(plr.DisplayName:lower(), f) ~= nil)
+        end
+        if match then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 36)
+            btn.Text = plr.DisplayName .. " (" .. plr.Name .. ")"
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 16
+            btn.TextColor3 = Color3.new(1, 1, 1)
+            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            btn.BorderSizePixel = 0
+            btn.AutoButtonColor = true
+            btn.Parent = playerScroll
+
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 6)
+            corner.Parent = btn
+
+            btn.MouseButton1Click:Connect(function()
+                teleportToPlayer(plr)
+            end)
+        end
+    end
+end
+
+-- Eventos de búsqueda y actualización dinámica
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    populatePlayerList(searchBox.Text)
+end)
+
+refreshBtn.MouseButton1Click:Connect(function()
+    populatePlayerList(searchBox.Text)
+end)
+
+Players.PlayerAdded:Connect(function()
+    populatePlayerList(searchBox.Text)
+end)
+Players.PlayerRemoving:Connect(function()
+    populatePlayerList(searchBox.Text)
+end)
+
+-- Inicial
+populatePlayerList("")
+ 
 
 -- Scrolling de jugadores
 local playerScroll = Instance.new("ScrollingFrame")
