@@ -437,6 +437,106 @@ function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onCha
 
     return Container
 end
+-- Multi-select list con highlight y contador
+function CreateMultiSelectList(parent, titleText, options, onSelectionChanged)
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 300, 0, 180)
+    Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
+    Frame.BorderSizePixel = 0
+    Frame.Parent = parent
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 24)
+    Title.BackgroundColor3 = Color3.fromRGB(58, 58, 58)
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Text = "  " .. titleText
+    Title.Parent = Frame
+
+    local Count = Instance.new("TextLabel")
+    Count.Size = UDim2.new(0, 60, 0, 24)
+    Count.Position = UDim2.new(1, -64, 0, 0)
+    Count.BackgroundTransparency = 1
+    Count.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Count.Font = Enum.Font.SourceSans
+    Count.TextSize = 14
+    Count.Text = "0 sel."
+    Count.Parent = Frame
+
+    local List = Instance.new("ScrollingFrame")
+    List.Size = UDim2.new(1, -10, 1, -34)
+    List.Position = UDim2.new(0, 5, 0, 30)
+    List.BackgroundTransparency = 1
+    List.BorderSizePixel = 0
+    List.ScrollBarThickness = 6
+    List.Active = true
+    List.Parent = Frame
+
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 4)
+    layout.Parent = List
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        List.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local selected = {}  -- set: selected[name] = true/false
+
+    local function updateCountAndCallback()
+        local c = 0
+        for name, s in pairs(selected) do if s then c += 1 end end
+        Count.Text = tostring(c) .. " sel."
+        if onSelectionChanged then
+            -- Pasamos una copia de las claves seleccionadas
+            local list = {}
+            for name, s in pairs(selected) do if s then table.insert(list, name) end end
+            local ok, err = pcall(function() onSelectionChanged(list) end)
+            if not ok then warn("[KS HUB] MultiSelect callback error:", err) end
+        end
+    end
+
+    for _, name in ipairs(options) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -4, 0, 24)
+        btn.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
+        btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 14
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.Text = "  " .. name
+        btn.Parent = List
+
+        btn.MouseButton1Click:Connect(function()
+            selected[name] = not selected[name]
+            btn.BackgroundColor3 = selected[name] and Color3.fromRGB(90, 140, 90) or Color3.fromRGB(64, 64, 64)
+            updateCountAndCallback()
+        end)
+    end
+
+    local api = {}
+    function api:GetSelected()
+        local out = {}
+        for name, s in pairs(selected) do if s then table.insert(out, name) end end
+        return out
+    end
+    function api:ClearSelection()
+        for _, child in ipairs(List:GetChildren()) do
+            if child:IsA("TextButton") then
+                local name = child.Text:sub(3)
+                if selected[name] then
+                    selected[name] = false
+                    child.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
+                end
+            end
+        end
+        updateCountAndCallback()
+    end
+
+    return Frame, api
+end
 
 --========================================================--
 -- TABS
