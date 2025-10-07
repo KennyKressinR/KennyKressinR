@@ -178,7 +178,7 @@ end
 --========================================================--
 -- PESTAÑA PRINCIPAL (Main)
 --========================================================--
-local tabMain = Window:CreateTab("Main")
+local tabMain = CreateTab("Main")
 -- Aquí irán funciones generales como Chop Aura, Safe Zone, etc.
 
 --========================================================--
