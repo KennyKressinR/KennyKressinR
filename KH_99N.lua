@@ -1,18 +1,51 @@
 --========================================================--
 -- KS HUB - 99 Noches
--- Main.lua (adaptado a int:CreateTab + debug)
+-- Main.lua (versión final con debug)
 --========================================================--
-
--- Servicios
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
 
 print("[KS HUB] Iniciando...")
 
--- UI principal (asumo que ya tienes 'int' inicializado antes de esto)
-local success, err = pcall(function()
-    -- Tabs
+-- === SERVICES ===
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+-- === UI LIBRARY ===
+local success, lib = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/iiivyne/robloxlua/refs/heads/main/lib.lua"))()
+end)
+
+if not success or not lib then
+    warn("[KS HUB] Error cargando librería UI:", lib)
+    return
+else
+    print("[KS HUB] Librería UI cargada correctamente.")
+end
+
+-- === INTERFACE ===
+local int
+local ok, err = pcall(function()
+    int = lib:CreateInterface(
+        "99 Nights in the Forest",
+        "script made by lohjc",
+        "https://discord.gg/ZNTHTWx7KE",
+        "bottom left",
+        "royal"
+    )
+end)
+
+if not ok or not int then
+    warn("[KS HUB] Error creando interfaz:", err)
+    return
+else
+    print("[KS HUB] Interfaz creada correctamente.")
+end
+
+-- === TABS ===
+local main, autofarmss, itemtp, gametp, charactertp, plr, vis, misc
+local ok2, err2 = pcall(function()
     main        = int:CreateTab("Main","main functions/script utilities","default",true)
     autofarmss  = int:CreateTab("Auto","auto farm utilities (OP)","op")
     itemtp      = int:CreateTab("Item TP/ESP","bring items to you","item")
@@ -23,16 +56,14 @@ local success, err = pcall(function()
     misc        = int:CreateTab("Misc","miscellaneous","misc")
 end)
 
-if not success then
-    warn("[KS HUB] Error creando tabs:", err)
+if not ok2 then
+    warn("[KS HUB] Error creando tabs:", err2)
     return
 else
     print("[KS HUB] Tabs creados correctamente.")
 end
 
---========================================================--
--- Cargar módulos
---========================================================--
+-- === LOAD MODULES ===
 local function LoadModule(name, tab)
     local ok, module = pcall(function()
         return require(script.Modules[name])
