@@ -19,7 +19,7 @@ local itemsFolder = Workspace:FindFirstChild("Items")
 if not itemsFolder then
     warn("[KS HUB] No se encontró workspace.Items. ESP/Bring dependerán de este folder.")
 else
-    print("[KS HUB] Items folder detectado.")
+    print("[KS HUB] Items folder detectado:", itemsFolder:GetFullName())
 end
 
 --========================================================--
@@ -121,11 +121,267 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 --========================================================--
--- UI HELPERS (CreateTab, CreateButton, CreateSlider, etc.)
 --========================================================--
--- (Aquí van las funciones auxiliares que ya teníamos: CreateTab, CreateButton, CreateCheckbox, CreateToggle, CreateTextBox, CreateDropdown, CreateSlider)
--- ***IMPORTANTE***: en esta versión los sliders ya están corregidos para actualizar valores al arrastrar.
+-- UI HELPERS
+--========================================================--
 
+local Tabs = {}
+
+function CreateTab(name)
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, -12, 0, 32)
+    Button.Position = UDim2.new(0, 6, 0, 0)
+    Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Button.Text = name
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.Font = Enum.Font.SourceSans
+    Button.TextSize = 16
+    Button.AutoButtonColor = true
+    Button.Parent = TabButtons
+
+    local TabContainer = Instance.new("ScrollingFrame")
+    TabContainer.Name = "Tab_"..name
+    TabContainer.Size = UDim2.new(1, -20, 1, -20)
+    TabContainer.Position = UDim2.new(0, 10, 0, 10)
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.BorderSizePixel = 0
+    TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabContainer.ScrollBarThickness = 6
+    TabContainer.Visible = false
+    TabContainer.Parent = ContentFrame
+
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 8)
+    layout.Parent = TabContainer
+
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabContainer.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+    end)
+
+    Button.MouseButton1Click:Connect(function()
+        for _, t in ipairs(Tabs) do
+            t.Frame.Visible = false
+        end
+        TabContainer.Visible = true
+        print("[KS HUB] Tab abierto:", name)
+    end)
+
+    table.insert(Tabs, {Button = Button, Frame = TabContainer})
+    return TabContainer
+end
+
+function CreateSection(parent, titleText)
+    local Section = Instance.new("Frame")
+    Section.Size = UDim2.new(1, -20, 0, 40)
+    Section.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+    Section.BorderSizePixel = 0
+    Section.Parent = parent
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -12, 1, 0)
+    Title.Position = UDim2.new(0, 6, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextSize = 16
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Text = titleText
+    Title.Parent = Section
+
+    return Section
+end
+
+function CreateButton(parent, text, onClick)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 220, 0, 30)
+    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.Font = Enum.Font.SourceSans
+    Btn.TextSize = 16
+    Btn.Text = text
+    Btn.AutoButtonColor = true
+    Btn.Parent = parent
+    Btn.MouseButton1Click:Connect(function()
+        print("[KS HUB] Click botón:", text)
+        local ok, err = pcall(onClick)
+        if not ok then
+            warn("[KS HUB] Error en botón '"..text.."':", err)
+        end
+    end)
+    return Btn
+end
+
+function CreateCheckbox(parent, text, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 220, 0, 30)
+    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.Font = Enum.Font.SourceSans
+    Btn.TextSize = 16
+    Btn.Text = "[ ] " .. text
+    Btn.Parent = parent
+
+    local enabled = false
+    Btn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        Btn.Text = (enabled and "[X] " or "[ ] ") .. text
+        print("[KS HUB] Checkbox '"..text.."' =", enabled)
+        local ok, err = pcall(function() callback(enabled) end)
+        if not ok then warn("[KS HUB] Error en checkbox '"..text.."':", err) end
+    end)
+
+    return Btn
+end
+
+function CreateToggle(parent, text, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 220, 0, 30)
+    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.Font = Enum.Font.SourceSans
+    Btn.TextSize = 16
+    Btn.Text = text .. " [OFF]"
+    Btn.Parent = parent
+
+    local state = false
+    Btn.MouseButton1Click:Connect(function()
+        state = not state
+        Btn.Text = text .. (state and " [ON]" or " [OFF]")
+        print("[KS HUB] Toggle '"..text.."' =", state)
+        local ok, err = pcall(function() callback(state) end)
+        if not ok then warn("[KS HUB] Error en toggle '"..text.."':", err) end
+    end)
+
+    return Btn
+end
+
+function CreateTextBox(parent, labelText, defaultText, onSubmit)
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(0, 340, 0, 30)
+    Container.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Container.Parent = parent
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0, 160, 1, 0)
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.SourceSans
+    Label.TextSize = 16
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Text = labelText
+    Label.Parent = Container
+
+    local Box = Instance.new("TextBox")
+    Box.Size = UDim2.new(1, -170, 1, 0)
+    Box.Position = UDim2.new(0, 170, 0, 0)
+    Box.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Box.Font = Enum.Font.SourceSans
+    Box.TextSize = 16
+    Box.Text = defaultText or ""
+    Box.ClearTextOnFocus = false
+    Box.Parent = Container
+
+    Box.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            print("[KS HUB] TextBox '"..labelText.."' submit:", Box.Text)
+            local ok, err = pcall(function() onSubmit(Box.Text) end)
+            if not ok then warn("[KS HUB] Error TextBox '"..labelText.."':", err) end
+        end
+    end)
+
+    return Container, Box
+end
+
+function CreateDropdown(parent, labelText, options, onChoose)
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 260, 0, 30 + (#options * 28))
+    Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Frame.Parent = parent
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, 0, 0, 30)
+    Label.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.SourceSansBold
+    Label.TextSize = 16
+    Label.Text = labelText
+    Label.Parent = Frame
+
+    for i, opt in ipairs(options) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 28)
+        btn.Position = UDim2.new(0, 0, 0, 30 + (i - 1) * 28)
+        btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        btn.Text = type(opt) == "table" and opt[1] or tostring(opt)
+        btn.Parent = Frame
+
+        btn.MouseButton1Click:Connect(function()
+            local value = type(opt) == "table" and (opt[2] or opt[1]) or opt
+            print("[KS HUB] Dropdown '"..labelText.."' elegido:", btn.Text)
+            local ok, err = pcall(function() onChoose(value, btn.Text) end)
+            if not ok then warn("[KS HUB] Error dropdown '"..labelText.."':", err) end
+        end)
+    end
+
+    return Frame
+end
+
+function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(0, 360, 0, 48)
+    Container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Container.Parent = parent
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, 0, 0, 18)
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.SourceSansBold
+    Label.TextSize = 14
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Text = labelText .. " ("..tostring(defaultValue)..")"
+    Label.Parent = Container
+
+    local Bar = Instance.new("Frame")
+    Bar.Size = UDim2.new(1, -20, 0, 8)
+    Bar.Position = UDim2.new(0, 10, 0, 28)
+    Bar.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    Bar.BorderSizePixel = 0
+    Bar.Parent = Container
+
+    local Fill = Instance.new("Frame")
+    Fill.Size = UDim2.new((defaultValue - minValue) / (maxValue - minValue), 0, 1, 0)
+    Fill.BackgroundColor3 = Color3.fromRGB(120, 200, 120)
+    Fill.BorderSizePixel = 0
+    Fill.Parent = Bar
+
+    local dragging = false
+    Bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+    Bar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local rel = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+            local value = math.floor(minValue + rel * (maxValue - minValue))
+            Fill.Size = UDim2.new(rel, 0, 1, 0)
+            Label.Text = labelText .. " ("..tostring(value)..")"
+            local ok, err = pcall(function() onChange(value) end)
+            if not ok then warn("[KS HUB] Error slider '"..labelText.."':", err) end
+        end
+    end)
+
+    return Container
+end
 --========================================================--
 -- TABS
 --========================================================--
@@ -138,7 +394,6 @@ local tabPlayer   = CreateTab("Player")
 local tabVisuals  = CreateTab("Visuals")
 local tabMisc     = CreateTab("Misc")
 
--- Mostrar primer tab
 for _, t in ipairs(Tabs) do t.Frame.Visible = false end
 Tabs[1].Frame.Visible = true
 
@@ -164,9 +419,12 @@ local toolsDamageIDs = {
 -- Buscar cualquier herramienta soportada en inventario
 local function getAnyToolWithDamageID()
     for toolName, damageID in pairs(toolsDamageIDs) do
-        local tool = LocalPlayer:FindFirstChild("Inventory") and LocalPlayer.Inventory:FindFirstChild(toolName)
-        if tool then
-            return tool, damageID
+        local inv = LocalPlayer:FindFirstChild("Inventory")
+        if inv then
+            local tool = inv:FindFirstChild(toolName)
+            if tool then
+                return tool, damageID
+            end
         end
     end
     return nil, nil
@@ -228,9 +486,7 @@ local function killAuraLoop()
     end
 end
 
---========================================================--
--- UI (Main Tab)
---========================================================--
+-- UI en Main Tab
 CreateSection(tabMain, "Combat")
 
 CreateCheckbox(tabMain, "Kill Aura", function(state)
@@ -251,7 +507,7 @@ CreateSlider(tabMain, "Kill Aura Radius", 20, 500, 200, function(value)
 end)
 
 --========================================================--
--- SAFE ZONE SETUP (Main)
+-- SAFE ZONE (Main)
 --========================================================--
 local safezoneBaseplates = {}
 local baseplateSize = Vector3.new(2048, 1, 2048)
@@ -281,10 +537,11 @@ CreateCheckbox(tabMain, "Show Safe Zone", function(enabled)
         baseplate.Transparency = enabled and 0.8 or 1
         baseplate.CanCollide = enabled
     end
+    print("[KS HUB] Safe Zone toggled:", enabled)
 end)
 
 --========================================================--
--- TELEPORT UTILS + PRESETS (Game TP)
+-- TELEPORTS (Game TP)
 --========================================================--
 local function stringToCFrame(str)
     local x, y, z = str:match("([^,]+),%s*([^,]+),%s*([^,]+)")
@@ -317,8 +574,10 @@ CreateDropdown(tabGameTP, "Teleports", storyCoords, function(value, label)
 end)
 
 --========================================================--
--- ITEM BRACKETS + POSICIONES ESPECIALES (Item TP/ESP)
 --========================================================--
+-- ITEM TP/ESP
+--========================================================--
+
 local campfireDropPos = Vector3.new(0, 19, 0)
 local machineDropPos  = Vector3.new(21, 16, -5)
 
@@ -354,7 +613,11 @@ local function bringItem(name, quantity)
             end
         end
     end
-    print("[KS HUB] Bring:", count, name)
+    if count > 0 then
+        print("[KS HUB] Se trajo correctamente", count, name)
+    else
+        warn("[KS HUB] No se encontró", name)
+    end
 end
 
 local function dropItemAt(name, quantity, position)
@@ -370,7 +633,11 @@ local function dropItemAt(name, quantity, position)
             end
         end
     end
-    print("[KS HUB] Drop:", count, name, "en", position)
+    if count > 0 then
+        print("[KS HUB] Drop:", count, name, "en", position)
+    else
+        warn("[KS HUB] No se encontró", name, "para dropear")
+    end
 end
 
 -- AutoDrop
@@ -381,7 +648,6 @@ local function toggleAutoDrop(state, name, qty, pos)
         print("[KS HUB] AutoDrop activado para:", name, "cada", autoDropTimer, "s")
         if autoDropConnection then autoDropConnection:Disconnect() end
         autoDropConnection = RunService.Heartbeat:Connect(function()
-            -- Timer básico con tick
             local now = tick()
             if not toggleAutoDrop._last or now - toggleAutoDrop._last >= autoDropTimer then
                 toggleAutoDrop._last = now
@@ -399,8 +665,6 @@ end
 -- Secciones por categoría
 CreateSection(tabItem, "Bring / Drop por categoría")
 for category, items in pairs(bracket) do
-    local sec = CreateSection(tabItem, "Category: "..category)
-
     local selectedName = nil
     CreateDropdown(tabItem, "Seleccionar "..category, items, function(val, label)
         selectedName = val
@@ -438,6 +702,9 @@ for category, items in pairs(bracket) do
 
     CreateToggle(tabItem, "AutoDrop "..category.." (Campfire)", function(state)
         if selectedName then
+            toggleAutoDrop(state, selectedName, qtyValue, camp)
+                CreateToggle(tabItem, "AutoDrop "..category.." (Campfire)", function(state)
+        if selectedName then
             toggleAutoDrop(state, selectedName, qtyValue, campfireDropPos)
         else
             warn("[KS HUB] Selecciona un ítem en "..category.." antes de AutoDrop.")
@@ -446,8 +713,112 @@ for category, items in pairs(bracket) do
 end
 
 --========================================================--
--- ITEM ESP (Visuals)
+-- TELEPORT TO ITEM
 --========================================================--
+CreateSection(tabItem, "Teleport to Item")
+
+local itemNames = {
+    "Revolver", "MedKit", "Alien Chest", "Berry", "Bolt", "Broken Fan",
+    "Carrot", "Coal", "Coin Stack", "Hologram Emitter", "Item Chest",
+    "Laser Fence Blueprint", "Log", "Old Flashlight", "Old Radio",
+    "Sheet Metal", "Bandage", "Rifle"
+}
+
+local function getModelPart(model)
+    if model.PrimaryPart then return model.PrimaryPart end
+    for _, part in pairs(model:GetChildren()) do
+        if part:IsA("BasePart") then return part end
+    end
+    return nil
+end
+
+CreateDropdown(tabItem, "Teleport to Item", itemNames, function(itemName)
+    if not itemsFolder then return end
+    local candidates = {}
+    for _, model in pairs(itemsFolder:GetChildren()) do
+        if model:IsA("Model") and model.Name == itemName then
+            local part = getModelPart(model)
+            if part then table.insert(candidates, part) end
+        end
+    end
+    if #candidates == 0 then
+        warn("[KS HUB] No se encontró '"..itemName.."' para teletransportar.")
+        return
+    end
+    local targetPart = candidates[math.random(1, #candidates)]
+    local char = LocalPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = targetPart.CFrame + Vector3.new(0, 5, 0)
+            print("[KS HUB] Teleport a "..itemName)
+        end
+    end
+end)
+
+--========================================================--
+-- TELEPORT ITEM TO YOU (Bulk)
+--========================================================--
+CreateSection(tabItem, "Teleport Item (Bulk)")
+
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local sources = { itemsFolder, ReplicatedStorage:WaitForChild("TempStorage") }
+
+local possibleItems = {
+    "Alien Chest","Alpha Wolf Pelt","Anvil Front","Anvil Back","Apple","Bandage",
+    "Bear Corpse","Bear Pelt","Berry","Biofuel","Bolt","Broken Fan","Bunny Foot",
+    "Carrot","Coal","Coin Stack","Cooked Morsel","Cooked Steak","Chainsaw","Cultist",
+    "Cultist Gem","Flower","Fuel Canister","Hologram Emitter","Item Chest",
+    "Laser Fence Blueprint","Leather Body","Iron Body","Thorn Body","Log","MedKit",
+    "Morsel","Old Flashlight","Old Radio","Good Sack","Good Axe","Raygun","Giant Sack",
+    "Strong Axe","Oil Barrel","Old Car Engine","Rifle","Rifle Ammo","Revolver",
+    "Revolver Ammo","Sapling","Sheet Metal","Steak","Wolf Pelt",
+    "Gem of the Forest Fragment","Tyre","Washing Machine","Broken Microwave"
+}
+
+local function teleportItem(itemName)
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local rootPart = char:WaitForChild("HumanoidRootPart")
+    local stackOffsetY = 2
+    local count = 0
+
+    for _, source in ipairs(sources) do
+        for _, item in ipairs(source:GetChildren()) do
+            if item.Name == itemName then
+                local targetPart
+                for _, child in ipairs(item:GetDescendants()) do
+                    if child:IsA("MeshPart") or child:IsA("Part") or child:IsA("UnionOperation") then
+                        targetPart = child
+                        break
+                    end
+                end
+                if targetPart then
+                    remoteEvents.RequestStartDraggingItem:FireServer(item)
+                    local offset = Vector3.new(0, count * stackOffsetY, 0)
+                    targetPart.CFrame = rootPart.CFrame + offset
+                    remoteEvents.StopDraggingItem:FireServer(item)
+                    print("[KS HUB] Se trajo correctamente "..itemName.." :", item:GetFullName())
+                    count += 1
+                else
+                    warn("[KS HUB] "..itemName.." encontrado, pero sin MeshPart/Part válido:", item:GetFullName())
+                end
+            end
+        end
+    end
+    if count == 0 then
+        warn("[KS HUB] No se encontró ningún "..itemName.." para traer.")
+    end
+end
+
+CreateDropdown(tabItem, "Teleport Item (Bulk)", possibleItems, function(itemName)
+    teleportItem(itemName)
+end)
+
+--========================================================--
+--========================================================--
+-- ESP (Visuals)
+--========================================================--
+
 local espColors = {
     weapons     = Color3.fromRGB(255, 0, 0),
     minifoods   = Color3.fromRGB(0, 255, 0),
@@ -510,7 +881,6 @@ CreateToggle(tabVisuals, "Activar ESP (todas categorías)", function(state)
                 end
             end
         end
-        -- Listener para nuevos ítems
         if not tabVisuals._espConn then
             tabVisuals._espConn = itemsFolder.ChildAdded:Connect(function(obj)
                 if not espActive then return end
@@ -549,20 +919,21 @@ for category, _ in pairs(bracket) do
         else
             for _, obj in ipairs(itemsFolder:GetChildren()) do
                 if obj:FindFirstChild("ESP") then
-                    -- Solo remover si pertenece a esta categoría (por nombre)
                     for _, name in ipairs(bracket[category]) do
                         if obj.Name == name then
                             obj.ESP:Destroy()
-                        end
+                                            end
                     end
                 end
             end
         end
     end)
-end
+            end
+--========================================================--
+-- (Bloque de ESP con toggles por categoría y prints)
 
 --========================================================--
--- PLAYER UTILS (Player tab ejemplo simple)
+-- PLAYER UTILS
 --========================================================--
 CreateSection(tabPlayer, "Player utils")
 CreateButton(tabPlayer, "FullBright", function()
@@ -580,6 +951,7 @@ CreateSlider(tabPlayer, "WalkSpeed", 16, 200, 16, function(val)
     local hum = char:FindFirstChildOfClass("Humanoid")
     if hum then
         hum.WalkSpeed = val
+        print("[KS HUB] WalkSpeed ajustado a:", val)
     end
 end)
 
@@ -588,6 +960,7 @@ CreateSlider(tabPlayer, "JumpPower", 50, 150, 50, function(val)
     local hum = char:FindFirstChildOfClass("Humanoid")
     if hum then
         hum.JumpPower = val
+        print("[KS HUB] JumpPower ajustado a:", val)
     end
 end)
 
