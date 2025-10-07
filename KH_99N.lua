@@ -315,13 +315,23 @@ function CreateDropdown(parent, labelText, options, onChoose)
     return Frame
 end
 
--- ✅ Slider corregido (funciona en todos los casos)
+-- ✅ REEMPLAZA tu función CreateSlider completa por esta versión
 function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onChange)
+    -- Validaciones básicas
+    if typeof(minValue) ~= "number" or typeof(maxValue) ~= "number" or minValue >= maxValue then
+        warn("[KS HUB] CreateSlider '"..labelText.."' parámetros inválidos."); return
+    end
+    if typeof(defaultValue) ~= "number" then defaultValue = minValue end
+    defaultValue = math.clamp(defaultValue, minValue, maxValue)
+
+    -- Contenedor
     local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(0, 300, 0, 40)
+    Container.Size = UDim2.new(0, 320, 0, 44)
     Container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Container.BorderSizePixel = 0
     Container.Parent = parent
 
+    -- Etiqueta
     local Label = Instance.new("TextLabel")
     Label.Size = UDim2.new(1, 0, 0, 18)
     Label.BackgroundTransparency = 1
@@ -329,41 +339,75 @@ function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onCha
     Label.Font = Enum.Font.SourceSansBold
     Label.TextSize = 14
     Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Text = labelText .. " ("..tostring(defaultValue)..")"
+    Label.Text = string.format("%s (%d)", labelText, defaultValue)
     Label.Parent = Container
 
+    -- Barra
     local Bar = Instance.new("Frame")
-    Bar.Size = UDim2.new(1, -20, 0, 8)
-    Bar.Position = UDim2.new(0, 10, 0, 24)
+    Bar.Size = UDim2.new(1, -20, 0, 10)
+    Bar.Position = UDim2.new(0, 10, 0, 26)
     Bar.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
     Bar.BorderSizePixel = 0
     Bar.Parent = Container
 
+    -- Fill
+    local relDefault = (defaultValue - minValue) / (maxValue - minValue)
     local Fill = Instance.new("Frame")
-    Fill.Size = UDim2.new((defaultValue - minValue) / (maxValue - minValue), 0, 1, 0)
+    Fill.Size = UDim2.new(relDefault, 0, 1, 0)
     Fill.BackgroundColor3 = Color3.fromRGB(120, 200, 120)
     Fill.BorderSizePixel = 0
     Fill.Parent = Bar
 
-    local dragging = false
+    -- Handle
+    local Handle = Instance.new("Frame")
+    Handle.Size = UDim2.new(0, 10, 1, 0)
+    Handle.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+    Handle.BorderSizePixel = 0
+    Handle.Parent = Bar
+    Handle.ZIndex = 2
+    Handle.Position = UDim2.new(relDefault, -5, 0, 0)
 
-    local function update(input)
-        local rel = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-        local value = math.floor(minValue + rel * (maxValue - minValue))
+    -- Estado
+    local dragging = false
+    local currentValue = defaultValue
+
+    -- Funciones
+    local function setValueFromRelative(rel)
+        rel = math.clamp(rel, 0, 1)
+        currentValue = math.floor(minValue + rel * (maxValue - minValue))
         Fill.Size = UDim2.new(rel, 0, 1, 0)
-        Label.Text = labelText .. " ("..tostring(value)..")"
-        local ok, err = pcall(function() onChange(value) end)
+        Handle.Position = UDim2.new(rel, -5, 0, 0)
+        Label.Text = string.format("%s (%d)", labelText, currentValue)
+
+        local ok, err = pcall(function()
+            if onChange then onChange(currentValue) end
+        end)
         if not ok then warn("[KS HUB] Error slider '"..labelText.."':", err) end
     end
 
+    local function updateFromInput(input)
+        local rel = (input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X
+        setValueFromRelative(rel)
+    end
+
+    -- Eventos
     Bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            update(input)
+            updateFromInput(input)
         end
     end)
-
+    Handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
     Bar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    Handle.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
@@ -371,9 +415,25 @@ function CreateSlider(parent, labelText, minValue, maxValue, defaultValue, onCha
 
     UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            update(input)
+            updateFromInput(input)
         end
     end)
+
+    -- Toque (móviles)
+    Bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            updateFromInput(input)
+        end
+    end)
+    Bar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    -- Inicializa
+    setValueFromRelative(relDefault)
 
     return Container
 end
