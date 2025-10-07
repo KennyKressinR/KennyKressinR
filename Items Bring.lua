@@ -1,13 +1,24 @@
 --========================================================--
--- UNIVERSAL INTERACTABLE ITEM SCANNER & BRING
--- Optimizado para Tools y objetos usables
+-- UNIVERSAL ITEM SCANNER & BRING (UI Fix + Debug)
 --========================================================--
 
-print("[DEBUG] Script iniciado (Interactables Only)")
+print("[DEBUG] Script iniciado (UI Fix)")
 
+-- Crear ScreenGui en PlayerGui (más seguro que CoreGui en algunos exploits)
+local player = game.Players.LocalPlayer
+local guiParent = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
+
+print("[DEBUG] Creando ScreenGui...")
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "UniversalItemScanner"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = guiParent
+
+-- Botón flotante
+print("[DEBUG] Creando ToggleBtn...")
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ItemsToggle"
-ToggleBtn.Parent = game.CoreGui
+ToggleBtn.Parent = ScreenGui
 ToggleBtn.Size = UDim2.new(0, 140, 0, 32)
 ToggleBtn.Position = UDim2.new(0, 20, 0, 20)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -15,9 +26,8 @@ ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleBtn.Text = "📦 Items (Abrir)"
 ToggleBtn.BorderSizePixel = 0
 
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "InteractableScanner"
-
+-- Frame principal
+print("[DEBUG] Creando Frame principal...")
 local Frame = Instance.new("Frame", ScreenGui)
 Frame.Size = UDim2.new(0, 320, 0, 480)
 Frame.Position = UDim2.new(0, 20, 0, 60)
@@ -25,6 +35,8 @@ Frame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 Frame.BorderSizePixel = 0
 Frame.Visible = false
 
+-- Scroll
+print("[DEBUG] Creando ScrollingFrame...")
 local Scroll = Instance.new("ScrollingFrame", Frame)
 Scroll.Size = UDim2.new(1, -12, 1, -50)
 Scroll.Position = UDim2.new(0, 6, 0, 40)
@@ -38,6 +50,8 @@ local UIList = Instance.new("UIListLayout", Scroll)
 UIList.Padding = UDim.new(0, 4)
 UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- Botón refrescar
+print("[DEBUG] Creando RefreshBtn...")
 local RefreshBtn = Instance.new("TextButton", Frame)
 RefreshBtn.Size = UDim2.new(0, 140, 0, 28)
 RefreshBtn.Position = UDim2.new(0, 6, 1, -34)
@@ -46,12 +60,10 @@ RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 RefreshBtn.Text = "🔄 Refrescar"
 RefreshBtn.BorderSizePixel = 0
 
--- 🔧 Helpers
+-- Helpers
 local function getHRP()
-    local plr = game.Players.LocalPlayer
-    if plr and plr.Character then
-        return plr.Character:FindFirstChild("HumanoidRootPart")
-    end
+    local char = player.Character or player.CharacterAdded:Wait()
+    return char:FindFirstChild("HumanoidRootPart")
 end
 
 local function getValidPart(obj)
@@ -62,24 +74,17 @@ local function getValidPart(obj)
     elseif obj:IsA("BasePart") then
         return obj
     end
-    return nil
 end
 
--- 🧠 Filtro de objetos interactuables
 local function isInteractable(obj)
     if obj:IsA("Tool") then return true end
     if obj:IsA("Model") and getValidPart(obj) then return true end
-    -- Evitar partes sueltas que son de edificios (ej: Anchored y enormes)
-    if obj:IsA("BasePart") then
-        if obj.Anchored and obj.Size.Magnitude > 20 then
-            return false
-        end
+    if obj:IsA("BasePart") and (not obj.Anchored or obj.Size.Magnitude < 20) then
         return true
     end
     return false
 end
 
--- 🔍 Escaneo recursivo
 local function scanFolder(root, results)
     for _, obj in ipairs(root:GetChildren()) do
         if not obj:IsDescendantOf(game.Players) and obj ~= workspace.CurrentCamera then
@@ -94,16 +99,14 @@ local function scanFolder(root, results)
     end
 end
 
--- 🧹 Limpiar lista
 local function clearList()
     for _, child in ipairs(Scroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
 end
 
--- 🔄 Refrescar
 local function refreshItems()
-    print("[DEBUG] Refrescando lista de ítems interactuables...")
+    print("[DEBUG] Refrescando lista...")
     clearList()
     local found = {}
     scanFolder(workspace, found)
