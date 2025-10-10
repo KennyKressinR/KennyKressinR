@@ -181,9 +181,6 @@ local function createButton(parent, text, callback)
     end)
     return button
 end
-
-
-
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
 ----------------------------------------------------------
