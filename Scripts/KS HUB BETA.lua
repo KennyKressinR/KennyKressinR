@@ -261,6 +261,21 @@ end -- ✅ Este end cierra la función correctamente
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
 ----------------------------------------------------------
+-- [Bloque 3.X] Infinite Jump
+local infiniteJumpEnabled = false
+
+-- Evento de salto
+UserInputService.JumpRequest:Connect(function()
+    if infiniteJumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- Toggle Infinite Jump
+local function toggleInfiniteJump()
+    infiniteJumpEnabled = not infiniteJumpEnabled
+    print("[KS HUB] Infinite Jump " .. (infiniteJumpEnabled and "ON" or "OFF"))
+end
 
 -- [Bloque 3.1] Teleports
 local function teleportToMouse()
@@ -353,6 +368,9 @@ createButton(mainScroll, "Toggle Noclip", toggleNoclip)
 
 -- Botón Anti‑Delay
 createButton(mainScroll, "Toggle Anti-Delay", toggleAntiDelay)
+
+-- Botón para activar/desactivar Infinite Jump
+createButton(mainScroll, "Toggle Infinite Jump", toggleInfiniteJump)
 ----------------------------------------------------------
 -- SLIDER DE VELOCIDAD
 ----------------------------------------------------------
