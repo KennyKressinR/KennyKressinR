@@ -789,6 +789,7 @@ local function toggleESP()
 end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
+
 -- [Bloque 6.3] ESP Ítems avanzado (búsqueda parcial + highlight + detección profunda)
 local itemESPEnabled = false
 local itemESPConnections = {}
