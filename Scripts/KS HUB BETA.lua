@@ -28,11 +28,9 @@ local function getHumanoid()
 end
 
 print("[KS HUB] Parte 1 lista")
-
 ----------------------------------------------------------
 -- PARTE 2: GUI PRINCIPAL
 ----------------------------------------------------------
-
 -- [Bloque 2.1] ScreenGui y botón flotante
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
@@ -193,8 +191,6 @@ local function createButton(parent, text, callback)
 end
 
 print("[KS HUB] Parte 2 lista")
-
-
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
 ----------------------------------------------------------
@@ -323,12 +319,9 @@ local function toggleAntiDelay()
 end
 
 print("[KS HUB] Parte 3 lista")
-
-
 ----------------------------------------------------------
 -- PARTE 4: MAIN (SLIDERS + UTILIDADES + BRING ITEMS)
 ----------------------------------------------------------
-
 -- Contenedor principal de la pestaña Main
 local mainScroll = Instance.new("ScrollingFrame")
 mainScroll.Size = UDim2.new(1, 0, 1, 0)
@@ -352,7 +345,6 @@ end)
 
 -- Botón Anti‑Delay
 createButton(mainScroll, "Toggle Anti-Delay", toggleAntiDelay)
-
 ----------------------------------------------------------
 -- SLIDER DE VELOCIDAD
 ----------------------------------------------------------
@@ -419,7 +411,6 @@ UserInputService.InputChanged:Connect(function(input)
         setSpeedFromX(input.Position.X)
     end
 end)
-
 ----------------------------------------------------------
 -- SLIDER DE SALTO
 ----------------------------------------------------------
@@ -486,7 +477,6 @@ UserInputService.InputChanged:Connect(function(input)
         setJumpFromX(input.Position.X)
     end
 end)
-
 ----------------------------------------------------------
 -- BRING ITEMS (Tools cercanos)
 ----------------------------------------------------------
@@ -507,12 +497,9 @@ createButton(mainScroll, "Bring Items (Tools)", function()
 end)
 
 print("[KS HUB] Parte 4 lista")
-
-
 ----------------------------------------------------------
 -- PARTE 5: TELEPORT (BUSCADOR + SCROLL + LOADER)
 ----------------------------------------------------------
-
 -- Contenedor scroll para toda la pestaña Teleport
 local tpScroll = Instance.new("ScrollingFrame")
 tpScroll.Size = UDim2.new(1, 0, 1, 0)
@@ -674,13 +661,9 @@ for i = 1, 3 do
 end
 
 print("[KS HUB] Parte 5 lista")
-
-
-
 ----------------------------------------------------------
 -- PARTE 6: VISUAL + AJUSTES + INICIALIZACIÓN
 ----------------------------------------------------------
-
 -- [Bloque 6.1] Full Bright
 local fullBright = false
 local oldBrightness, oldAmbient, oldOutdoorAmbient
