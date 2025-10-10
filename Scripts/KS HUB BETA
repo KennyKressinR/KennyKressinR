@@ -1,21 +1,18 @@
 --========================================================
--- KS HUB - REESCRITO DESDE 0
+-- KS HUB - SCRIPT COMPLETO
 --========================================================
 
 ----------------------------------------------------------
 -- PARTE 1: SERVICIOS Y VARIABLES
 ----------------------------------------------------------
--- [Bloque 1.1] Servicios principales
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 
--- [Bloque 1.2] Variables del jugador local
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- [Bloque 1.3] Funciones auxiliares
 local function getRoot(plr)
     local char = plr.Character
     if not char then return nil end
@@ -29,11 +26,10 @@ local function getHumanoid()
 end
 
 print("[KS HUB] Parte 1 lista")
+
 ----------------------------------------------------------
 -- PARTE 2: GUI PRINCIPAL
 ----------------------------------------------------------
-
--- [Bloque 2.1] ScreenGui y botón flotante
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
@@ -51,13 +47,11 @@ ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
--- [Bloque 2.1.1] Hacer el botón flotante arrastrable
+-- Botón arrastrable
 local dragging = false
 local dragStart, startPos
-
 ToggleButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = ToggleButton.Position
@@ -68,19 +62,14 @@ ToggleButton.InputBegan:Connect(function(input)
         end)
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement 
-    or input.UserInputType == Enum.UserInputType.Touch) then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
-        ToggleButton.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
+        ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
--- [Bloque 2.2] Marco principal
+-- Marco principal
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
@@ -91,7 +80,6 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
--- [Bloque 2.3] Título
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
@@ -101,7 +89,6 @@ Title.TextSize = 24
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Parent = MainFrame
 
--- [Bloque 2.4] Contenedor de pestañas
 local Tabs = {}
 local TabContainer = Instance.new("Frame")
 TabContainer.Size = UDim2.new(0, 120, 1, -40)
@@ -113,14 +100,12 @@ TabLayout.Padding = UDim.new(0, 6)
 TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabLayout.Parent = TabContainer
 
--- [Bloque 2.5] Contenido
 local ContentFrame = Instance.new("Frame")
 ContentFrame.Size = UDim2.new(1, -130, 1, -50)
 ContentFrame.Position = UDim2.new(0, 130, 0, 50)
 ContentFrame.BackgroundTransparency = 1
 ContentFrame.Parent = MainFrame
 
--- [Bloque 2.6] Función para crear pestañas
 local function createTab(name)
     local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(1, 0, 0, 36)
@@ -151,18 +136,15 @@ local function createTab(name)
     end)
 end
 
--- Crear pestañas
 createTab("Main")
 createTab("Teleport")
 createTab("Visual")
 createTab("Ajustes")
 
--- [Bloque 2.7] Toggle HUB
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- [Bloque 2.8] Función para crear botones
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -181,9 +163,74 @@ local function createButton(parent, text, callback)
     end)
     return button
 end
+
+print("[KS HUB] Parte 2 lista")
+
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
 ----------------------------------------------------------
+-- Teleports
+local function teleportToMouse()
+    local root = getRoot(LocalPlayer)
+    if root and Mouse and Mouse.Hit then
+        root.CFrame = Mouse.Hit + Vector3.new(0, 3, 0)
+    end
+end
+local function teleportToPlayer(player)
+    local myRoot = getRoot(LocalPlayer)
+    local targetRoot = getRoot(player)
+    if myRoot and targetRoot then
+        LocalPlayer.Character:PivotTo(targetRoot.CFrame + Vector3.new(0, 3, 0))
+    end
+end
+
+-- Noclip
+local noclip = false
+local noclipConnection
+local function toggleNoclip()
+    noclip = not noclip
+    if noclip then
+        noclipConnection = RunService.Stepped:Connect(function()
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+            end
+        end)
+    else
+        if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+        end
+    end
+end
+
+-- Anti-delay
+local antiDelay = false
+local originalDurations = {}
+local function toggleAntiDelay()
+    antiDelay = not antiDelay
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            if antiDelay then
+                originalDurations[obj] = obj.HoldDuration
+                obj.HoldDuration = 0
+            else
+                if originalDurations[obj] ~= nil then
+                    obj.HoldDuration = originalDurations[obj]
+                end
+            end
+        end
+    end
+
+----------------------------------------------------------
+-- PARTE 3: FUNCIONES DE UTILIDAD
+----------------------------------------------------------
+
 -- [Bloque 3.1] Teleports
 local function teleportToMouse()
     local root = getRoot(LocalPlayer)
@@ -252,7 +299,7 @@ print("[KS HUB] Parte 3 lista")
 -- PARTE 4: MAIN (SLIDERS + UTILIDADES + BRING ITEMS)
 ----------------------------------------------------------
 
--- [Bloque 4.1] Contenedor principal de la pestaña Main
+-- Contenedor principal de la pestaña Main
 local mainScroll = Instance.new("ScrollingFrame")
 mainScroll.Size = UDim2.new(1, 0, 1, 0)
 mainScroll.BackgroundTransparency = 1
@@ -265,11 +312,20 @@ mainLayout.Padding = UDim.new(0, 6)
 mainLayout.SortOrder = Enum.SortOrder.LayoutOrder
 mainLayout.Parent = mainScroll
 
--- [Bloque 4.2] Botones base
-createButton(mainScroll, "Toggle Noclip", toggleNoclip)
+-- Botones Noclip ON / OFF
+createButton(mainScroll, "Noclip ON", function()
+    if not noclip then toggleNoclip() end
+end)
+createButton(mainScroll, "Noclip OFF", function()
+    if noclip then toggleNoclip() end
+end)
+
+-- Botón Anti‑Delay
 createButton(mainScroll, "Toggle Anti-Delay", toggleAntiDelay)
 
--- [Bloque 4.3] Slider de Velocidad (16–150)
+----------------------------------------------------------
+-- SLIDER DE VELOCIDAD
+----------------------------------------------------------
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(1, 0, 0, 24)
 speedLabel.BackgroundTransparency = 1
@@ -318,26 +374,25 @@ local function setSpeedFromX(x)
 end
 
 speedBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         draggingSpeed = true
         setSpeedFromX(input.Position.X)
     end
 end)
 speedBar.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         draggingSpeed = false
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
-    if draggingSpeed and (input.UserInputType == Enum.UserInputType.MouseMovement 
-    or input.UserInputType == Enum.UserInputType.Touch) then
+    if draggingSpeed and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         setSpeedFromX(input.Position.X)
     end
 end)
 
--- [Bloque 4.4] Slider de Salto (32–100)
+----------------------------------------------------------
+-- SLIDER DE SALTO
+----------------------------------------------------------
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, 0, 0, 24)
 jumpLabel.BackgroundTransparency = 1
@@ -383,11 +438,52 @@ local function setJumpFromX(x)
     jumpLabel.Text = "Salto: " .. tostring(value)
     local hum = getHumanoid()
     if hum then hum.JumpPower = value end
+end
+
+jumpBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingJump = true
+        setJumpFromX(input.Position.X)
+    end
+end)
+jumpBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingJump = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        setJumpFromX(input.Position.X)
+    end
+end)
+
+----------------------------------------------------------
+-- BRING ITEMS (Tools cercanos)
+----------------------------------------------------------
+createButton(mainScroll, "Bring Items (Tools)", function()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local root = getRoot(LocalPlayer)
+    if not root then return end
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+            local dist = (obj.Handle.Position - root.Position).Magnitude
+            if dist < 100 then
+                obj.Handle.CFrame = root.CFrame + Vector3.new(0, 3, 0)
+            end
+        end
+    end
+end)
+
+print("[KS HUB] Parte 4 lista")
+
+
 ----------------------------------------------------------
 -- PARTE 5: TELEPORT (BUSCADOR + SCROLL + LOADER)
 ----------------------------------------------------------
 
--- Contenedor scroll principal
+-- Contenedor scroll para toda la pestaña Teleport
 local tpScroll = Instance.new("ScrollingFrame")
 tpScroll.Size = UDim2.new(1, 0, 1, 0)
 tpScroll.BackgroundTransparency = 1
@@ -400,10 +496,10 @@ tpLayout.Padding = UDim.new(0, 6)
 tpLayout.SortOrder = Enum.SortOrder.LayoutOrder
 tpLayout.Parent = tpScroll
 
--- Teleport al mouse
+-- [Bloque 5.1] Teleport al mouse
 createButton(tpScroll, "Teleport al Mouse", teleportToMouse)
 
--- Caja de búsqueda
+-- [Bloque 5.2] Caja de búsqueda de jugadores
 local searchBox = Instance.new("TextBox")
 searchBox.Size = UDim2.new(1, 0, 0, 30)
 searchBox.PlaceholderText = "Buscar jugador..."
@@ -418,7 +514,7 @@ searchBox.ClearTextOnFocus = false
 searchBox.Parent = tpScroll
 Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
 
--- Botón Refresh
+-- [Bloque 5.3] Botón Refresh
 local refreshBtn = Instance.new("TextButton")
 refreshBtn.Size = UDim2.new(1, 0, 0, 30)
 refreshBtn.Text = "Actualizar lista de jugadores"
@@ -431,7 +527,7 @@ refreshBtn.BorderSizePixel = 0
 refreshBtn.Parent = tpScroll
 Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 6)
 
--- Scroll de jugadores (con altura fija para que se vea)
+-- [Bloque 5.4] Scroll de jugadores
 local playerScroll = Instance.new("ScrollingFrame")
 playerScroll.Size = UDim2.new(1, 0, 0, 200)
 playerScroll.BackgroundTransparency = 1
@@ -444,7 +540,7 @@ scrollLayout.Padding = UDim.new(0, 6)
 scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scrollLayout.Parent = playerScroll
 
--- Función para poblar lista
+-- Función para poblar lista de jugadores
 local function populatePlayerList(filter)
     for _, child in ipairs(playerScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -477,7 +573,7 @@ local function populatePlayerList(filter)
     end
 end
 
--- Conexiones
+-- Conexiones de búsqueda y refresh
 searchBox:GetPropertyChangedSignal("Text"):Connect(function()
     populatePlayerList(searchBox.Text)
 end)
@@ -490,8 +586,9 @@ Players.PlayerRemoving:Connect(function() populatePlayerList(searchBox.Text) end
 -- Inicializar lista
 populatePlayerList("")
 
--- Teleport Loader (Save/Load posiciones) – igual que antes
+-- [Bloque 5.5] Teleport Loader (Save/Load posiciones)
 local savedPositions = {}
+
 local function savePosition(slot)
     local root = getRoot(LocalPlayer)
     if root then
@@ -499,6 +596,7 @@ local function savePosition(slot)
         print("[KS HUB] Posición guardada en slot", slot)
     end
 end
+
 local function loadPosition(slot)
     local root = getRoot(LocalPlayer)
     if root and savedPositions[slot] then
@@ -509,6 +607,7 @@ local function loadPosition(slot)
     end
 end
 
+-- Crear botones Save/Load en filas
 for i = 1, 3 do
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, 0, 0, 36)
@@ -542,34 +641,14 @@ for i = 1, 3 do
     loadBtn.Parent = row
     Instance.new("UICorner", loadBtn).CornerRadius = UDim.new(0, 6)
     loadBtn.MouseButton1Click:Connect(function() loadPosition(i) end)
-endend
+end
 
-jumpBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        draggingJump = true
-        setJumpFromX(input.Position.X)
-    end
-end)
-jumpBar.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        draggingJump = false
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement 
-    or input.UserInputType == Enum.UserInputType.Touch) then
-        setJumpFromX(input.Position.X)
-    end
-end)
+print("[KS HUB] Parte 5 lista")
 
--- [Bloque 4.5] Bring Items
--- (igual al bloque robusto que ya te pasé: busca Tools, ordena por distancia, trae cantidad, limpia inputs)
-----------------------------------------------------------
+
 
 ----------------------------------------------------------
--- PARTE 6: VISUAL (FULL BRIGHT + ESP CON NOMBRES)
+-- PARTE 6: VISUAL + AJUSTES + INICIALIZACIÓN
 ----------------------------------------------------------
 
 -- [Bloque 6.1] Full Bright
@@ -656,7 +735,7 @@ local function toggleESP()
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
                 addESP(plr)
-                espConnections[#espConnections+1] = plr.CharacterAdded:Connect(function(char)
+                espConnections[#espConnections+1] = plr.CharacterAdded:Connect(function()
                     task.wait(0.5)
                     addESP(plr)
                 end)
@@ -664,7 +743,7 @@ local function toggleESP()
         end
         -- Nuevos jugadores
         espConnections[#espConnections+1] = Players.PlayerAdded:Connect(function(plr)
-            espConnections[#espConnections+1] = plr.CharacterAdded:Connect(function(char)
+            espConnections[#espConnections+1] = plr.CharacterAdded:Connect(function()
                 task.wait(0.5)
                 addESP(plr)
             end)
@@ -684,3 +763,19 @@ local function toggleESP()
 end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
+
+-- [Bloque 6.3] Ajustes
+createButton(Tabs["Ajustes"], "Cerrar HUB", function()
+    MainFrame.Visible = false
+end)
+
+createButton(Tabs["Ajustes"], "Resetear Personaje", function()
+    LocalPlayer:LoadCharacter()
+end)
+
+-- [Bloque 6.4] Inicialización
+for name, frame in pairs(Tabs) do
+    frame.Visible = (name == "Main")
+end
+
+print("[KS HUB] HUB cargado correctamente")
