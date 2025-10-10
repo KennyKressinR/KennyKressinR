@@ -3,28 +3,6 @@
 --========================================================
 
 ----------------------------------------------------------
--- PARTE 1: SERVICIOS Y VARIABLES
-----------------------------------------------------------
--- [Bloque 1.1] Servicios principales
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Lighting = game:GetService("Lighting")
-
--- [Bloque 1.2] Variables del jugador local
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
--- [Bloque 1.3] Funciones auxiliares
-local function getRoot(plr)
-    local char = plr.Character
-    if not char then return nil end
-    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-end
-
-local function getHumanoid()
-    local char = LocalPlayer.Character
-    if not char then return nil end----------------------------------------------------------
 -- PARTE 2: GUI PRINCIPAL
 ----------------------------------------------------------
 
@@ -176,10 +154,6 @@ local function createButton(parent, text, callback)
     end)
     return button
 end
-    return char:FindFirstChildOfClass("Humanoid")
-end
-
-print("[KS HUB] Parte 1 lista")
 
 
 
