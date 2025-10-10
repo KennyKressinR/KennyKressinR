@@ -681,18 +681,15 @@ local oldBrightness, oldAmbient, oldOutdoorAmbient
 createButton(Tabs["Visual"], "Toggle Full Bright", function()
     fullBright = not fullBright
     if fullBright then
-        -- Guardar valores originales
         oldBrightness = Lighting.Brightness
         oldAmbient = Lighting.Ambient
         oldOutdoorAmbient = Lighting.OutdoorAmbient
 
-        -- Forzar brillo
         Lighting.Brightness = 5
         Lighting.Ambient = Color3.new(1, 1, 1)
         Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
         print("[KS HUB] Full Bright ON")
     else
-        -- Restaurar valores
         if oldBrightness then Lighting.Brightness = oldBrightness end
         if oldAmbient then Lighting.Ambient = oldAmbient end
         if oldOutdoorAmbient then Lighting.OutdoorAmbient = oldOutdoorAmbient end
@@ -708,7 +705,6 @@ local function addESP(plr)
     if not plr.Character then return end
     local char = plr.Character
 
-    -- Highlight
     if not char:FindFirstChild("KS_ESP_Highlight") then
         local h = Instance.new("Highlight")
         h.Name = "KS_ESP_Highlight"
@@ -718,7 +714,6 @@ local function addESP(plr)
         h.Parent = char
     end
 
-    -- Billboard con nombre
     if not char:FindFirstChild("KS_ESP_Name") then
         local head = char:FindFirstChild("Head")
         if head then
@@ -754,7 +749,6 @@ end
 local function toggleESP()
     espEnabled = not espEnabled
     if espEnabled then
-        -- Añadir ESP a jugadores existentes
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
                 addESP(plr)
@@ -764,7 +758,6 @@ local function toggleESP()
                 end)
             end
         end
-        -- Nuevos jugadores
         espConnections[#espConnections+1] = Players.PlayerAdded:Connect(function(plr)
             espConnections[#espConnections+1] = plr.CharacterAdded:Connect(function()
                 task.wait(0.5)
@@ -773,13 +766,11 @@ local function toggleESP()
         end)
         print("[KS HUB] ESP ON")
     else
-        -- Quitar ESP de todos
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
                 removeESP(plr)
             end
         end
-        -- Desconectar eventos
         for _, c in ipairs(espConnections) do
             c:Disconnect()
         end
@@ -790,15 +781,14 @@ end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
 
--- [Bloque 6.3] ESP Ítems avanzado (búsqueda parcial + highlight + detección profunda)
+-- [Bloque 6.3] ESP Ítems (Highlight + Nombre manual)
 local itemESPEnabled = false
 local itemESPConnections = {}
 local itemESPName = ""
 
--- Caja de texto para buscar ítems
 local itemSearchBox = Instance.new("TextBox")
 itemSearchBox.Size = UDim2.new(1, 0, 0, 30)
-itemSearchBox.PlaceholderText = "" -- vacío
+itemSearchBox.PlaceholderText = ""
 itemSearchBox.Text = ""
 itemSearchBox.Font = Enum.Font.Gotham
 itemSearchBox.TextSize = 16
@@ -810,155 +800,36 @@ itemSearchBox.ClearTextOnFocus = false
 itemSearchBox.Parent = Tabs["Visual"]
 Instance.new("UICorner", itemSearchBox).CornerRadius = UDim.new(0, 6)
 
--- Utilidades de comparación profunda
-local function safe(t) -- convierte a string seguro
-    local ok, res = pcall(function() return tostring(t) end)
-    return ok and res or "<?>"
-end
+local function addItemESP(obj)
+    if not itemESPEnabled or itemESPName == "" then return end
+    if string.find(obj.Name:lower(), itemESPName:lower()) then
+        local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
+        if adornee then
+            if not obj:FindFirstChild("KS_ItemESP_Highlight") then
+                local h = Instance.new("Highlight")
+                h.Name = "KS_ItemESP_Highlight"
+                h.FillTransparency = 1
+                h.OutlineColor = Color3.fromRGB(255, 255, 0)
+                h.Adornee = obj
+                h.Parent = obj
+            end
+            if not obj:FindFirstChild("KS_ItemESP") then
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = "KS_ItemESP"
+                billboard.Size = UDim2.new(0, 200, 0, 50)
+                billboard.Adornee = adornee
+                billboard.AlwaysOnTop = true
+                billboard.Parent = obj
 
-local function getBasicProps(part)
-    -- propiedades básicas de BasePart y Tool/Model si aplica
-    local props = {}
-    if part:IsA("BasePart") then
-        props.Color = tostring(part.Color)
-        props.Material = tostring(part.Material)
-        props.Transparency = tostring(part.Transparency)
-        props.Reflectance = tostring(part.Reflectance)
-        props.Size = tostring(part.Size)
-        props.Anchored = tostring(part.Anchored)
-        props.CanCollide = tostring(part.CanCollide)
-        props.CanQuery = tostring(part.CanQuery)
-        props.CanTouch = tostring(part.CanTouch)
-        props.CastShadow = tostring(part.CastShadow)
-    end
-    if part:IsA("Tool") then
-        props.ToolName = part.Name
-        props.Enabled = tostring(part.Enabled)
-        props.RequiresHandle = tostring(part.RequiresHandle)
-    end
-    return props
-end
-
-local function getAttributesSignature(instance)
-    local sig = {}
-    for _, key in ipairs(instance:GetAttributes and instance:GetAttributes() or {}) do
-        -- Nota: GetAttributes() retorna diccionario en algunos casos; gestionamos con pcall
-    end
-    -- Alternativa segura: iterar nombres potenciales si se usan atributos
-    local ok, attrs = pcall(function() return instance:GetAttributes() end)
-    if ok and typeof(attrs) == "table" then
-        for k, v in pairs(attrs) do
-            sig[k] = safe(v)
-        end
-    end
-    return sig
-end
-
-local function childSignature(child)
-    -- firma simple del hijo: tipo + nombre + props básicas + atributos
-    local sig = {
-        ClassName = child.ClassName,
-        Name = child.Name,
-        BasicProps = getBasicProps(child),
-        Attrs = getAttributesSignature(child),
-        Special = {}
-    }
-    -- detectar componentes que suelen marcar diferencia
-    sig.Special.HasParticleEmitter = tostring(#child:GetChildren() > 0 and child:FindFirstChildWhichIsA("ParticleEmitter") ~= nil)
-    sig.Special.HasDecal = tostring(child:FindFirstChildWhichIsA("Decal") ~= nil)
-    sig.Special.HasSurfaceAppearance = tostring(child:FindFirstChildWhichIsA("SurfaceAppearance") ~= nil)
-    sig.Special.HasHighlight = tostring(child:FindFirstChildWhichIsA("Highlight") ~= nil)
-    sig.Special.HasProximityPrompt = tostring(child:FindFirstChildWhichIsA("ProximityPrompt") ~= nil)
-    sig.Special.HasTouchTransmitter = tostring(child:FindFirstChildWhichIsA("TouchTransmitter") ~= nil)
-    return sig
-end
-
-local function deepStructureSignature(root, depth)
-    depth = depth or 0
-    if depth > 3 then
-        return { Truncated = true } -- limitar profundidad por rendimiento
-    end
-    local children = root:GetChildren()
-    local list = {}
-    for _, c in ipairs(children) do
-        local entry = childSignature(c)
-        entry.Children = deepStructureSignature(c, depth + 1)
-        table.insert(list, entry)
-    end
-    -- normalizar orden para firmas determinísticas
-    table.sort(list, function(a, b)
-        if a.ClassName == b.ClassName then
-            return a.Name < b.Name
-        end
-        return a.ClassName < b.ClassName
-    end)
-    return list
-end
-
-local function serializeTable(t)
-    local ok, res = pcall(function() return game:GetService("HttpService"):JSONEncode(t) end)
-    return ok and res or "<?>"
-end
-
-local function computeItemSignature(obj)
-    -- firma total: clase + nombre + props base + attrs + estructura profunda
-    local basePart = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
-    local signature = {
-        ClassName = obj.ClassName,
-        Name = obj.Name,
-        BasicProps = basePart and getBasicProps(basePart) or {},
-        Attrs = getAttributesSignature(obj),
-        Structure = deepStructureSignature(obj, 0)
-    }
-    return serializeTable(signature)
-end
-
-local function getTopTableModel(obj)
-    -- heurística: subir hasta encontrar un Model "mesa" razonable sin cruzar Workspace
-    local current = obj
-    local lastModel = obj:IsA("Model") and obj or nil
-    while current and current.Parent and current.Parent ~= workspace do
-        if current.Parent:IsA("Model") then
-            lastModel = current.Parent
-        end
-        current = current.Parent
-    end
-    return lastModel or obj
-end
-
--- Highlight + Billboard
-local function ensureVisuals(obj, adornee, isAnomaly, labelTag)
-    if not obj:FindFirstChild("KS_ItemESP_Highlight") then
-        local h = Instance.new("Highlight")
-        h.Name = "KS_ItemESP_Highlight"
-        h.FillTransparency = 1
-        h.OutlineColor = isAnomaly and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 0)
-        h.Adornee = obj
-        h.Parent = obj
-    else
-        obj.KS_ItemESP_Highlight.OutlineColor = isAnomaly and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 0)
-    end
-    if not obj:FindFirstChild("KS_ItemESP") then
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "KS_ItemESP"
-        billboard.Size = UDim2.new(0, 200, 0, 50)
-        billboard.Adornee = adornee
-        billboard.AlwaysOnTop = true
-        billboard.Parent = obj
-
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Text = obj.Name .. labelTag
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 14
-        label.TextColor3 = isAnomaly and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 0)
-        label.Parent = billboard
-    else
-        local label = obj.KS_ItemESP:FindFirstChildOfClass("TextLabel")
-        if label then
-            label.Text = obj.Name .. labelTag
-            label.TextColor3 = isAnomaly and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 0)
+                local label = Instance.new("TextLabel")
+                label.Size = UDim2.new(1, 0, 1, 0)
+                label.BackgroundTransparency = 1
+                label.Text = obj.Name
+                label.Font = Enum.Font.GothamBold
+                label.TextSize = 14
+                label.TextColor3 = Color3.fromRGB(255, 255, 0)
+                label.Parent = billboard
+            end
         end
     end
 end
@@ -972,57 +843,6 @@ local function removeItemESP()
     end
 end
 
-local function buildSetsAndMark(matches)
-    -- 1) Agrupar por mesa
-    local groups = {} -- [tableModel] = {items = {}}
-    for _, obj in ipairs(matches) do
-        local tableModel = getTopTableModel(obj)
-        groups[tableModel] = groups[tableModel] or { items = {} }
-        table.insert(groups[tableModel].items, obj)
-    end
-
-    -- 2) Firmas por mesa y frecuencia global
-    local globalFreq = {} -- [signature] = count
-    local itemSigMap = {} -- [obj] = signature
-
-    for tableModel, bucket in pairs(groups) do
-        local sigCount = {} -- [signature] = count dentro de la mesa
-        for _, obj in ipairs(bucket.items) do
-            local sig = computeItemSignature(obj)
-            itemSigMap[obj] = sig
-            sigCount[sig] = (sigCount[sig] or 0) + 1
-            globalFreq[sig] = (globalFreq[sig] or 0) + 1
-        end
-        groups[tableModel].sigCount = sigCount
-    end
-
-    -- 3) Marcar ítems: anómalo si es minoría en su mesa y poco frecuente globalmente
-    for tableModel, bucket in pairs(groups) do
-        local sigCount = bucket.sigCount
-        for _, obj in ipairs(bucket.items) do
-            local sig = itemSigMap[obj]
-            local localCount = sigCount[sig] or 0
-            local globalCount = globalFreq[sig] or 0
-            local isLocalMinority = localCount == 1 -- único en su mesa
-            local isGlobalRare = globalCount <= math.max(1, math.floor(#matches * 0.05)) -- <=5% del total aprox
-            local isAnomaly = isLocalMinority or isGlobalRare
-
-            local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
-            if adornee then
-                local tag = ""
-                if isLocalMinority and isGlobalRare then
-                    tag = " [ANOMALÍA mesa+global]"
-                elseif isLocalMinority then
-                    tag = " [ANOMALÍA mesa]"
-                elseif isGlobalRare then
-                    tag = " [ANOMALÍA global]"
-                end
-                ensureVisuals(obj, adornee, isAnomaly, tag)
-            end
-        end
-    end
-end
-
 local function toggleItemESP()
     itemESPEnabled = not itemESPEnabled
     removeItemESP()
@@ -1030,33 +850,14 @@ local function toggleItemESP()
     itemESPConnections = {}
 
     if itemESPEnabled and itemESPName ~= "" then
-        -- recopilar coincidencias por nombre parcial
-        local matches = {}
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if string.find(obj.Name:lower(), itemESPName:lower()) and (obj:IsA("Model") or obj:IsA("Tool") or obj:IsA("BasePart")) then
-                table.insert(matches, obj)
-            end
+            addItemESP(obj)
         end
-
-        if #matches > 0 then
-            buildSetsAndMark(matches)
-        end
-
         table.insert(itemESPConnections, workspace.DescendantAdded:Connect(function(obj)
             task.wait(0.2)
-            if itemESPEnabled and itemESPName ~= "" and string.find(obj.Name:lower(), itemESPName:lower()) then
-                -- recomputar en inserciones para mantener coherencia
-                local m = {}
-                for _, x in ipairs(workspace:GetDescendants()) do
-                    if string.find(x.Name:lower(), itemESPName:lower()) and (x:IsA("Model") or x:IsA("Tool") or x:IsA("BasePart")) then
-                        table.insert(m, x)
-                    end
-                end
-                buildSetsAndMark(m)
-            end
+            addItemESP(obj)
         end))
-
-        print("[KS HUB] ESP Ítems avanzado ON")
+        print("[KS HUB] ESP Ítems ON")
     else
         print("[KS HUB] ESP Ítems OFF")
     end
@@ -1065,9 +866,25 @@ end
 itemSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
     itemESPName = itemSearchBox.Text
     if itemESPEnabled then
-        toggleItemESP() -- apagar
-        toggleItemESP() -- encender con nuevo filtro
+        toggleItemESP()
+        toggleItemESP()
     end
 end)
 
-createButton(Tabs["Visual"], "Toggle ESP Ítems (Avanzado)", toggleItemESP)
+createButton(Tabs["Visual"], "Toggle ESP Ítems", toggleItemESP)
+
+----------------------------------------------------------
+-- PARTE 6.4: AJUSTES
+----------------------------------------------------------
+createButton(Tabs["Ajustes"], "Reset Character", function()
+    LocalPlayer.Character:BreakJoints()
+end)
+
+createButton(Tabs["Ajustes"], "Rejoin", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+end)
+
+----------------------------------------------------------
+-- PARTE 6.5: FINAL
+----------------------------------------------------------
+print("[KS HUB] Versión Estable 1.0 cargada correctamente")
