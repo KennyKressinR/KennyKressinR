@@ -277,10 +277,10 @@ local function teleportToPlayer(player)
         LocalPlayer.Character:PivotTo(targetRoot.CFrame + Vector3.new(0, 3, 0))
     end
 end
-
 -- [Bloque 3.2] Noclip
 local noclip = false
 local noclipConnection
+
 local function toggleNoclip()
     noclip = not noclip
     if noclip then
@@ -288,21 +288,29 @@ local function toggleNoclip()
             local char = LocalPlayer.Character
             if char then
                 for _, part in ipairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanCollide = false end
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
                 end
             end
         end)
+        print("[KS HUB] Noclip ON")
     else
-        if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
+        if noclipConnection then
+            noclipConnection:Disconnect()
+            noclipConnection = nil
+        end
         local char = LocalPlayer.Character
         if char then
             for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
             end
         end
+        print("[KS HUB] Noclip OFF")
     end
 end
-
 -- [Bloque 3.3] Anti-delay
 local antiDelay = false
 local originalDurations = {}
@@ -340,13 +348,8 @@ mainLayout.Padding = UDim.new(0, 6)
 mainLayout.SortOrder = Enum.SortOrder.LayoutOrder
 mainLayout.Parent = mainScroll
 
--- Botones Noclip ON / OFF
-createButton(mainScroll, "Noclip ON", function()
-    if not noclip then toggleNoclip() end
-end)
-createButton(mainScroll, "Noclip OFF", function()
-    if noclip then toggleNoclip() end
-end)
+-- Botón único para Noclip
+createButton(mainScroll, "Toggle Noclip", toggleNoclip)
 
 -- Botón Anti‑Delay
 createButton(mainScroll, "Toggle Anti-Delay", toggleAntiDelay)
@@ -482,26 +485,26 @@ UserInputService.InputChanged:Connect(function(input)
         setJumpFromX(input.Position.X)
     end
 end)
-----------------------------------------------------------
--- BRING ITEMS (Tools cercanos)
-----------------------------------------------------------
+
+-- [Bloque 4.X] Bring Items (Tools)
 createButton(mainScroll, "Bring Items (Tools)", function()
-    local char = LocalPlayer.Character
-    if not char then return end
     local root = getRoot(LocalPlayer)
     if not root then return end
 
+    local count = 0
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
-            local dist = (obj.Handle.Position - root.Position).Magnitude
-            if dist < 100 then
-                obj.Handle.CFrame = root.CFrame + Vector3.new(0, 3, 0)
-            end
+            obj.Handle.CFrame = root.CFrame + Vector3.new(0, 3, 0)
+            count += 1
         end
     end
-end)
 
-print("[KS HUB] Parte 4 lista")
+    if count > 0 then
+        print("[KS HUB] Se trajeron " .. count .. " items al jugador")
+    else
+        print("[KS HUB] No se encontraron Tools con Handle en el workspace")
+    end
+end)
 ----------------------------------------------------------
 -- PARTE 5: TELEPORT (BUSCADOR + SCROLL + LOADER)
 ----------------------------------------------------------
