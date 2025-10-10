@@ -235,8 +235,10 @@ local function toggleNoclip()
 end
 
 -- Anti-delay
+-- Anti-delay
 local antiDelay = false
 local originalDurations = {}
+
 local function toggleAntiDelay()
     antiDelay = not antiDelay
     for _, obj in ipairs(workspace:GetDescendants()) do
@@ -251,6 +253,10 @@ local function toggleAntiDelay()
             end
         end
     end
+    if not antiDelay then
+        originalDurations = {}
+    end
+end -- ✅ Este end cierra la función correctamente
     
 
 ----------------------------------------------------------
