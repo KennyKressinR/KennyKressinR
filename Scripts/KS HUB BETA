@@ -24,15 +24,10 @@ end
 
 local function getHumanoid()
     local char = LocalPlayer.Character
-    if not char then return nil end
-    return char:FindFirstChildOfClass("Humanoid")
-end
-
-print("[KS HUB] Parte 1 lista")
-
-----------------------------------------------------------
+    if not char then return nil end----------------------------------------------------------
 -- PARTE 2: GUI PRINCIPAL
 ----------------------------------------------------------
+
 -- [Bloque 2.1] ScreenGui y botón flotante
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
@@ -50,9 +45,8 @@ ToggleButton.BackgroundTransparency = 0.25
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
---========================================================
--- DRAGGABLE TOGGLE BUTTON
---========================================================
+
+-- [Bloque 2.1.1] Hacer el botón flotante arrastrable
 local dragging = false
 local dragStart, startPos
 
@@ -158,12 +152,12 @@ createTab("Teleport")
 createTab("Visual")
 createTab("Ajustes")
 
--- Toggle HUB
+-- [Bloque 2.7] Toggle HUB
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- [Bloque 2.7] Función para crear botones
+-- [Bloque 2.8] Función para crear botones
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -182,8 +176,12 @@ local function createButton(parent, text, callback)
     end)
     return button
 end
+    return char:FindFirstChildOfClass("Humanoid")
+end
 
-print("[KS HUB] Parte 2 lista")
+print("[KS HUB] Parte 1 lista")
+
+
 
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
@@ -251,7 +249,7 @@ end
 
 print("[KS HUB] Parte 3 lista")
 
-----------------------------------------------------------
+
 ----------------------------------------------------------
 -- PARTE 4: MAIN (SLIDERS + UTILIDADES + BRING ITEMS)
 ----------------------------------------------------------
