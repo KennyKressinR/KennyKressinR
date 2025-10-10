@@ -382,13 +382,27 @@ end)
 -- [Bloque 4.5] Bring Items
 -- (igual al bloque robusto que ya te pasé: busca Tools, ordena por distancia, trae cantidad, limpia inputs)
 ----------------------------------------------------------
+-- ----------------------------------------------------------
 -- PARTE 5: TELEPORT (BUSCADOR + SCROLL + LOADER)
 ----------------------------------------------------------
 
--- Teleport al mouse
-createButton(Tabs["Teleport"], "Teleport al Mouse", teleportToMouse)
+-- Contenedor scroll para toda la pestaña Teleport
+local tpScroll = Instance.new("ScrollingFrame")
+tpScroll.Size = UDim2.new(1, 0, 1, 0)
+tpScroll.BackgroundTransparency = 1
+tpScroll.ScrollBarThickness = 6
+tpScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+tpScroll.Parent = Tabs["Teleport"]
 
--- Caja de búsqueda
+local tpLayout = Instance.new("UIListLayout")
+tpLayout.Padding = UDim.new(0, 6)
+tpLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tpLayout.Parent = tpScroll
+
+-- [Bloque 5.1] Teleport al mouse
+createButton(tpScroll, "Teleport al Mouse", teleportToMouse)
+
+-- [Bloque 5.2] Caja de búsqueda de jugadores
 local searchBox = Instance.new("TextBox")
 searchBox.Size = UDim2.new(1, 0, 0, 30)
 searchBox.PlaceholderText = "Buscar jugador..."
@@ -400,10 +414,10 @@ searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 searchBox.BackgroundTransparency = 0.1
 searchBox.BorderSizePixel = 0
 searchBox.ClearTextOnFocus = false
-searchBox.Parent = Tabs["Teleport"]
+searchBox.Parent = tpScroll
 Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
 
--- Botón Refresh
+-- [Bloque 5.3] Botón Refresh
 local refreshBtn = Instance.new("TextButton")
 refreshBtn.Size = UDim2.new(1, 0, 0, 30)
 refreshBtn.Text = "Actualizar lista de jugadores"
@@ -413,23 +427,22 @@ refreshBtn.TextColor3 = Color3.new(1, 1, 1)
 refreshBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 refreshBtn.BackgroundTransparency = 0.1
 refreshBtn.BorderSizePixel = 0
-refreshBtn.Parent = Tabs["Teleport"]
+refreshBtn.Parent = tpScroll
 Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 6)
 
--- Scroll de jugadores
+-- [Bloque 5.4] Scroll de jugadores
 local playerScroll = Instance.new("ScrollingFrame")
-playerScroll.Size = UDim2.new(1, 0, 1, -70)
-playerScroll.Position = UDim2.new(0, 0, 0, 70)
+playerScroll.Size = UDim2.new(1, 0, 0, 150)
 playerScroll.BackgroundTransparency = 1
 playerScroll.ScrollBarThickness = 6
 playerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-playerScroll.Parent = Tabs["Teleport"]
+playerScroll.Parent = tpScroll
 local scrollLayout = Instance.new("UIListLayout")
 scrollLayout.Padding = UDim.new(0, 6)
 scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scrollLayout.Parent = playerScroll
 
--- Función para poblar lista
+-- Función para poblar lista de jugadores
 local function populatePlayerList(filter)
     for _, child in ipairs(playerScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -462,6 +475,7 @@ local function populatePlayerList(filter)
     end
 end
 
+-- Conexiones de búsqueda y refresh
 searchBox:GetPropertyChangedSignal("Text"):Connect(function()
     populatePlayerList(searchBox.Text)
 end)
@@ -493,12 +507,12 @@ local function loadPosition(slot)
     end
 end
 
--- Crear botones Save/Load
+-- Crear botones Save/Load en filas
 for i = 1, 3 do
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, 0, 0, 36)
     row.BackgroundTransparency = 1
-    row.Parent = Tabs["Teleport"]
+    row.Parent = tpScroll
 
     local saveBtn = Instance.new("TextButton")
     saveBtn.Size = UDim2.new(0.5, -3, 1, 0)
