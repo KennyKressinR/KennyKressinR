@@ -13,12 +13,14 @@ local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+-- Función para obtener el HumanoidRootPart
 local function getRoot(plr)
     local char = plr.Character
     if not char then return nil end
     return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 end
 
+-- Función para obtener el Humanoid
 local function getHumanoid()
     local char = LocalPlayer.Character
     if not char then return nil end
@@ -30,6 +32,8 @@ print("[KS HUB] Parte 1 lista")
 ----------------------------------------------------------
 -- PARTE 2: GUI PRINCIPAL
 ----------------------------------------------------------
+
+-- [Bloque 2.1] ScreenGui y botón flotante
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
@@ -47,14 +51,17 @@ ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
--- Botón arrastrable
+-- [Bloque 2.1.1] Hacer el botón flotante arrastrable
 local dragging = false
 local dragStart, startPos
+
 ToggleButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = ToggleButton.Position
+
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -62,14 +69,19 @@ ToggleButton.InputBegan:Connect(function(input)
         end)
     end
 end)
+
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
-        ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        ToggleButton.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
     end
 end)
 
--- Marco principal
+-- [Bloque 2.2] Marco principal
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
@@ -80,6 +92,7 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
+-- [Bloque 2.3] Título
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
@@ -89,23 +102,27 @@ Title.TextSize = 24
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Parent = MainFrame
 
+-- [Bloque 2.4] Contenedor de pestañas
 local Tabs = {}
 local TabContainer = Instance.new("Frame")
 TabContainer.Size = UDim2.new(0, 120, 1, -40)
 TabContainer.Position = UDim2.new(0, 0, 0, 40)
 TabContainer.BackgroundTransparency = 1
 TabContainer.Parent = MainFrame
+
 local TabLayout = Instance.new("UIListLayout")
 TabLayout.Padding = UDim.new(0, 6)
 TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabLayout.Parent = TabContainer
 
+-- [Bloque 2.5] Contenido
 local ContentFrame = Instance.new("Frame")
 ContentFrame.Size = UDim2.new(1, -130, 1, -50)
 ContentFrame.Position = UDim2.new(0, 130, 0, 50)
 ContentFrame.BackgroundTransparency = 1
 ContentFrame.Parent = MainFrame
 
+-- [Bloque 2.6] Función para crear pestañas
 local function createTab(name)
     local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(1, 0, 0, 36)
@@ -124,27 +141,34 @@ local function createTab(name)
     sectionFrame.BackgroundTransparency = 1
     sectionFrame.Visible = false
     sectionFrame.Parent = ContentFrame
+
     local layout = Instance.new("UIListLayout")
     layout.Padding = UDim.new(0, 8)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Parent = sectionFrame
 
     Tabs[name] = sectionFrame
+
     tabButton.MouseButton1Click:Connect(function()
-        for _, frame in pairs(Tabs) do frame.Visible = false end
+        for _, frame in pairs(Tabs) do
+            frame.Visible = false
+        end
         sectionFrame.Visible = true
     end)
 end
 
+-- Crear pestañas
 createTab("Main")
 createTab("Teleport")
 createTab("Visual")
 createTab("Ajustes")
 
+-- [Bloque 2.7] Toggle HUB
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
+-- [Bloque 2.8] Función para crear botones
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -157,14 +181,19 @@ local function createButton(parent, text, callback)
     button.BorderSizePixel = 0
     button.Parent = parent
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
     button.MouseButton1Click:Connect(function()
         local ok, err = pcall(callback)
-        if not ok then warn("[KS HUB] Error en botón:", err) end
+        if not ok then
+            warn("[KS HUB] Error en botón:", err)
+        end
     end)
+
     return button
 end
 
 print("[KS HUB] Parte 2 lista")
+
 
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
@@ -226,6 +255,7 @@ local function toggleAntiDelay()
             end
         end
     end
+    
 
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
