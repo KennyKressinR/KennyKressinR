@@ -50,6 +50,36 @@ ToggleButton.BackgroundTransparency = 0.25
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+--========================================================
+-- DRAGGABLE TOGGLE BUTTON
+--========================================================
+local dragging = false
+local dragStart, startPos
+
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        ToggleButton.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
 
 -- [Bloque 2.2] Marco principal
 local MainFrame = Instance.new("Frame")
@@ -357,36 +387,11 @@ local function setJumpFromX(x)
     jumpLabel.Text = "Salto: " .. tostring(value)
     local hum = getHumanoid()
     if hum then hum.JumpPower = value end
-end
-
-jumpBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        draggingJump = true
-        setJumpFromX(input.Position.X)
-    end
-end)
-jumpBar.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        draggingJump = false
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement 
-    or input.UserInputType == Enum.UserInputType.Touch) then
-        setJumpFromX(input.Position.X)
-    end
-end)
-
--- [Bloque 4.5] Bring Items
--- (igual al bloque robusto que ya te pasé: busca Tools, ordena por distancia, trae cantidad, limpia inputs)
 ----------------------------------------------------------
--- ----------------------------------------------------------
 -- PARTE 5: TELEPORT (BUSCADOR + SCROLL + LOADER)
 ----------------------------------------------------------
 
--- Contenedor scroll para toda la pestaña Teleport
+-- Contenedor scroll principal
 local tpScroll = Instance.new("ScrollingFrame")
 tpScroll.Size = UDim2.new(1, 0, 1, 0)
 tpScroll.BackgroundTransparency = 1
@@ -399,10 +404,10 @@ tpLayout.Padding = UDim.new(0, 6)
 tpLayout.SortOrder = Enum.SortOrder.LayoutOrder
 tpLayout.Parent = tpScroll
 
--- [Bloque 5.1] Teleport al mouse
+-- Teleport al mouse
 createButton(tpScroll, "Teleport al Mouse", teleportToMouse)
 
--- [Bloque 5.2] Caja de búsqueda de jugadores
+-- Caja de búsqueda
 local searchBox = Instance.new("TextBox")
 searchBox.Size = UDim2.new(1, 0, 0, 30)
 searchBox.PlaceholderText = "Buscar jugador..."
@@ -417,7 +422,7 @@ searchBox.ClearTextOnFocus = false
 searchBox.Parent = tpScroll
 Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
 
--- [Bloque 5.3] Botón Refresh
+-- Botón Refresh
 local refreshBtn = Instance.new("TextButton")
 refreshBtn.Size = UDim2.new(1, 0, 0, 30)
 refreshBtn.Text = "Actualizar lista de jugadores"
@@ -430,19 +435,20 @@ refreshBtn.BorderSizePixel = 0
 refreshBtn.Parent = tpScroll
 Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 6)
 
--- [Bloque 5.4] Scroll de jugadores
+-- Scroll de jugadores (con altura fija para que se vea)
 local playerScroll = Instance.new("ScrollingFrame")
-playerScroll.Size = UDim2.new(1, 0, 0, 150)
+playerScroll.Size = UDim2.new(1, 0, 0, 200)
 playerScroll.BackgroundTransparency = 1
 playerScroll.ScrollBarThickness = 6
 playerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 playerScroll.Parent = tpScroll
+
 local scrollLayout = Instance.new("UIListLayout")
 scrollLayout.Padding = UDim.new(0, 6)
 scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scrollLayout.Parent = playerScroll
 
--- Función para poblar lista de jugadores
+-- Función para poblar lista
 local function populatePlayerList(filter)
     for _, child in ipairs(playerScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -475,7 +481,7 @@ local function populatePlayerList(filter)
     end
 end
 
--- Conexiones de búsqueda y refresh
+-- Conexiones
 searchBox:GetPropertyChangedSignal("Text"):Connect(function()
     populatePlayerList(searchBox.Text)
 end)
@@ -484,11 +490,12 @@ refreshBtn.MouseButton1Click:Connect(function()
 end)
 Players.PlayerAdded:Connect(function() populatePlayerList(searchBox.Text) end)
 Players.PlayerRemoving:Connect(function() populatePlayerList(searchBox.Text) end)
+
+-- Inicializar lista
 populatePlayerList("")
 
--- [Bloque 5.5] Teleport Loader (Save/Load posiciones)
+-- Teleport Loader (Save/Load posiciones) – igual que antes
 local savedPositions = {}
-
 local function savePosition(slot)
     local root = getRoot(LocalPlayer)
     if root then
@@ -496,7 +503,6 @@ local function savePosition(slot)
         print("[KS HUB] Posición guardada en slot", slot)
     end
 end
-
 local function loadPosition(slot)
     local root = getRoot(LocalPlayer)
     if root and savedPositions[slot] then
@@ -507,7 +513,6 @@ local function loadPosition(slot)
     end
 end
 
--- Crear botones Save/Load en filas
 for i = 1, 3 do
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, 0, 0, 36)
@@ -541,7 +546,32 @@ for i = 1, 3 do
     loadBtn.Parent = row
     Instance.new("UICorner", loadBtn).CornerRadius = UDim.new(0, 6)
     loadBtn.MouseButton1Click:Connect(function() loadPosition(i) end)
-end
+endend
+
+jumpBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        draggingJump = true
+        setJumpFromX(input.Position.X)
+    end
+end)
+jumpBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        draggingJump = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if draggingJump and (input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch) then
+        setJumpFromX(input.Position.X)
+    end
+end)
+
+-- [Bloque 4.5] Bring Items
+-- (igual al bloque robusto que ya te pasé: busca Tools, ordena por distancia, trae cantidad, limpia inputs)
+----------------------------------------------------------
+
 ----------------------------------------------------------
 -- PARTE 6: VISUAL (FULL BRIGHT + ESP CON NOMBRES)
 ----------------------------------------------------------
