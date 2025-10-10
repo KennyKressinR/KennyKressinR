@@ -235,7 +235,6 @@ local function toggleNoclip()
 end
 
 -- Anti-delay
--- Anti-delay
 local antiDelay = false
 local originalDurations = {}
 
@@ -782,6 +781,96 @@ local function toggleESP()
 end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
+-- [Bloque 6.X] ESP Ítems con búsqueda parcial
+local itemESPEnabled = false
+local itemESPConnections = {}
+local itemESPName = ""
+
+-- Caja de texto para buscar ítems
+local itemSearchBox = Instance.new("TextBox")
+itemSearchBox.Size = UDim2.new(1, 0, 0, 30)
+itemSearchBox.PlaceholderText = "" -- vacío
+itemSearchBox.Text = ""
+itemSearchBox.Font = Enum.Font.Gotham
+itemSearchBox.TextSize = 16
+itemSearchBox.TextColor3 = Color3.new(1, 1, 1)
+itemSearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+itemSearchBox.BackgroundTransparency = 0.1
+itemSearchBox.BorderSizePixel = 0
+itemSearchBox.ClearTextOnFocus = false
+itemSearchBox.Parent = Tabs["Visual"]
+Instance.new("UICorner", itemSearchBox).CornerRadius = UDim.new(0, 6)
+
+-- Función para agregar ESP a ítems
+local function addItemESP(obj)
+    if not itemESPEnabled or itemESPName == "" then return end
+    if obj:IsA("Tool") or obj:IsA("Part") or obj:IsA("Model") then
+        -- Coincidencia parcial (case-insensitive)
+        if string.find(obj.Name:lower(), itemESPName:lower()) then
+            if not obj:FindFirstChild("KS_ItemESP") then
+                local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
+                if adornee then
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Name = "KS_ItemESP"
+                    billboard.Size = UDim2.new(0, 200, 0, 50)
+                    billboard.Adornee = adornee
+                    billboard.AlwaysOnTop = true
+                    billboard.Parent = obj
+
+                    local label = Instance.new("TextLabel")
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.Text = obj.Name
+                    label.Font = Enum.Font.GothamBold
+                    label.TextSize = 14
+                    label.TextColor3 = Color3.fromRGB(255, 255, 0)
+                    label.Parent = billboard
+                end
+            end
+        end
+    end
+end
+
+-- Función para quitar ESP de ítems
+local function removeItemESP()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        local esp = obj:FindFirstChild("KS_ItemESP")
+        if esp then esp:Destroy() end
+    end
+end
+
+-- Toggle ESP Ítems
+local function toggleItemESP()
+    itemESPEnabled = not itemESPEnabled
+    removeItemESP()
+    for _, c in ipairs(itemESPConnections) do c:Disconnect() end
+    itemESPConnections = {}
+
+    if itemESPEnabled and itemESPName ~= "" then
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            addItemESP(obj)
+        end
+        table.insert(itemESPConnections, workspace.DescendantAdded:Connect(function(obj)
+            task.wait(0.2)
+            addItemESP(obj)
+        end))
+        print("[KS HUB] ESP Ítems ON")
+    else
+        print("[KS HUB] ESP Ítems OFF")
+    end
+end
+
+-- Actualizar búsqueda
+itemSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    itemESPName = itemSearchBox.Text
+    if itemESPEnabled then
+        toggleItemESP() -- apagar
+        toggleItemESP() -- encender con nuevo filtro
+    end
+end)
+
+-- Botón toggle
+createButton(Tabs["Visual"], "Toggle ESP Ítems", toggleItemESP)
 
 -- [Bloque 6.3] Ajustes
 createButton(Tabs["Ajustes"], "Cerrar HUB", function()
