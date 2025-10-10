@@ -888,18 +888,6 @@ end)
 -- Botón toggle
 createButton(Tabs["Visual"], "Toggle ESP Ítems", toggleItemESP)
 
--- Actualizar búsqueda
-itemSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    itemESPName = itemSearchBox.Text
-    if itemESPEnabled then
-        toggleItemESP() -- apagar
-        toggleItemESP() -- encender con nuevo filtro
-    end
-end)
-
--- Botón toggle
-createButton(Tabs["Visual"], "Toggle ESP Ítems", toggleItemESP)
-
 -- [Bloque 6.3] Ajustes
 createButton(Tabs["Ajustes"], "Cerrar HUB", function()
     MainFrame.Visible = false
