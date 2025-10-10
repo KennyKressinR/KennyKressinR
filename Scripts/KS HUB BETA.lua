@@ -781,7 +781,7 @@ local function toggleESP()
 end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
--- [Bloque 6.X] ESP Ítems con búsqueda parcial
+-- [Bloque 6.X] ESP Ítems con búsqueda parcial + Highlight
 local itemESPEnabled = false
 local itemESPConnections = {}
 local itemESPName = ""
@@ -807,6 +807,20 @@ local function addItemESP(obj)
     if obj:IsA("Tool") or obj:IsA("Part") or obj:IsA("Model") then
         -- Coincidencia parcial (case-insensitive)
         if string.find(obj.Name:lower(), itemESPName:lower()) then
+            -- Highlight
+            if not obj:FindFirstChild("KS_ItemESP_Highlight") then
+                local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
+                if adornee then
+                    local h = Instance.new("Highlight")
+                    h.Name = "KS_ItemESP_Highlight"
+                    h.FillTransparency = 1
+                    h.OutlineColor = Color3.fromRGB(255, 255, 0)
+                    h.Adornee = obj
+                    h.Parent = obj
+                end
+            end
+
+            -- Billboard con nombre
             if not obj:FindFirstChild("KS_ItemESP") then
                 local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
                 if adornee then
@@ -836,6 +850,8 @@ local function removeItemESP()
     for _, obj in ipairs(workspace:GetDescendants()) do
         local esp = obj:FindFirstChild("KS_ItemESP")
         if esp then esp:Destroy() end
+        local h = obj:FindFirstChild("KS_ItemESP_Highlight")
+        if h then h:Destroy() end
     end
 end
 
@@ -859,6 +875,18 @@ local function toggleItemESP()
         print("[KS HUB] ESP Ítems OFF")
     end
 end
+
+-- Actualizar búsqueda
+itemSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    itemESPName = itemSearchBox.Text
+    if itemESPEnabled then
+        toggleItemESP() -- apagar
+        toggleItemESP() -- encender con nuevo filtro
+    end
+end)
+
+-- Botón toggle
+createButton(Tabs["Visual"], "Toggle ESP Ítems", toggleItemESP)
 
 -- Actualizar búsqueda
 itemSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
