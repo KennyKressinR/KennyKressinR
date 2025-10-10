@@ -670,8 +670,10 @@ end
 
 print("[KS HUB] Parte 5 lista")
 ----------------------------------------------------------
+----------------------------------------------------------
 -- PARTE 6: VISUAL + AJUSTES + INICIALIZACIÓN
 ----------------------------------------------------------
+
 -- [Bloque 6.1] Full Bright
 local fullBright = false
 local oldBrightness, oldAmbient, oldOutdoorAmbient
@@ -777,14 +779,18 @@ local function toggleESP()
                 removeESP(plr)
             end
         end
-        for _, c in ipairs(espConnections) do c:Disconnect() end
+        -- Desconectar eventos
+        for _, c in ipairs(espConnections) do
+            c:Disconnect()
+        end
         espConnections = {}
         print("[KS HUB] ESP OFF")
     end
 end
 
 createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
--- [Bloque 6.X] ESP Ítems con búsqueda parcial + Highlight
+
+-- [Bloque 6.3] ESP Ítems (Highlight + Diferencias)
 local itemESPEnabled = false
 local itemESPConnections = {}
 local itemESPName = ""
@@ -804,51 +810,62 @@ itemSearchBox.ClearTextOnFocus = false
 itemSearchBox.Parent = Tabs["Visual"]
 Instance.new("UICorner", itemSearchBox).CornerRadius = UDim.new(0, 6)
 
--- Función para agregar ESP a ítems
-local function addItemESP(obj)
-    if not itemESPEnabled or itemESPName == "" then return end
-    if obj:IsA("Tool") or obj:IsA("Part") or obj:IsA("Model") then
-        -- Coincidencia parcial (case-insensitive)
-        if string.find(obj.Name:lower(), itemESPName:lower()) then
-            -- Highlight
-            if not obj:FindFirstChild("KS_ItemESP_Highlight") then
-                local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
-                if adornee then
-                    local h = Instance.new("Highlight")
-                    h.Name = "KS_ItemESP_Highlight"
-                    h.FillTransparency = 1
-                    h.OutlineColor = Color3.fromRGB(255, 255, 0)
-                    h.Adornee = obj
-                    h.Parent = obj
-                end
+-- Detectar diferencias entre ítems
+local function findDifferences(items)
+    local reference = items[1]
+    local diffs = {}
+    for i = 2, #items do
+        local obj = items[i]
+        local refChildren = {}
+        for _, c in ipairs(reference:GetChildren()) do
+            refChildren[c.Name] = true
+        end
+        for _, c in ipairs(obj:GetChildren()) do
+            if not refChildren[c.Name] then
+                table.insert(diffs, obj)
+                break
             end
+        end
+    end
+    return diffs
+end
 
-            -- Billboard con nombre
+-- Agregar ESP a ítems
+local function addItemESP(obj, highlightDiff)
+    if not itemESPEnabled or itemESPName == "" then return end
+    if string.find(obj.Name:lower(), itemESPName:lower()) then
+        local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
+        if adornee then
+            if not obj:FindFirstChild("KS_ItemESP_Highlight") then
+                local h = Instance.new("Highlight")
+                h.Name = "KS_ItemESP_Highlight"
+                h.FillTransparency = 1
+                h.OutlineColor = highlightDiff and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 0)
+                h.Adornee = obj
+                h.Parent = obj
+            end
             if not obj:FindFirstChild("KS_ItemESP") then
-                local adornee = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj:FindFirstChildWhichIsA("BasePart")
-                if adornee then
-                    local billboard = Instance.new("BillboardGui")
-                    billboard.Name = "KS_ItemESP"
-                    billboard.Size = UDim2.new(0, 200, 0, 50)
-                    billboard.Adornee = adornee
-                    billboard.AlwaysOnTop = true
-                    billboard.Parent = obj
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = "KS_ItemESP"
+                billboard.Size = UDim2.new(0, 200, 0, 50)
+                billboard.Adornee = adornee
+                billboard.AlwaysOnTop = true
+                billboard.Parent = obj
 
-                    local label = Instance.new("TextLabel")
-                    label.Size = UDim2.new(1, 0, 1, 0)
-                    label.BackgroundTransparency = 1
-                    label.Text = obj.Name
-                    label.Font = Enum.Font.GothamBold
-                    label.TextSize = 14
-                    label.TextColor3 = Color3.fromRGB(255, 255, 0)
-                    label.Parent = billboard
-                end
+                local label = Instance.new("TextLabel")
+                label.Size = UDim2.new(1, 0, 1, 0)
+                label.BackgroundTransparency = 1
+                label.Text = obj.Name .. (highlightDiff and " [DIF]" or "")
+                label.Font = Enum.Font.GothamBold
+                label.TextSize = 14
+                label.TextColor3 = highlightDiff and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 0)
+                label.Parent = billboard
             end
         end
     end
 end
 
--- Función para quitar ESP de ítems
+-- Quitar ESP de ítems
 local function removeItemESP()
     for _, obj in ipairs(workspace:GetDescendants()) do
         local esp = obj:FindFirstChild("KS_ItemESP")
@@ -866,14 +883,31 @@ local function toggleItemESP()
     itemESPConnections = {}
 
     if itemESPEnabled and itemESPName ~= "" then
+        local matches = {}
         for _, obj in ipairs(workspace:GetDescendants()) do
-            addItemESP(obj)
+            if string.find(obj.Name:lower(), itemESPName:lower()) then
+                table.insert(matches, obj)
+            end
         end
+local diffs = findDifferences(matches)
+        for _, obj in ipairs(matches) do
+            local isDiff = table.find(diffs, obj) ~= nil
+            addItemESP(obj, isDiff)
+        end
+
         table.insert(itemESPConnections, workspace.DescendantAdded:Connect(function(obj)
             task.wait(0.2)
-            addItemESP(obj)
+            if string.find(obj.Name:lower(), itemESPName:lower()) then
+                local isDiff = false
+                if #matches > 0 then
+                    local diffs = findDifferences(matches)
+                    isDiff = table.find(diffs, obj) ~= nil
+                end
+                addItemESP(obj, isDiff)
+            end
         end))
-        print("[KS HUB] ESP Ítems ON")
+
+        print("[KS HUB] ESP Ítems con diferencias ON")
     else
         print("[KS HUB] ESP Ítems OFF")
     end
@@ -891,18 +925,18 @@ end)
 -- Botón toggle
 createButton(Tabs["Visual"], "Toggle ESP Ítems", toggleItemESP)
 
--- [Bloque 6.3] Ajustes
-createButton(Tabs["Ajustes"], "Cerrar HUB", function()
-    MainFrame.Visible = false
+----------------------------------------------------------
+-- PARTE 6.4: AJUSTES
+----------------------------------------------------------
+createButton(Tabs["Ajustes"], "Reset Character", function()
+    LocalPlayer.Character:BreakJoints()
 end)
 
-createButton(Tabs["Ajustes"], "Resetear Personaje", function()
-    LocalPlayer:LoadCharacter()
+createButton(Tabs["Ajustes"], "Rejoin", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
 end)
 
--- [Bloque 6.4] Inicialización
-for name, frame in pairs(Tabs) do
-    frame.Visible = (name == "Main")
-end
-
-print("[KS HUB] HUB cargado correctamente")
+----------------------------------------------------------
+-- PARTE 6.5: FINAL
+----------------------------------------------------------
+print("[KS HUB] Versión Estable 1.0 cargada correctamente")
