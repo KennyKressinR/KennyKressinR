@@ -381,7 +381,153 @@ end)
 
 -- [Bloque 4.5] Bring Items
 -- (igual al bloque robusto que ya te pasé: busca Tools, ordena por distancia, trae cantidad, limpia inputs)
+----------------------------------------------------------
+-- PARTE 5: TELEPORT (BUSCADOR + SCROLL + LOADER)
+----------------------------------------------------------
 
+-- Teleport al mouse
+createButton(Tabs["Teleport"], "Teleport al Mouse", teleportToMouse)
+
+-- Caja de búsqueda
+local searchBox = Instance.new("TextBox")
+searchBox.Size = UDim2.new(1, 0, 0, 30)
+searchBox.PlaceholderText = "Buscar jugador..."
+searchBox.Text = ""
+searchBox.Font = Enum.Font.Gotham
+searchBox.TextSize = 16
+searchBox.TextColor3 = Color3.new(1, 1, 1)
+searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+searchBox.BackgroundTransparency = 0.1
+searchBox.BorderSizePixel = 0
+searchBox.ClearTextOnFocus = false
+searchBox.Parent = Tabs["Teleport"]
+Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
+
+-- Botón Refresh
+local refreshBtn = Instance.new("TextButton")
+refreshBtn.Size = UDim2.new(1, 0, 0, 30)
+refreshBtn.Text = "Actualizar lista de jugadores"
+refreshBtn.Font = Enum.Font.Gotham
+refreshBtn.TextSize = 16
+refreshBtn.TextColor3 = Color3.new(1, 1, 1)
+refreshBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+refreshBtn.BackgroundTransparency = 0.1
+refreshBtn.BorderSizePixel = 0
+refreshBtn.Parent = Tabs["Teleport"]
+Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 6)
+
+-- Scroll de jugadores
+local playerScroll = Instance.new("ScrollingFrame")
+playerScroll.Size = UDim2.new(1, 0, 1, -70)
+playerScroll.Position = UDim2.new(0, 0, 0, 70)
+playerScroll.BackgroundTransparency = 1
+playerScroll.ScrollBarThickness = 6
+playerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+playerScroll.Parent = Tabs["Teleport"]
+local scrollLayout = Instance.new("UIListLayout")
+scrollLayout.Padding = UDim.new(0, 6)
+scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+scrollLayout.Parent = playerScroll
+
+-- Función para poblar lista
+local function populatePlayerList(filter)
+    for _, child in ipairs(playerScroll:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local match = true
+            if filter and filter ~= "" then
+                local f = filter:lower()
+                match = (string.find(plr.Name:lower(), f) ~= nil) or (string.find(plr.DisplayName:lower(), f) ~= nil)
+            end
+            if match then
+                local btn = Instance.new("TextButton")
+                btn.Size = UDim2.new(1, 0, 0, 36)
+                btn.Text = plr.DisplayName .. " (" .. plr.Name .. ")"
+                btn.Font = Enum.Font.Gotham
+                btn.TextSize = 16
+                btn.TextColor3 = Color3.new(1, 1, 1)
+                btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+                btn.BackgroundTransparency = 0.1
+                btn.BorderSizePixel = 0
+                btn.Parent = playerScroll
+                Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+                btn.MouseButton1Click:Connect(function()
+                    teleportToPlayer(plr)
+                end)
+            end
+        end
+    end
+end
+
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    populatePlayerList(searchBox.Text)
+end)
+refreshBtn.MouseButton1Click:Connect(function()
+    populatePlayerList(searchBox.Text)
+end)
+Players.PlayerAdded:Connect(function() populatePlayerList(searchBox.Text) end)
+Players.PlayerRemoving:Connect(function() populatePlayerList(searchBox.Text) end)
+populatePlayerList("")
+
+-- [Bloque 5.5] Teleport Loader (Save/Load posiciones)
+local savedPositions = {}
+
+local function savePosition(slot)
+    local root = getRoot(LocalPlayer)
+    if root then
+        savedPositions[slot] = root.CFrame
+        print("[KS HUB] Posición guardada en slot", slot)
+    end
+end
+
+local function loadPosition(slot)
+    local root = getRoot(LocalPlayer)
+    if root and savedPositions[slot] then
+        root.CFrame = savedPositions[slot]
+        print("[KS HUB] Teleport a slot", slot)
+    else
+        warn("[KS HUB] Slot vacío:", slot)
+    end
+end
+
+-- Crear botones Save/Load
+for i = 1, 3 do
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundTransparency = 1
+    row.Parent = Tabs["Teleport"]
+
+    local saveBtn = Instance.new("TextButton")
+    saveBtn.Size = UDim2.new(0.5, -3, 1, 0)
+    saveBtn.Position = UDim2.new(0, 0, 0, 0)
+    saveBtn.Text = "Save" .. i
+    saveBtn.Font = Enum.Font.Gotham
+    saveBtn.TextSize = 16
+    saveBtn.TextColor3 = Color3.new(1, 1, 1)
+    saveBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    saveBtn.BackgroundTransparency = 0.1
+    saveBtn.BorderSizePixel = 0
+    saveBtn.Parent = row
+    Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 6)
+    saveBtn.MouseButton1Click:Connect(function() savePosition(i) end)
+
+    local loadBtn = Instance.new("TextButton")
+    loadBtn.Size = UDim2.new(0.5, -3, 1, 0)
+    loadBtn.Position = UDim2.new(0.5, 3, 0, 0)
+    loadBtn.Text = "Load" .. i
+    loadBtn.Font = Enum.Font.Gotham
+    loadBtn.TextSize = 16
+    loadBtn.TextColor3 = Color3.new(1, 1, 1)
+    loadBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    loadBtn.BackgroundTransparency = 0.1
+    loadBtn.BorderSizePixel = 0
+    loadBtn.Parent = row
+    Instance.new("UICorner", loadBtn).CornerRadius = UDim.new(0, 6)
+    loadBtn.MouseButton1Click:Connect(function() loadPosition(i) end)
+end
 ----------------------------------------------------------
 -- PARTE 6: VISUAL + AJUSTES + INICIALIZACIÓN
 ----------------------------------------------------------
