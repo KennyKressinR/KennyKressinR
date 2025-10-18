@@ -966,7 +966,7 @@ local function evasiveTP()
     end
 end
 
--- [6.6.5] Botones en la pestaña de Ajustes
-createButton(Tabs["Ajustes"], "🌀 Activar Anti-Hitbox", antiHitbox)
-createButton(Tabs["Ajustes"], "💚 Activar Auto-Heal", autoHeal)
-createButton(Tabs["Ajustes"], "⚡ Activar Teleport Evasivo", evasiveTP)
+-- [6.6.5] Botones en la pestaña Main (debajo de Bring)
+createButton(Tabs["Main"], "🌀 Activar Anti-Hitbox", antiHitbox)
+createButton(Tabs["Main"], "💚 Activar Auto-Heal", autoHeal)
+createButton(Tabs["Main"], "⚡ Activar Teleport Evasivo", evasiveTP)
