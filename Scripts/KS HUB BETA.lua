@@ -729,9 +729,6 @@ end
 print("[KS HUB] Parte 5 lista")
 ----------------------------------------------------------
 ----------------------------------------------------------
--- PARTE 6: VISUAL + AJUSTES + INICIALIZACIÓN
-----------------------------------------------------------
-----------------------------------------------------------
 -- PARTE 6: VISUALS (ESP + BRING ITEMS)
 ----------------------------------------------------------
 
@@ -741,75 +738,20 @@ visualScroll.Size = UDim2.new(1, 0, 1, 0)
 visualScroll.BackgroundTransparency = 1
 visualScroll.ScrollBarThickness = 6
 visualScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-visualScroll.Parent = Tabs["Visuals"]
+visualScroll.Parent = Tabs["Visual"]
 
 local visualLayout = Instance.new("UIListLayout")
 visualLayout.Padding = UDim.new(0, 6)
 visualLayout.SortOrder = Enum.SortOrder.LayoutOrder
 visualLayout.Parent = visualScroll
 
--- [Bloque 6.1] ESP Items (ya lo tienes aquí normalmente)
--- createButton(visualScroll, "ESP Items", toggleESPItems)
-
--- [Bloque 6.2] Bring Items
-local function getHRP()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    return char:FindFirstChild("HumanoidRootPart")
-end
-
-local function getValidPart(obj)
-    if obj:IsA("BasePart") then return obj end
-    if obj:IsA("Model") then
-        return obj:FindFirstChildWhichIsA("BasePart")
-    end
-    return nil
-end
-
-local function bringItems()
-    local hrp = getHRP()
-    if not hrp then
-        warn("[KS HUB] No se encontró HumanoidRootPart")
-        return
-    end
-
-    local items = {}
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Tool") or obj:IsA("Model") or obj:IsA("BasePart") then
-            local part = getValidPart(obj)
-            if part and part:IsDescendantOf(workspace) and not part:IsDescendantOf(workspace.Terrain) then
-                local dist = (part.Position - hrp.Position).Magnitude
-                table.insert(items, {obj = obj, part = part, dist = dist})
-            end
-        end
-    end
-
-    table.sort(items, function(a, b)
-        return a.dist < b.dist
-    end)
-
-    local offsetY = 5
-    for i, data in ipairs(items) do
-        local targetPos = hrp.Position + Vector3.new(0, offsetY + (i * 3), 0)
-        local part = data.part
-        part.Anchored = false
-        part.CanCollide = false
-        part.CFrame = CFrame.new(targetPos)
-        if data.obj:IsA("Tool") and data.obj:FindFirstChild("Handle") then
-            data.obj.Handle.CFrame = CFrame.new(targetPos)
-        end
-    end
-
-    print("[KS HUB] 📦 Bring Items ejecutado, total: " .. tostring(#items))
-end
-
-createButton(visualScroll, "📦 Bring Items", bringItems)
-
-
+----------------------------------------------------------
 -- [Bloque 6.1] Full Bright
+----------------------------------------------------------
 local fullBright = false
 local oldBrightness, oldAmbient, oldOutdoorAmbient
 
-createButton(Tabs["Visual"], "Toggle Full Bright", function()
+createButton(visualScroll, "Toggle Full Bright", function()
     fullBright = not fullBright
     if fullBright then
         oldBrightness = Lighting.Brightness
@@ -828,7 +770,9 @@ createButton(Tabs["Visual"], "Toggle Full Bright", function()
     end
 end)
 
--- [Bloque 6.2] ESP Jugadores (Highlight + Nombre)
+----------------------------------------------------------
+-- [Bloque 6.2] ESP Jugadores
+----------------------------------------------------------
 local espEnabled = false
 local espConnections = {}
 
@@ -910,16 +854,18 @@ local function toggleESP()
     end
 end
 
-createButton(Tabs["Visual"], "Toggle ESP Jugadores", toggleESP)
+createButton(visualScroll, "Toggle ESP Jugadores", toggleESP)
 
+----------------------------------------------------------
 -- [Bloque 6.3] ESP Ítems (Highlight + Nombre manual)
+----------------------------------------------------------
 local itemESPEnabled = false
 local itemESPConnections = {}
 local itemESPName = ""
 
 local itemSearchBox = Instance.new("TextBox")
 itemSearchBox.Size = UDim2.new(1, 0, 0, 30)
-itemSearchBox.PlaceholderText = ""
+itemSearchBox.PlaceholderText = "Nombre de ítem..."
 itemSearchBox.Text = ""
 itemSearchBox.Font = Enum.Font.Gotham
 itemSearchBox.TextSize = 16
@@ -928,7 +874,7 @@ itemSearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 itemSearchBox.BackgroundTransparency = 0.1
 itemSearchBox.BorderSizePixel = 0
 itemSearchBox.ClearTextOnFocus = false
-itemSearchBox.Parent = Tabs["Visual"]
+itemSearchBox.Parent = visualScroll
 Instance.new("UICorner", itemSearchBox).CornerRadius = UDim.new(0, 6)
 
 local function addItemESP(obj)
@@ -1002,20 +948,95 @@ itemSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
-createButton(Tabs["Visual"], "Toggle ESP Ítems", toggleItemESP)
+createButton(visualScroll, "Toggle ESP Ítems", toggleItemESP)
 
 ----------------------------------------------------------
--- PARTE 6.4: AJUSTES
+-- [Bloque 6.4] Bring Items (filtrado + cantidad)
 ----------------------------------------------------------
-createButton(Tabs["Ajustes"], "Reset Character", function()
+bringCountBox.TextColor3 = Color3.new(1, 1, 1)
+bringCountBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+bringCountBox.BackgroundTransparency = 0.1
+bringCountBox.BorderSizePixel = 0
+bringCountBox.ClearTextOnFocus = false
+Instance.new("UICorner", bringCountBox).CornerRadius = UDim.new(0, 6)
+
+local function bringFilteredItems()
+    local hrp = getHRP()
+    if not hrp then
+        warn("[KS HUB] No se encontró HumanoidRootPart")
+        return
+    end
+
+    if itemESPName == "" then
+        warn("[KS HUB] No hay nombre de ítem en el buscador ESP")
+        return
+    end
+
+    -- Cantidad a traer
+    local maxCount = tonumber(bringCountBox.Text)
+    if not maxCount then maxCount = math.huge end
+
+    -- Buscar ítems que coincidan con el nombre
+    local items = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if string.find(obj.Name:lower(), itemESPName:lower()) then
+            local part = obj:IsA("BasePart") and obj or obj:FindFirstChildWhichIsA("BasePart")
+            if part then
+                local dist = (part.Position - hrp.Position).Magnitude
+                table.insert(items, {obj = obj, part = part, dist = dist})
+            end
+        end
+    end
+
+    -- Ordenar por distancia
+    table.sort(items, function(a, b)
+        return a.dist < b.dist
+    end)
+
+    -- Traerlos encima del jugador en fila
+    local offsetY = 5
+    local count = 0
+    for i, data in ipairs(items) do
+        if count >= maxCount then break end
+        local targetPos = hrp.Position + Vector3.new(0, offsetY + (i * 3), 0)
+        local part = data.part
+        part.Anchored = false
+        part.CanCollide = false
+        part.CFrame = CFrame.new(targetPos)
+        if data.obj:IsA("Tool") and data.obj:FindFirstChild("Handle") then
+            data.obj.Handle.CFrame = CFrame.new(targetPos)
+        end
+        count += 1
+    end
+
+    print("[KS HUB] 📦 Bring Items ejecutado, total: " .. tostring(count))
+end
+
+createButton(visualScroll, "📦 Bring Items (filtrados)", bringFilteredItems)
+
+----------------------------------------------------------
+-- PARTE 6.5: AJUSTES
+----------------------------------------------------------
+local ajustesScroll = Instance.new("ScrollingFrame")
+ajustesScroll.Size = UDim2.new(1, 0, 1, 0)
+ajustesScroll.BackgroundTransparency = 1
+ajustesScroll.ScrollBarThickness = 6
+ajustesScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ajustesScroll.Parent = Tabs["Ajustes"]
+
+local ajustesLayout = Instance.new("UIListLayout")
+ajustesLayout.Padding = UDim.new(0, 6)
+ajustesLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ajustesLayout.Parent = ajustesScroll
+
+-- Botón Reset Character
+createButton(ajustesScroll, "Reset Character", function()
     LocalPlayer.Character:BreakJoints()
 end)
 
-createButton(Tabs["Ajustes"], "Rejoin", function()
+-- Botón Rejoin
+createButton(ajustesScroll, "Rejoin", function()
     game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
 end)
 
-----------------------------------------------------------
--- PARTE 6.5: FINAL
-----------------------------------------------------------
-
+print("[KS HUB] Parte 6 lista")
