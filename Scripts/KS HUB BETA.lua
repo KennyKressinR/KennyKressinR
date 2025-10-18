@@ -570,6 +570,75 @@ refreshBtn.BorderSizePixel = 0
 refreshBtn.Parent = tpScroll
 Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 6)
 
+--========================================================--
+-- BLOQUE 5.X: BRING ITEMS (Visuals)
+--========================================================--
+
+-- Utilidad: obtener HRP del jugador
+local function getHRP()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return char:FindFirstChild("HumanoidRootPart")
+end
+
+-- Utilidad: obtener parte válida de un objeto
+local function getValidPart(obj)
+    if obj:IsA("BasePart") then return obj end
+    if obj:IsA("Model") then
+        return obj:FindFirstChildWhichIsA("BasePart")
+    end
+    return nil
+end
+
+-- Función principal: traer ítems encima del jugador
+local function bringItems()
+    local hrp = getHRP()
+    if not hrp then
+        warn("[KS HUB] No se encontró HumanoidRootPart")
+        return
+    end
+
+    -- Buscar ítems en Workspace
+    local items = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Tool") or obj:IsA("Model") or obj:IsA("BasePart") then
+            local part = getValidPart(obj)
+            if part and part:IsDescendantOf(workspace) and not part:IsDescendantOf(workspace.Terrain) then
+                local dist = (part.Position - hrp.Position).Magnitude
+                table.insert(items, {obj = obj, part = part, dist = dist})
+            end
+        end
+    end
+
+    -- Ordenar por distancia (cercano → lejano)
+    table.sort(items, function(a, b)
+        return a.dist < b.dist
+    end)
+
+    -- Traerlos encima del jugador
+    local offsetY = 5
+    for i, data in ipairs(items) do
+        local targetPos = hrp.Position + Vector3.new(0, offsetY + (i * 3), 0)
+        local part = data.part
+
+        -- Asegurar que sea interactuable
+        part.Anchored = false
+        part.CanCollide = false
+
+        -- Teletransportar
+        part.CFrame = CFrame.new(targetPos)
+
+        -- Si es Tool, mover Handle
+        if data.obj:IsA("Tool") and data.obj:FindFirstChild("Handle") then
+            data.obj.Handle.CFrame = CFrame.new(targetPos)
+        end
+    end
+
+    print("[KS HUB] 📦 Bring Items ejecutado, total: " .. tostring(#items))
+end
+
+-- Botón en pestaña Visuals (debajo de ESP Items)
+createButton(Tabs["Visuals"], "📦 Bring Items", bringItems)
+
 -- [Bloque 5.4] Scroll de jugadores
 local playerScroll = Instance.new("ScrollingFrame")
 playerScroll.Size = UDim2.new(1, 0, 0, 200)
