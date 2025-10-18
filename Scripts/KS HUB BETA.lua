@@ -523,6 +523,63 @@ createButton(mainScroll, "Bring Items (Tools)", function()
         print("[KS HUB] No se encontraron Tools con Handle en el workspace")
     end
 end)
+
+----------------------------------------------------------
+-- [Bloque 4.X] DEFENSAS AVANZADAS
+----------------------------------------------------------
+
+-- Anti-Hitbox: reduce tamaño del HRP para recibir menos golpes
+local function antiHitbox()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.Size = Vector3.new(2, 2, 1)
+        hrp.Transparency = 0.7
+        hrp.CanCollide = false
+        print("[KS HUB] 🌀 Anti-Hitbox activado")
+    else
+        warn("[KS HUB] No se encontró HumanoidRootPart")
+    end
+end
+
+-- Auto-Heal: cura automáticamente al perder vida
+local function autoHeal()
+    local hum = getHumanoid()
+    if hum then
+        hum.HealthChanged:Connect(function(hp)
+            if hp < hum.MaxHealth then
+                hum.Health = hum.MaxHealth
+                print("[KS HUB] 💚 Auto-Heal aplicado")
+            end
+        end)
+        print("[KS HUB] 💚 Auto-Heal activado")
+    else
+        warn("[KS HUB] No se encontró Humanoid")
+    end
+end
+
+-- Teleport evasivo: se teletransporta si la vida baja del 50%
+local function evasiveTP()
+    local hum = getHumanoid()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hum and hrp then
+        hum.HealthChanged:Connect(function(hp)
+            if hp < (hum.MaxHealth * 0.5) then
+                hrp.CFrame = hrp.CFrame + Vector3.new(0, 0, 30)
+                print("[KS HUB] ⚡ Teleport evasivo activado")
+            end
+        end)
+        print("[KS HUB] ⚡ Teleport evasivo listo")
+    else
+        warn("[KS HUB] No se encontró Humanoid o HRP")
+    end
+end
+
+-- Botones en Main (dentro del scroll)
+createButton(mainScroll, "🌀 Activar Anti-Hitbox", antiHitbox)
+createButton(mainScroll, "💚 Activar Auto-Heal", autoHeal)
+createButton(mainScroll, "⚡ Activar Teleport Evasivo", evasiveTP)
 ----------------------------------------------------------
 -- PARTE 5: TELEPORT (BUSCADOR + SCROLL + LOADER)
 ----------------------------------------------------------
@@ -974,68 +1031,4 @@ end)
 ----------------------------------------------------------
 -- PARTE 6.5: FINAL
 ----------------------------------------------------------
---========================================================--
--- BLOQUE 6.6: DEFENSAS AVANZADAS
---========================================================--
 
--- [6.6.1] Obtener Humanoid y HRP
-local function getHumanoid()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    return char:FindFirstChildOfClass("Humanoid")
-end
-
-local function getHRP()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    return char:FindFirstChild("HumanoidRootPart")
-end
-
--- [6.6.2] Anti-Hitbox (reduce tamaño del HRP para recibir menos golpes)
-local function antiHitbox()
-    local hrp = getHRP()
-    if hrp then
-        hrp.Size = Vector3.new(2, 2, 1) -- más pequeño que el normal
-        hrp.Transparency = 0.7
-        hrp.CanCollide = false
-        print("[KS HUB] 🌀 Anti-Hitbox activado")
-    else
-        warn("[KS HUB] No se encontró HumanoidRootPart")
-    end
-end
-
--- [6.6.3] Auto-Heal (cura automáticamente cuando baja la vida)
-local function autoHeal()
-    local hum = getHumanoid()
-    if hum then
-        hum.HealthChanged:Connect(function(hp)
-            if hp < hum.MaxHealth then
-                hum.Health = hum.MaxHealth
-                print("[KS HUB] 💚 Auto-Heal aplicado")
-            end
-        end)
-        print("[KS HUB] 💚 Auto-Heal activado")
-    else
-        warn("[KS HUB] No se encontró Humanoid")
-    end
-end
-
--- [6.6.4] Teleport evasivo (se teletransporta si la vida baja del 50%)
-local function evasiveTP()
-    local hum = getHumanoid()
-    local hrp = getHRP()
-    if hum and hrp then
-        hum.HealthChanged:Connect(function(hp)
-            if hp < (hum.MaxHealth * 0.5) then
-                hrp.CFrame = hrp.CFrame + Vector3.new(0, 0, 30) -- tp hacia adelante
-                print("[KS HUB] ⚡ Teleport evasivo activado")
-            end
-        end)
-        print("[KS HUB] ⚡ Teleport evasivo listo")
-    else
-        warn("[KS HUB] No se encontró Humanoid o HRP")
-    end
-end
-
--- [6.6.5] Botones en la pestaña Main (debajo de Bring)
-createButton(Tabs["Main"], "🌀 Activar Anti-Hitbox", antiHitbox)
-createButton(Tabs["Main"], "💚 Activar Auto-Heal", autoHeal)
-createButton(Tabs["Main"], "⚡ Activar Teleport Evasivo", evasiveTP)
