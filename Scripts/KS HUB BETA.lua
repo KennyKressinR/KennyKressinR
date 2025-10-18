@@ -906,51 +906,67 @@ end)
 -- PARTE 6.5: FINAL
 ----------------------------------------------------------
 --========================================================--
--- BLOQUE 6.6: GOD MODE (2 OPCIONES)
+-- BLOQUE 6.6: DEFENSAS AVANZADAS
 --========================================================--
 
--- [6.6.1] Obtener el Humanoid actual del jugador
+-- [6.6.1] Obtener Humanoid y HRP
 local function getHumanoid()
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     return char:FindFirstChildOfClass("Humanoid")
 end
 
--- [6.6.2] God Mode básico (invulnerabilidad + bloqueo de estados de muerte)
-local function godModeBasico()
+local function getHRP()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return char:FindFirstChild("HumanoidRootPart")
+end
+
+-- [6.6.2] Anti-Hitbox (reduce tamaño del HRP para recibir menos golpes)
+local function antiHitbox()
+    local hrp = getHRP()
+    if hrp then
+        hrp.Size = Vector3.new(2, 2, 1) -- más pequeño que el normal
+        hrp.Transparency = 0.7
+        hrp.CanCollide = false
+        print("[KS HUB] 🌀 Anti-Hitbox activado")
+    else
+        warn("[KS HUB] No se encontró HumanoidRootPart")
+    end
+end
+
+-- [6.6.3] Auto-Heal (cura automáticamente cuando baja la vida)
+local function autoHeal()
     local hum = getHumanoid()
     if hum then
-        hum.Name = "GodHumanoid"
-        hum.MaxHealth = math.huge
-        hum.Health = math.huge
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-        print("[KS HUB] 🛡️ God Mode básico activado")
+        hum.HealthChanged:Connect(function(hp)
+            if hp < hum.MaxHealth then
+                hum.Health = hum.MaxHealth
+                print("[KS HUB] 💚 Auto-Heal aplicado")
+            end
+        end)
+        print("[KS HUB] 💚 Auto-Heal activado")
     else
         warn("[KS HUB] No se encontró Humanoid")
     end
 end
 
--- [6.6.3] God Mode agresivo (reemplazo completo del Humanoid)
-local function godModeAgresivo()
-    local char = LocalPlayer.Character
-    if not char then return end
-    local oldHum = char:FindFirstChildOfClass("Humanoid")
-    if oldHum then
-        oldHum:Destroy()
-        local newHum = Instance.new("Humanoid")
-        newHum.Name = "GodHumanoid"
-        newHum.Parent = char
-        char:MoveTo(char:GetPivot().Position)
-        print("[KS HUB] 🔥 Humanoid reemplazado por uno inmortal")
+-- [6.6.4] Teleport evasivo (se teletransporta si la vida baja del 50%)
+local function evasiveTP()
+    local hum = getHumanoid()
+    local hrp = getHRP()
+    if hum and hrp then
+        hum.HealthChanged:Connect(function(hp)
+            if hp < (hum.MaxHealth * 0.5) then
+                hrp.CFrame = hrp.CFrame + Vector3.new(0, 0, 30) -- tp hacia adelante
+                print("[KS HUB] ⚡ Teleport evasivo activado")
+            end
+        end)
+        print("[KS HUB] ⚡ Teleport evasivo listo")
     else
-        warn("[KS HUB] No se encontró Humanoid para reemplazar")
+        warn("[KS HUB] No se encontró Humanoid o HRP")
     end
 end
 
--- [6.6.4] Botones en la pestaña de Ajustes
-createButton(Tabs["Ajustes"], "🛡️ Activar God Mode Básico", godModeBasico)
-createButton(Tabs["Ajustes"], "🔥 Activar God Mode Agresivo", godModeAgresivo)
-print("[KS HUB] Versión Estable 1.0 cargada correctamente")
+-- [6.6.5] Botones en la pestaña de Ajustes
+createButton(Tabs["Ajustes"], "🌀 Activar Anti-Hitbox", antiHitbox)
+createButton(Tabs["Ajustes"], "💚 Activar Auto-Heal", autoHeal)
+createButton(Tabs["Ajustes"], "⚡ Activar Teleport Evasivo", evasiveTP)
