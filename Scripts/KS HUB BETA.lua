@@ -504,26 +504,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- [Bloque 4.X] Bring Items (Tools)
-createButton(mainScroll, "Bring Items (Tools)", function()
-    local root = getRoot(LocalPlayer)
-    if not root then return end
-
-    local count = 0
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
-            obj.Handle.CFrame = root.CFrame + Vector3.new(0, 3, 0)
-            count += 1
-        end
-    end
-
-    if count > 0 then
-        print("[KS HUB] Se trajeron " .. count .. " items al jugador")
-    else
-        print("[KS HUB] No se encontraron Tools con Handle en el workspace")
-    end
-end)
-
 ----------------------------------------------------------
 -- [Bloque 4.X] DEFENSAS AVANZADAS
 ----------------------------------------------------------
