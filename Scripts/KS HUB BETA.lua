@@ -905,4 +905,52 @@ end)
 ----------------------------------------------------------
 -- PARTE 6.5: FINAL
 ----------------------------------------------------------
+--========================================================--
+-- BLOQUE 6.6: GOD MODE (2 OPCIONES)
+--========================================================--
+
+-- [6.6.1] Obtener el Humanoid actual del jugador
+local function getHumanoid()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return char:FindFirstChildOfClass("Humanoid")
+end
+
+-- [6.6.2] God Mode básico (invulnerabilidad + bloqueo de estados de muerte)
+local function godModeBasico()
+    local hum = getHumanoid()
+    if hum then
+        hum.Name = "GodHumanoid"
+        hum.MaxHealth = math.huge
+        hum.Health = math.huge
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        print("[KS HUB] 🛡️ God Mode básico activado")
+    else
+        warn("[KS HUB] No se encontró Humanoid")
+    end
+end
+
+-- [6.6.3] God Mode agresivo (reemplazo completo del Humanoid)
+local function godModeAgresivo()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local oldHum = char:FindFirstChildOfClass("Humanoid")
+    if oldHum then
+        oldHum:Destroy()
+        local newHum = Instance.new("Humanoid")
+        newHum.Name = "GodHumanoid"
+        newHum.Parent = char
+        char:MoveTo(char:GetPivot().Position)
+        print("[KS HUB] 🔥 Humanoid reemplazado por uno inmortal")
+    else
+        warn("[KS HUB] No se encontró Humanoid para reemplazar")
+    end
+end
+
+-- [6.6.4] Botones en la pestaña de Ajustes
+createButton(Tabs["Ajustes"], "🛡️ Activar God Mode Básico", godModeBasico)
+createButton(Tabs["Ajustes"], "🔥 Activar God Mode Agresivo", godModeAgresivo)
 print("[KS HUB] Versión Estable 1.0 cargada correctamente")
