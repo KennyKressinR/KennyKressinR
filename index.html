@@ -117,7 +117,6 @@
     .redes .btn:hover { background: linear-gradient(135deg, #ff9500, #ff6f00); transform: scale(1.07); }
     .juegos .btn:hover { background: linear-gradient(135deg, #2196f3, #00bcd4); transform: scale(1.07); }
     .acerca .btn:hover { background: linear-gradient(135deg, #b366ff, #7a00ff); transform: scale(1.07); }
-    .btn img { width: 24px; height: 24px; }
 
     footer { margin-top: 30px; font-size: 0.8rem; color: #aaa; text-align: center; }
 
@@ -125,12 +124,19 @@
       h1 { font-size: 1.5rem; }
       .btn { width: 100%; justify-content: center; }
     }
+
+    /* --- Íconos genéricos en SVG --- */
+    .icon {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
   </style>
 </head>
 <body>
 
   <!-- FOTO DE PERFIL -->
-  <img src="https://raw.githubusercontent.com/KennyKressinR/KennyKressinR/main/Image/Yo.png" alt="Foto de perfil" class="profile-img" />
+  <img src="Image/Yo.png" alt="Foto de perfil" class="profile-img" />
 
   <!-- TÍTULO PRINCIPAL -->
   <h1>Conecta conmigo 🌐</h1>
@@ -139,21 +145,17 @@
   <section class="redes">
     <h2>Redes Sociales</h2>
     <div class="social-links">
-      <a class="btn" href="https://www.instagram.com/kennykressinr" target="_blank">
-        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" /> Instagram
+      <a class="btn" href="#">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg> Instagram
       </a>
-      <a class="btn" href="https://www.facebook.com/DanielRodriguezKK" target="_blank">
-        <img src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png" alt="Facebook" /> Facebook
+      <a class="btn" href="#">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/></svg> Facebook
       </a>
-      <a class="btn" href="https://www.instagram.com/kennykrdraws" target="_blank">
-        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram Draws" /> IG Dibujos
+      <a class="btn" href="#">
+        <svg class="icon" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22"/></svg> TikTok
       </a>
-      <a class="btn" href="https://www.tiktok.com/@kennykressinr" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/TikTok_logo.svg" alt="TikTok" /> TikTok
-      </a>
-      <!-- Discord: mejor usar tu ID en vez de invitación directa -->
-      <a class="btn" href="https://discord.com/users/TU_ID" target="_blank">
-        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" /> Discord
+      <a class="btn" href="#">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg> Discord
       </a>
     </div>
   </section>
@@ -162,16 +164,15 @@
   <section class="juegos">
     <h2>Perfil de Juegos 🎮</h2>
     <div class="social-links">
-      <a class="btn" href="https://www.roblox.com/users/tuID/profile" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Roblox_logo_2022.svg" alt="Roblox" /> Roblox
+      <a class="btn" href="#">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg> Roblox
       </a>
-<a class="btn" href="#" target="_blank">
-        <img src="https://static.wikia.nocookie.net/minecraft_gamepedia/images/5/51/Minecraft_cover.png" alt="Minecraft" /> Minecraft (Bedrock)
+      <a class="btn" href="#">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg> Minecraft
       </a>
-      <a class="btn" href="https://link.brawlstars.com/invite/friend/es?tag=PYL9UQ880" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/en/3/33/Brawl_Stars_logo.png" alt="Brawl Stars" /> Brawl Stars
+      <a class="btn" href="#">
+        <svg class="icon" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22"/></svg> Brawl Stars
       </a>
-      <!-- Free Fire y Bloodstrike eliminados porque sus dominios suelen activar advertencias -->
     </div>
   </section>
 
@@ -204,7 +205,8 @@
 
   <script>
     /* ---------------------- FONDO DE PÁGINA ---------------------- */
-    const fondoURL = 'https://wallpapers-clan.com/wp-content/uploads/2023/10/halloween-spooky-house-jack-o-lantern-wallpaper-scaled.jpg';
+    const fondoURL = 'Image/fondo.jpg'; 
+    // Usa una imagen tuya dentro de la carpeta del repo en vez de un link externo
     document.body.style.background = `linear-gradient(135deg, rgba(30,30,47,0.3), rgba(42,42,64,0.3)), url(${fondoURL})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
@@ -224,6 +226,3 @@
   </script>
 </body>
 </html>
-
-
-        
