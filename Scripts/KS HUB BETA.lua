@@ -153,6 +153,7 @@ createTab("Main")
 createTab("Teleport")
 createTab("Visual")
 createTab("Ajustes")
+createTab("Waypoints") -- ✅ Nueva pestaña
 
 -- [Bloque 2.7] Toggle HUB
 local toggleSound = Instance.new("Sound")
@@ -359,52 +360,56 @@ end)
 
 print("[KS HUB] Parte 3 lista")
 
-----------------------------------------------------------
--- PARTE 4: TELEPORT
-----------------------------------------------------------
 
--- [Bloque 4.1] Teleport a Jugadores
-local function teleportToPlayer(playerName)
-    local target = Players:FindFirstChild(playerName)
-    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-            print("[KS HUB] Teleport a " .. playerName)
-        end
-    else
-        warn("[KS HUB] Jugador no encontrado:", playerName)
-    end
-end
-
--- Caja de texto para escribir nombre de jugador
-local tpBox = Instance.new("TextBox")
-tpBox.Size = UDim2.new(1, 0, 0, 30)
-tpBox.PlaceholderText = "Nombre del jugador"
-tpBox.Text = ""
-tpBox.Font = Enum.Font.Gotham
-tpBox.TextSize = 16
-tpBox.TextColor3 = Color3.new(1, 1, 1)
-tpBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-tpBox.BackgroundTransparency = 0.1
-tpBox.BorderSizePixel = 0
-tpBox.ClearTextOnFocus = false
-tpBox.Parent = Tabs["Teleport"]
-Instance.new("UICorner", tpBox).CornerRadius = UDim.new(0, 6)
-
-createButton(Tabs["Teleport"], "Teleport to Player", function()
-    if tpBox.Text ~= "" then
-        teleportToPlayer(tpBox.Text)
-    else
-        warn("[KS HUB] Ingresa un nombre de jugador")
-    end
-end)
 
 ----------------------------------------------------------
 -- [Bloque 4.2] Teleport a CFrame personalizado
 ----------------------------------------------------------
 local function teleportToCFrame(cf)
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidR----------------------------------------------------------
+-- PARTE 4: TELEPORT (con lista de jugadores)
+----------------------------------------------------------
+
+-- [Bloque 4.1] Teleport a Jugadores (lista automática)
+local playerList = Instance.new("ScrollingFrame")
+playerList.Size = UDim2.new(1, 0, 0, 150)
+playerList.BackgroundTransparency = 1
+playerList.ScrollBarThickness = 6
+playerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+playerList.Parent = Tabs["Teleport"]
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 4)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Parent = playerList
+
+local function refreshPlayerList()
+    for _, child in pairs(playerList:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            createButton(playerList, plr.Name, function()
+                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.CFrame = plr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+                        print("[KS HUB] Teleport a " .. plr.Name)
+                    end
+                end
+            end)
+        end
+    end
+end
+
+refreshPlayerList()
+Players.PlayerAdded:Connect(refreshPlayerList)
+Players.PlayerRemoving:Connect(refreshPlayerList)
+
+----------------------------------------------------------
+-- [Bloque 4.2] Teleport a CFrame personalizado
+----------------------------------------------------------
+-- (igual que antes, con caja de texto para coords)ootPart")
     if hrp then
         hrp.CFrame = cf
         print("[KS HUB] Teleport a CFrame:", cf)
@@ -453,6 +458,50 @@ end)
 
 print("[KS HUB] Parte 4 lista")
 
+
+ ----------------------------------------------------------
+-- PARTE 4.9.9: WAYPOINTS
+----------------------------------------------------------
+
+local waypoints = {} -- aquí guardamos los CFrame
+local waypointNames = {} -- nombres opcionales
+
+for i = 1, 8 do
+    local nameBox = Instance.new("TextBox")
+    nameBox.Size = UDim2.new(1, 0, 0, 24)
+    nameBox.PlaceholderText = "Nombre (opcional) para Slot " .. i
+    nameBox.Text = ""
+    nameBox.Font = Enum.Font.Gotham
+    nameBox.TextSize = 14
+    nameBox.TextColor3 = Color3.new(1, 1, 1)
+    nameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    nameBox.BackgroundTransparency = 0.1
+    nameBox.BorderSizePixel = 0
+    nameBox.ClearTextOnFocus = false
+    nameBox.Parent = Tabs["Waypoints"]
+    Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 6)
+
+    local saveBtn = createButton(Tabs["Waypoints"], "Save " .. i, function()
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            waypoints[i] = hrp.CFrame
+            waypointNames[i] = nameBox.Text ~= "" and nameBox.Text or ("Waypoint " .. i)
+            print("[KS HUB] Guardado Waypoint " .. i .. " (" .. waypointNames[i] .. ")")
+        end
+    end)
+
+    local loadBtn = createButton(Tabs["Waypoints"], "Load " .. i, function()
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and waypoints[i] then
+            hrp.CFrame = waypoints[i]
+            print("[KS HUB] Teleport a Waypoint " .. i .. " (" .. (waypointNames[i] or "sin nombre") .. ")")
+        else
+            warn("[KS HUB] No hay Waypoint guardado en slot " .. i)
+        end
+    end)
+end
+
+print("[KS HUB] Parte Waypoints lista")
 ----------------------------------------------------------
 -- PARTE 5: VISUAL
 ----------------------------------------------------------
