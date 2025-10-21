@@ -363,10 +363,6 @@ print("[KS HUB] Parte 3 lista")
 
 
 ----------------------------------------------------------
--- [Bloque 4.2] Teleport a CFrame personalizado
-----------------------------------------------------------
-local function teleportToCFrame(cf)
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidR----------------------------------------------------------
 -- PARTE 4: TELEPORT (con lista de jugadores)
 ----------------------------------------------------------
 
