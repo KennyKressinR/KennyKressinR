@@ -1,3 +1,4 @@
+
 --========================================================
 -- KS HUB - SCRIPT COMPLETO
 --========================================================
@@ -99,31 +100,6 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 24
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Parent = MainFrame
-local gradient = Instance.new("UIGradient")
-gradient.Rotation = 90 -- vertical
-gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 191, 255)),   -- Azul profundo
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(102, 255, 255))  -- Cian claro
-}
-gradient.Parent = MainFrame
--- Reflejo superior izquierdo
-local highlight = Instance.new("Frame")
-highlight.Size = UDim2.new(0.5, 0, 0.5, 0)
-highlight.Position = UDim2.new(0, 0, 0, 0)
-highlight.BackgroundColor3 = Color3.new(1, 1, 1)
-highlight.BackgroundTransparency = 0.85
-highlight.BorderSizePixel = 0
-highlight.Parent = MainFrame
-
--- Sombra inferior derecha
-local shadow = Instance.new("Frame")
-shadow.Size = UDim2.new(0.5, 0, 0.5, 0)
-shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-shadow.BackgroundTransparency = 0.9
-shadow.BorderSizePixel = 0
-shadow.Parent = MainFrame
-
 
 -- [Bloque 2.4] Contenedor de pestañas
 local Tabs = {}
@@ -138,92 +114,7 @@ TabLayout.Padding = UDim.new(0, 6)
 TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabLayout.Parent = TabContainer
 
--- [Bloque 2.5] Contenido
-local ContentFrame = Instance.new("Frame")
-ContentFrame.Size = UDim2.new(1, -130, 1, -50)
-ContentFrame.Position = UDim2.new(0, 130, 0, 50)
-ContentFrame.BackgroundTransparency = 1
-ContentFrame.Parent = MainFrame
 
--- [Bloque 2.6] Función para crear pestañas
-local function createTab(name)
-    local tabButton = Instance.new("TextButton")
-    tabButton.Size = UDim2.new(1, 0, 0, 36)
-    tabButton.Text = name
-    tabButton.Font = Enum.Font.Gotham
-    tabButton.TextSize = 16
-    tabButton.TextColor3 = Color3.new(1, 1, 1)
-    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    tabButton.BackgroundTransparency = 0.1
-    tabButton.BorderSizePixel = 0
-    tabButton.Parent = TabContainer
-    Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
-
-    local sectionFrame = Instance.new("Frame")
-    sectionFrame.Size = UDim2.new(1, 0, 1, 0)
-    sectionFrame.BackgroundTransparency = 1
-    sectionFrame.Visible = false
-    sectionFrame.Parent = ContentFrame
-
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 8)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = sectionFrame
-
-    Tabs[name] = sectionFrame
-
-    tabButton.MouseButton1Click:Connect(function()
-        for _, frame in pairs(Tabs) do
-            frame.Visible = false
-        end
-        sectionFrame.Visible = true
-    end)
-end
-
--- Crear pestañas
-createTab("Main")
-createTab("Teleport")
-createTab("Visual")
-createTab("Ajustes")
-
--- [Bloque 2.7] Toggle HUB
-ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
-
--- [Bloque 2.8] Función para crear botones
-local function createButton(parent, text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 36)
-    button.Text = text
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 16
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    button.BackgroundTransparency = 0.1
-    button.BorderSizePixel = 0
-    button.Parent = parent
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
-
-    local gradient = Instance.new("UIGradient")
-gradient.Rotation = 90
-gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 180, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 255, 255))
-}
-gradient.Parent = button
-    
-    button.MouseButton1Click:Connect(function()
-        local ok, err = pcall(callback)
-        if not ok then
-            warn("[KS HUB] Error en botón:", err)
-        end
-    end)
-
-    return button
-end
-
-print("[KS HUB] Parte 2 lista")
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
 ----------------------------------------------------------
@@ -290,7 +181,105 @@ local function toggleAntiDelay()
     end
 end -- ✅ Este end cierra la función correctamente
     
+-- [Bloque 2.5] Contenido
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -130, 1, -50)
+ContentFrame.Position = UDim2.new(0, 130, 0, 50)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
 
+-- [Bloque 2.6] Función para crear pestañas
+local function createTab(name)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Size = UDim2.new(1, 0, 0, 36)
+    tabButton.Text = name
+    tabButton.Font = Enum.Font.Gotham
+    tabButton.TextSize = 16
+    tabButton.TextColor3 = Color3.new(1, 1, 1)
+    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    tabButton.BackgroundTransparency = 0.1
+    tabButton.BorderSizePixel = 0
+    tabButton.Parent = TabContainer
+    Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
+
+    -- 🔊 Sonido al presionar pestañas
+    local tabClickSound = Instance.new("Sound")
+    tabClickSound.SoundId = "rbxassetid://9120507525"
+    tabClickSound.Volume = 1
+    tabClickSound.Parent = tabButton
+
+    local sectionFrame = Instance.new("Frame")
+    sectionFrame.Size = UDim2.new(1, 0, 1, 0)
+    sectionFrame.BackgroundTransparency = 1
+    sectionFrame.Visible = false
+    sectionFrame.Parent = ContentFrame
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 8)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = sectionFrame
+
+    Tabs[name] = sectionFrame
+
+    tabButton.MouseButton1Click:Connect(function()
+        tabClickSound:Play() -- 🔊 Sonido al hacer click en pestaña
+        for _, frame in pairs(Tabs) do
+            frame.Visible = false
+        end
+        sectionFrame.Visible = true
+    end)
+end
+
+-- Crear pestañas
+createTab("Main")
+createTab("Teleport")
+createTab("Visual")
+createTab("Ajustes")
+
+-- [Bloque 2.7] Toggle HUB
+-- 🔊 Sonido al abrir/cerrar HUB
+local toggleSound = Instance.new("Sound")
+toggleSound.SoundId = "rbxassetid://77300603936003"
+toggleSound.Volume = 1
+toggleSound.Parent = ScreenGui
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    toggleSound:Play() -- 🔊 Sonido al abrir/cerrar HUB
+end)
+
+-- [Bloque 2.8] Función para crear botones
+local function createButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 36)
+    button.Text = text
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 16
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    button.BackgroundTransparency = 0.1
+    button.BorderSizePixel = 0
+    button.Parent = parent
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+    -- 🔊 Sonido al presionar botones
+    local clickSound = Instance.new("Sound")
+    clickSound.SoundId = "rbxassetid://9120507525"
+    clickSound.Volume = 1
+    clickSound.Parent = button
+
+    button.MouseButton1Click:Connect(function()
+        clickSound:Play() -- 🔊 Sonido al hacer click
+        local ok, err = pcall(callback)
+        if not ok then
+            warn("[KS HUB] Error en botón:", err)
+        end
+    end)
+
+    return button
+end
+
+print("[KS HUB] Parte 2 lista")
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
 ----------------------------------------------------------
