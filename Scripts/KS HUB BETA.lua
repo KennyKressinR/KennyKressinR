@@ -106,6 +106,8 @@ ContentFrame.BackgroundTransparency = 1
 ContentFrame.Parent = MainFrame
 
 -- [Bloque 2.6] Función para crear pestañas
+Tabs = {}
+
 local function createTab(name)
     local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(1, 0, 0, 36)
@@ -163,7 +165,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     toggleSound:Play()
 end)
 
--- [Bloque 2.8] Función para crear botones
+-- [Bloque 2.8] Funciones para crear botones
 function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -193,6 +195,42 @@ function createButton(parent, text, callback)
     return button
 end
 
+-- Botón con estado ON/OFF
+function createToggleButton(parent, text, stateVar, callbackOn, callbackOff)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 36)
+    button.Text = text .. " [OFF]"
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 16
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    button.BackgroundTransparency = 0.1
+    button.BorderSizePixel = 0
+    button.Parent = parent
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+    local clickSound = Instance.new("Sound")
+    clickSound.SoundId = "rbxassetid://9120507525"
+    clickSound.Volume = 1
+    clickSound.Parent = button
+
+    _G[stateVar] = false
+
+    button.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        _G[stateVar] = not _G[stateVar]
+        if _G[stateVar] then
+            button.Text = text .. " [ON]"
+            if callbackOn then callbackOn() end
+        else
+            button.Text = text .. " [OFF]"
+            if callbackOff then callbackOff() end
+        end
+    end)
+
+    return button
+end
+
 print("[KS HUB] Parte 2 lista")
 
 ----------------------------------------------------------
@@ -200,12 +238,9 @@ print("[KS HUB] Parte 2 lista")
 ----------------------------------------------------------
 
 -- [Bloque 3.1] Noclip
-local noclipEnabled = false
 local noclipConnection
-
-local function toggleNoclip()
-    noclipEnabled = not noclipEnabled
-    if noclipEnabled then
+createToggleButton(Tabs["Main"], "Noclip", "noclipEnabled",
+    function() -- ON
         noclipConnection = game:GetService("RunService").Stepped:Connect(function()
             if LocalPlayer.Character then
                 for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
@@ -216,67 +251,57 @@ local function toggleNoclip()
             end
         end)
         print("[KS HUB] Noclip ON")
-    else
+    end,
+    function() -- OFF
         if noclipConnection then
             noclipConnection:Disconnect()
             noclipConnection = nil
         end
         print("[KS HUB] Noclip OFF")
     end
-end
-
-createButton(Tabs["Main"], "Toggle Noclip", toggleNoclip)
+)
 
 ----------------------------------------------------------
 -- [Bloque 3.2] Anti-Delay
 ----------------------------------------------------------
-local antiDelayEnabled = false
 local antiDelayConnection
-
-local function toggleAntiDelay()
-    antiDelayEnabled = not antiDelayEnabled
-    if antiDelayEnabled then
+createToggleButton(Tabs["Main"], "Anti-Delay", "antiDelayEnabled",
+    function() -- ON
         antiDelayConnection = game:GetService("RunService").Heartbeat:Connect(function()
-            -- Fuerza el SimulationRadius para reducir retrasos
             sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
         end)
         print("[KS HUB] Anti-Delay ON")
-    else
+    end,
+    function() -- OFF
         if antiDelayConnection then
             antiDelayConnection:Disconnect()
             antiDelayConnection = nil
         end
         print("[KS HUB] Anti-Delay OFF")
     end
-end
-
-createButton(Tabs["Main"], "Toggle Anti-Delay", toggleAntiDelay)
+)
 
 ----------------------------------------------------------
 -- [Bloque 3.3] Infinite Jump
 ----------------------------------------------------------
-local infiniteJumpEnabled = false
 local infiniteJumpConnection
-
-local function toggleInfiniteJump()
-    infiniteJumpEnabled = not infiniteJumpEnabled
-    if infiniteJumpEnabled then
+createToggleButton(Tabs["Main"], "Infinite Jump", "infiniteJumpEnabled",
+    function() -- ON
         infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
-            if infiniteJumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            if _G.infiniteJumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
                 LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
             end
         end)
         print("[KS HUB] Infinite Jump ON")
-    else
+    end,
+    function() -- OFF
         if infiniteJumpConnection then
             infiniteJumpConnection:Disconnect()
             infiniteJumpConnection = nil
         end
         print("[KS HUB] Infinite Jump OFF")
     end
-end
-
-createButton(Tabs["Main"], "Toggle Infinite Jump", toggleInfiniteJump)
+)
 
 ----------------------------------------------------------
 -- [Bloque 3.4] WalkSpeed y JumpPower
@@ -370,6 +395,8 @@ Instance.new("UICorner", tpBox).CornerRadius = UDim.new(0, 6)
 createButton(Tabs["Teleport"], "Teleport to Player", function()
     if tpBox.Text ~= "" then
         teleportToPlayer(tpBox.Text)
+    else
+        warn("[KS HUB] Ingresa un nombre de jugador")
     end
 end)
 
@@ -407,7 +434,7 @@ createButton(Tabs["Teleport"], "Teleport to Coords", function()
     if #coords == 3 then
         teleportToCFrame(CFrame.new(coords[1], coords[2], coords[3]))
     else
-        warn("[KS HUB] Coordenadas inválidas")
+        warn("[KS HUB] Coordenadas inválidas, usa formato x,y,z")
     end
 end)
 
