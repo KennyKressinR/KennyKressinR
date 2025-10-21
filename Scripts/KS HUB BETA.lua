@@ -91,29 +91,170 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
--- [Bloque 2.3] Título
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
-Title.Text = "KS HUB"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 24
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.Parent = MainFrame
+----------------------------------------------------------
+-- [Bloque 2.3] Botón Toggle (abrir/cerrar HUB)
+----------------------------------------------------------
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 40, 0, 40)
+ToggleButton.Position = UDim2.new(0, 10, 1, -120) -- más arriba para no tapar salto
+ToggleButton.Text = "≡"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 20
+ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+ToggleButton.BackgroundTransparency = 0.1
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Parent = ScreenGui
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
--- [Bloque 2.4] Contenedor de pestañas
-local Tabs = {}
-local TabContainer = Instance.new("Frame")
-TabContainer.Size = UDim2.new(0, 120, 1, -40)
-TabContainer.Position = UDim2.new(0, 0, 0, 40)
-TabContainer.BackgroundTransparency = 1
-TabContainer.Parent = MainFrame
+-- Estado de anclado
+local anchored = true
+local initialPosition = ToggleButton.Position
 
-local TabLayout = Instance.new("UIListLayout")
-TabLayout.Padding = UDim.new(0, 6)
-TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TabLayout.Parent = TabContainer
+-- Lógica de arrastre (solo si está desanclado)
+local dragging = false
+local dragInput, dragStart, startPos
 
+local function update(input)
+    local delta = input.Position - dragStart
+    ToggleButton.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+end
+
+ToggleButton.InputBegan:Connect(function(input)
+    if not anchored and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+ToggleButton.InputChanged:Connect(function(input)
+    if not anchored and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if not anchored and input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+----------------------------------------------------------
+-- [Bloque 2.5] Contenido
+----------------------------------------------------------
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -130, 1, -50)
+ContentFrame.Position = UDim2.new(0, 130, 0, 50)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+----------------------------------------------------------
+-- [Bloque 2.6] Función para crear pestañas
+----------------------------------------------------------
+local function createTab(name)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Size = UDim2.new(1, 0, 0, 36)
+    tabButton.Text = name
+    tabButton.Font = Enum.Font.Gotham
+    tabButton.TextSize = 16
+    tabButton.TextColor3 = Color3.new(1, 1, 1)
+    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    tabButton.BackgroundTransparency = 0.1
+    tabButton.BorderSizePixel = 0
+    tabButton.Parent = TabContainer
+    Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
+
+    -- 🔊 Sonido al presionar pestañas
+    local tabClickSound = Instance.new("Sound")
+    tabClickSound.SoundId = "rbxassetid://9120507525"
+    tabClickSound.Volume = 1
+    tabClickSound.Parent = tabButton
+
+    local sectionFrame = Instance.new("Frame")
+    sectionFrame.Size = UDim2.new(1, 0, 1, 0)
+    sectionFrame.BackgroundTransparency = 1
+    sectionFrame.Visible = false
+    sectionFrame.Parent = ContentFrame
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 8)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = sectionFrame
+
+    Tabs[name] = sectionFrame
+
+    tabButton.MouseButton1Click:Connect(function()
+        tabClickSound:Play()
+        for _, frame in pairs(Tabs) do
+            frame.Visible = false
+        end
+        sectionFrame.Visible = true
+    end)
+end
+
+-- Crear pestañas
+createTab("Main")
+createTab("Teleport")
+createTab("Visual")
+createTab("Ajustes")
+
+----------------------------------------------------------
+-- [Bloque 2.7] Toggle HUB
+----------------------------------------------------------
+-- 🔊 Sonido al abrir/cerrar HUB
+local toggleSound = Instance.new("Sound")
+toggleSound.SoundId = "rbxassetid://77300603936003"
+toggleSound.Volume = 1
+toggleSound.Parent = ScreenGui
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    toggleSound:Play()
+end)
+
+----------------------------------------------------------
+-- [Bloque 2.8] Función para crear botones
+----------------------------------------------------------
+local function createButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 36)
+    button.Text = text
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 16
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    button.BackgroundTransparency = 0.1
+    button.BorderSizePixel = 0
+    button.Parent = parent
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+    -- 🔊 Sonido al presionar botones
+    local clickSound = Instance.new("Sound")
+    clickSound.SoundId = "rbxassetid://9120507525"
+    clickSound.Volume = 1
+    clickSound.Parent = button
+
+    button.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        local ok, err = pcall(callback)
+        if not ok then
+            warn("[KS HUB] Error en botón:", err)
+        end
+    end)
+
+    return button
+end
+
+print("[KS HUB] Parte 2 lista")
 
 ----------------------------------------------------------
 -- PARTE 3: FUNCIONES DE UTILIDAD
@@ -1059,6 +1200,17 @@ end)
 -- Botón Rejoin
 createButton(ajustesScroll, "Rejoin", function()
     game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+end)
+
+-- Botón para anclar/desanclar ToggleButton
+createButton(ajustesScroll, "Toggle Anclar Botón Abrir", function()
+    anchored = not anchored
+    if anchored then
+        ToggleButton.Position = initialPosition
+        print("[KS HUB] 📌 Botón de abrir ANCLADO")
+    else
+        print("[KS HUB] 📌 Botón de abrir DESANCLADO (puede moverse)")
+    end
 end)
 
 print("[KS HUB] Parte 6 lista")
