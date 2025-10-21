@@ -8,7 +8,7 @@ local Tabs = {}
 
 print("[KS HUB] Parte 1 lista")
 
-----------------------------------------------------------
+
 ----------------------------------------------------------
 -- PARTE 2: INTERFAZ PRINCIPAL
 ----------------------------------------------------------
@@ -220,30 +220,53 @@ createToggleButton(Tabs["Main"], "Infinite Jump", "infiniteJumpEnabled",
     function() if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end end
 )
 
--- WalkSpeed y JumpPower
+-- WalkSpeed
 local wsBox = Instance.new("TextBox")
 wsBox.Size = UDim2.new(1, 0, 0, 30)
-wsBox.PlaceholderText = "WalkSpeed (default 16)"
+wsBox.PlaceholderText = "Introduce WalkSpeed (default 16)"
+wsBox.Text = ""
+wsBox.Font = Enum.Font.Gotham
+wsBox.TextSize = 16
+wsBox.TextColor3 = Color3.new(1, 1, 1)
+wsBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+wsBox.BackgroundTransparency = 0.1
+wsBox.BorderSizePixel = 0
+wsBox.ClearTextOnFocus = false
 wsBox.Parent = Tabs["Main"]
+Instance.new("UICorner", wsBox).CornerRadius = UDim.new(0, 6)
+
 wsBox.FocusLost:Connect(function(enter)
     if enter then
         local val = tonumber(wsBox.Text)
         if val and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
             LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
+            print("[KS HUB] WalkSpeed set to", val)
         end
     end
 end)
 
+-- JumpPower
 local jpBox = Instance.new("TextBox")
 jpBox.Size = UDim2.new(1, 0, 0, 30)
-jpBox.PlaceholderText = "JumpPower (default 50)"
+jpBox.PlaceholderText = "Introduce JumpPower (default 50)"
+jpBox.Text = ""
+jpBox.Font = Enum.Font.Gotham
+jpBox.TextSize = 16
+jpBox.TextColor3 = Color3.new(1, 1, 1)
+jpBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+jpBox.BackgroundTransparency = 0.1
+jpBox.BorderSizePixel = 0
+jpBox.ClearTextOnFocus = false
 jpBox.Parent = Tabs["Main"]
+Instance.new("UICorner", jpBox).CornerRadius = UDim.new(0, 6)
+
 jpBox.FocusLost:Connect(function(enter)
     if enter then
         local val = tonumber(jpBox.Text)
         if val and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
             LocalPlayer.Character:FindFirstChildOfClass("Humanoid").UseJumpPower = true
             LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = val
+            print("[KS HUB] JumpPower set to", val)
         end
     end
 end)
@@ -333,11 +356,12 @@ end)
 ----------------------------------------------------------
 createButton(Tabs["Teleport"], "Teleport to Spawn", function()
     local spawnLocation = workspace:FindFirstChildOfClass("SpawnLocation")
-    if spawnLocation and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = spawnLocation.CFrame + Vector3.new(0, 5, 0)
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if spawnLocation and hrp then
+        hrp.CFrame = spawnLocation.CFrame + Vector3.new(0, 5, 0)
         print("[KS HUB] Teleport a Spawn")
     else
-        warn("[KS HUB] No se encontró SpawnLocation")
+        warn("[KS HUB] No se encontró SpawnLocation o HumanoidRootPart")
     end
 end)
 
@@ -445,6 +469,66 @@ createToggleButton(Tabs["Visual"], "FullBright", "fullBrightEnabled",
 
 print("[KS HUB] Parte 5 lista")
 
+----------------------------------------------------------
+-- [Bloque 5.4] ESP Items
+----------------------------------------------------------
+local espItems = {}
+local espItemConnection
+
+-- Caja de texto para nombre parcial del ítem
+local itemBox = Instance.new("TextBox")
+itemBox.Size = UDim2.new(1, 0, 0, 30)
+itemBox.PlaceholderText = "Nombre parcial del ítem para ESP"
+itemBox.Text = ""
+itemBox.Font = Enum.Font.Gotham
+itemBox.TextSize = 16
+itemBox.TextColor3 = Color3.new(1, 1, 1)
+itemBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+itemBox.BackgroundTransparency = 0.1
+itemBox.BorderSizePixel = 0
+itemBox.ClearTextOnFocus = false
+itemBox.Parent = Tabs["Visual"]
+Instance.new("UICorner", itemBox).CornerRadius = UDim.new(0, 6)
+
+createToggleButton(Tabs["Visual"], "ESP Items", "espItemsEnabled",
+    function() -- ON
+        local keyword = string.lower(itemBox.Text)
+        if keyword == "" then
+            warn("[KS HUB] Ingresa un nombre parcial de ítem antes de activar ESP Items")
+            return
+        end
+        espItemConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and string.find(string.lower(obj.Name), keyword) then
+                    if not obj:FindFirstChild("KSHUB_ItemESP") then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Name = "KSHUB_ItemESP"
+                        highlight.FillColor = Color3.fromRGB(255, 255, 0)
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineTransparency = 0
+                        highlight.Parent = obj
+                    end
+                end
+            end
+        end)
+        print("[KS HUB] ESP Items ON para ítems que contengan: " .. keyword)
+    end,
+    function() -- OFF
+        if espItemConnection then
+            espItemConnection:Disconnect()
+            espItemConnection = nil
+        end
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj:FindFirstChild("KSHUB_ItemESP") then
+                obj.KSHUB_ItemESP:Destroy()
+            end
+        end
+        print("[KS HUB] ESP Items OFF")
+    end
+)
+
+print("[KS HUB] Parte 5 lista")
 
 ----------------------------------------------------------
 -- PARTE 6: AJUSTES
