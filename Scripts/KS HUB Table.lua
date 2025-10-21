@@ -9,6 +9,7 @@ local Tabs = {}
 print("[KS HUB] Parte 1 lista")
 
 ----------------------------------------------------------
+----------------------------------------------------------
 -- PARTE 2: INTERFAZ PRINCIPAL
 ----------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
@@ -26,7 +27,7 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
--- Botón Toggle
+-- Botón Toggle (abrir/cerrar HUB)
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 40, 0, 40)
 ToggleButton.Position = UDim2.new(0, 10, 1, -120)
@@ -35,6 +36,8 @@ ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 20
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+ToggleButton.BackgroundTransparency = 0.1
+ToggleButton.BorderSizePixel = 0
 ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
@@ -68,6 +71,8 @@ local function createTab(name)
     tabButton.TextSize = 16
     tabButton.TextColor3 = Color3.new(1, 1, 1)
     tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    tabButton.BackgroundTransparency = 0.1
+    tabButton.BorderSizePixel = 0
     tabButton.Parent = TabContainer
     Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
 
@@ -100,7 +105,11 @@ ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Funciones de botones
+----------------------------------------------------------
+-- Funciones para crear botones
+----------------------------------------------------------
+
+-- Botón simple con sonido
 function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -109,24 +118,64 @@ function createButton(parent, text, callback)
     button.TextSize = 16
     button.TextColor3 = Color3.new(1, 1, 1)
     button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    button.BackgroundTransparency = 0.1
+    button.BorderSizePixel = 0
     button.Parent = parent
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
-    button.MouseButton1Click:Connect(callback)
+
+    -- 🔊 Sonido de click
+    local clickSound = Instance.new("Sound")
+    clickSound.SoundId = "rbxassetid://9120507525"
+    clickSound.Volume = 1
+    clickSound.Parent = button
+
+    button.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        local ok, err = pcall(callback)
+        if not ok then
+            warn("[KS HUB] Error en botón:", err)
+        end
+    end)
+
     return button
 end
 
+-- Botón con estado ON/OFF y sonido
 function createToggleButton(parent, text, stateVar, callbackOn, callbackOff)
-    local button = createButton(parent, text .. " [OFF]", function()
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 36)
+    button.Text = text .. " [OFF]"
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 16
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+    button.BackgroundTransparency = 0.1
+    button.BorderSizePixel = 0
+    button.Parent = parent
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+    -- 🔊 Sonido de click
+    local clickSound = Instance.new("Sound")
+    clickSound.SoundId = "rbxassetid://9120507525"
+    clickSound.Volume = 1
+    clickSound.Parent = button
+
+    _G[stateVar] = false
+
+    button.MouseButton1Click:Connect(function()
+        clickSound:Play()
         _G[stateVar] = not _G[stateVar]
         if _G[stateVar] then
             button.Text = text .. " [ON]"
             if callbackOn then callbackOn() end
+            print("[KS HUB] " .. text .. " ON")
         else
             button.Text = text .. " [OFF]"
             if callbackOff then callbackOff() end
+            print("[KS HUB] " .. text .. " OFF")
         end
     end)
-    _G[stateVar] = false
+
     return button
 end
 
