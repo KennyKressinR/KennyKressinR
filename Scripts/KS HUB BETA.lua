@@ -99,6 +99,31 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 24
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Parent = MainFrame
+local gradient = Instance.new("UIGradient")
+gradient.Rotation = 90 -- vertical
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 191, 255)),   -- Azul profundo
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(102, 255, 255))  -- Cian claro
+}
+gradient.Parent = MainFrame
+-- Reflejo superior izquierdo
+local highlight = Instance.new("Frame")
+highlight.Size = UDim2.new(0.5, 0, 0.5, 0)
+highlight.Position = UDim2.new(0, 0, 0, 0)
+highlight.BackgroundColor3 = Color3.new(1, 1, 1)
+highlight.BackgroundTransparency = 0.85
+highlight.BorderSizePixel = 0
+highlight.Parent = MainFrame
+
+-- Sombra inferior derecha
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(0.5, 0, 0.5, 0)
+shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.9
+shadow.BorderSizePixel = 0
+shadow.Parent = MainFrame
+
 
 -- [Bloque 2.4] Contenedor de pestañas
 local Tabs = {}
@@ -180,6 +205,14 @@ local function createButton(parent, text, callback)
     button.Parent = parent
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
 
+    local gradient = Instance.new("UIGradient")
+gradient.Rotation = 90
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 180, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 255, 255))
+}
+gradient.Parent = button
+    
     button.MouseButton1Click:Connect(function()
         local ok, err = pcall(callback)
         if not ok then
