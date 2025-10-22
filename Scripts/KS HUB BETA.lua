@@ -122,13 +122,6 @@ closeClickSound.SoundId = "rbxassetid://87654321" -- reemplaza con tu ID
 closeClickSound.Volume = 0.75
 closeClickSound.Parent = CloseButton
 
-----------------------------------------------------------
--- Funcionalidad del botón cerrar
-----------------------------------------------------------
-CloseButton.MouseButton1Click:Connect(function()
-    closeClickSound:Play()
-    MainFrame.Visible = false
-end)
 
 ----------------------------------------------------------
 -- Toggle global con tecla (ej: F4) para abrir/cerrar HUB
