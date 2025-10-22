@@ -133,31 +133,31 @@ toggleSound.Parent = ToggleButton
 
 ----------------------------------------------------------
 ----------------------------------------------------------
--- SISTEMA DE PESTAÑAS CORREGIDO CON ESPACIO INTERNO
+-- SISTEMA DE PESTAÑAS VERTICALES (Sidebar Izquierda)
 ----------------------------------------------------------
 
--- Barra de pestañas (debajo del TopBar)
+-- Barra lateral de pestañas
 local TabsBar = Instance.new("Frame")
 TabsBar.Name = "TabsBar"
-TabsBar.Size = UDim2.new(1, -10, 0, 36)
-TabsBar.Position = UDim2.new(0, 5, 0, 40) -- debajo del TopBar
+TabsBar.Size = UDim2.new(0, 120, 1, -40) -- ancho fijo, alto total menos TopBar
+TabsBar.Position = UDim2.new(0, 0, 0, 40) -- debajo del TopBar
 TabsBar.BackgroundColor3 = Color3.fromRGB(22, 32, 52)
 TabsBar.BackgroundTransparency = 0.2
 TabsBar.BorderSizePixel = 0
 TabsBar.Parent = MainFrame
 
 local tabsLayout = Instance.new("UIListLayout")
-tabsLayout.FillDirection = Enum.FillDirection.Horizontal
+tabsLayout.FillDirection = Enum.FillDirection.Vertical
 tabsLayout.Padding = UDim.new(0, 6)
-tabsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-tabsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+tabsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tabsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 tabsLayout.Parent = TabsBar
 
--- Contenedor de contenido de pestañas
+-- Contenedor de contenido de pestañas (a la derecha)
 local TabsContent = Instance.new("Frame")
 TabsContent.Name = "TabsContent"
-TabsContent.Size = UDim2.new(1, -10, 1, -90) -- ocupa todo el espacio restante
-TabsContent.Position = UDim2.new(0, 5, 0, 80) -- debajo de TabsBar
+TabsContent.Size = UDim2.new(1, -130, 1, -50) -- ocupa el resto del espacio
+TabsContent.Position = UDim2.new(0, 130, 0, 45)
 TabsContent.BackgroundTransparency = 1
 TabsContent.Parent = MainFrame
 
@@ -175,7 +175,7 @@ end
 -- Crear pestañas y botones
 for _, name in ipairs(tabsList) do
     local tabBtn = Instance.new("TextButton")
-    tabBtn.Size = UDim2.new(0, 100, 1, 0)
+    tabBtn.Size = UDim2.new(1, -10, 0, 36)
     tabBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
     tabBtn.BackgroundTransparency = 0.1
     tabBtn.BorderSizePixel = 0
@@ -545,25 +545,34 @@ local function offNoclip()
     createNotification("Noclip desactivado")
 end
 
--- Anti Delay (reduce latencia en acciones comunes con HRP)
+----------------------------------------------------------
+-- AntiDelay (para eliminar tiempo de touch)
+----------------------------------------------------------
 local antiDelayConnection
-local function onAntiDelay()
-    if antiDelayConnection then antiDelayConnection:Disconnect() end
-    antiDelayConnection = RunService.Heartbeat:Connect(function()
-        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            -- Pequeños ajustes para estabilidad del HRP
-            hrp.AssemblyLinearVelocity = hrp.AssemblyLinearVelocity * Vector3.new(1, 0.98, 1)
+
+createToggleButton(MainScroll, "Anti Delay", "antiDelayEnabled",
+    function()
+        antiDelayConnection = RunService.Heartbeat:Connect(function()
+            local hrp = getHRP()
+            if not hrp then return end
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and obj:FindFirstChildOfClass("TouchTransmitter") then
+                    -- Fuerza el touch sin delay
+                    firetouchinterest(hrp, obj, 0)
+                    firetouchinterest(hrp, obj, 1)
+                end
+            end
+        end)
+        createNotification("Anti Delay (Touch) ON")
+    end,
+    function()
+        if antiDelayConnection then
+            antiDelayConnection:Disconnect()
+            antiDelayConnection = nil
         end
-    end)
-    _G.antiDelayEnabled = true
-    createNotification("Anti Delay activado")
-end
-local function offAntiDelay()
-    if antiDelayConnection then antiDelayConnection:Disconnect() antiDelayConnection = nil end
-    _G.antiDelayEnabled = false
-    createNotification("Anti Delay desactivado")
-end
+        createNotification("Anti Delay (Touch) OFF")
+    end
+)
 
 -- Infinite Jump
 local infiniteJumpConnection
@@ -694,6 +703,7 @@ local function refreshPlayers()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             createButton(playersScroll, "TP to " .. plr.Name, function()
+                -- Espera a que el Character exista
                 local targetChar = plr.Character or plr.CharacterAdded:Wait()
                 local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
                 if targetHRP then
@@ -706,6 +716,7 @@ local function refreshPlayers()
     end
 end
 
+
 Players.PlayerAdded:Connect(refreshPlayers)
 Players.PlayerRemoving:Connect(refreshPlayers)
 refreshPlayers()
@@ -715,11 +726,8 @@ print("[KS HUB] Parte 3 lista: Teleport configurado")
 
 
 ----------------------------------------------------------
--- KS HUB – Parte 4: Waypoints
--- Incluye:
--- - Sistema de guardado de waypoints en memoria local
--- - Botones para guardar, teletransportar y eliminar
--- - Scroll automático para manejar muchos waypoints
+----------------------------------------------------------
+-- KS HUB – Parte 4: Waypoints (versión final mejorada)
 ----------------------------------------------------------
 
 -- Tabla de waypoints guardados
@@ -727,12 +735,14 @@ local savedWaypoints = {}
 
 -- Función para refrescar la lista de waypoints en la UI
 local function refreshWaypoints()
+    -- Limpia la lista antes de regenerar
     for _, child in ipairs(WaypointsScroll:GetChildren()) do
-        if child:IsA("TextButton") or child:IsA("Frame") then
+        if child:IsA("Frame") then
             child:Destroy()
         end
     end
 
+    -- Genera un frame con botones TP y DEL por cada waypoint
     for name, pos in pairs(savedWaypoints) do
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(1, 0, 0, 36)
@@ -741,17 +751,27 @@ local function refreshWaypoints()
 
         local btnTP = createButton(frame, "TP: " .. name, function()
             teleportToCFrame(CFrame.new(pos))
+            createNotification("Teletransportado a '"..name.."'")
         end)
-        btnTP.Size = UDim2.new(0.5, -3, 1, 0)
+        btnTP.Size = UDim2.new(0.65, -3, 1, 0)
         btnTP.Position = UDim2.new(0, 0, 0, 0)
 
-        local btnDel = createButton(frame, "DEL", function()
+        local btnDel = Instance.new("TextButton")
+        btnDel.Size = UDim2.new(0.3, 0, 1, 0)
+        btnDel.Position = UDim2.new(0.7, 0, 0, 0)
+        btnDel.BackgroundColor3 = Color3.fromRGB(180, 40, 40) -- rojo estilo cerrar
+        btnDel.Text = "DEL"
+        btnDel.TextColor3 = Color3.new(1,1,1)
+        btnDel.Font = Enum.Font.GothamBold
+        btnDel.TextSize = 14
+        btnDel.Parent = frame
+        Instance.new("UICorner", btnDel).CornerRadius = UDim.new(0, 6)
+
+        btnDel.MouseButton1Click:Connect(function()
             savedWaypoints[name] = nil
             refreshWaypoints()
             createNotification("Waypoint '"..name.."' eliminado")
         end)
-        btnDel.Size = UDim2.new(0.25, -3, 1, 0)
-        btnDel.Position = UDim2.new(0.5, 6, 0, 0)
     end
 end
 
@@ -770,28 +790,39 @@ wpBox.ClearTextOnFocus = false
 wpBox.Parent = WaypointsScroll
 Instance.new("UICorner", wpBox).CornerRadius = UDim.new(0, 6)
 
--- Botón para guardar waypoint
-createButton(WaypointsScroll, "Guardar Waypoint", function()
-    local name = wpBox.Text
-    if name == "" then
-        warn("[KS HUB] Ingresa un nombre para el waypoint")
-        return
-    end
+-- Botón para crear waypoint
+createButton(WaypointsScroll, "Crear Waypoint", function()
     local hrp = getHRP()
-    if not hrp then
-        warn("[KS HUB] No se pudo obtener HRP")
-        return
+    if hrp then
+        local name = wpBox.Text ~= "" and wpBox.Text or ("WP"..tostring(#savedWaypoints+1))
+        savedWaypoints[name] = hrp.Position
+        wpBox.Text = ""
+        refreshWaypoints()
+        createNotification("Waypoint '"..name.."' creado")
     end
-    savedWaypoints[name] = hrp.Position
+end)
+
+-- Botón para borrar todos
+local clearAllBtn = Instance.new("TextButton")
+clearAllBtn.Size = UDim2.new(1, 0, 0, 30)
+clearAllBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40) -- rojo
+clearAllBtn.Text = "Borrar TODOS los Waypoints"
+clearAllBtn.TextColor3 = Color3.new(1,1,1)
+clearAllBtn.Font = Enum.Font.GothamBold
+clearAllBtn.TextSize = 14
+clearAllBtn.Parent = WaypointsScroll
+Instance.new("UICorner", clearAllBtn).CornerRadius = UDim.new(0, 6)
+
+clearAllBtn.MouseButton1Click:Connect(function()
+    savedWaypoints = {}
     refreshWaypoints()
-    createNotification("Waypoint '"..name.."' guardado")
+    createNotification("Todos los waypoints borrados")
 end)
 
 -- Inicializar lista
 refreshWaypoints()
 
 print("[KS HUB] Parte 4 lista: Waypoints configurados")
-
 
 
 
