@@ -132,8 +132,11 @@ toggleSound.Volume = 0.75
 toggleSound.Parent = ToggleButton
 
 ----------------------------------------------------------
--- Contenedor de pestañas (tabs)
 ----------------------------------------------------------
+-- SISTEMA DE PESTAÑAS CORREGIDO (TabsBar + TabsContent)
+----------------------------------------------------------
+
+-- Contenedor de pestañas (barra superior)
 local TabsBar = Instance.new("Frame")
 TabsBar.Name = "TabsBar"
 TabsBar.Size = UDim2.new(1, 0, 0, 36)
@@ -143,17 +146,7 @@ TabsBar.BackgroundTransparency = 0.2
 TabsBar.BorderSizePixel = 0
 TabsBar.Parent = MainFrame
 
-local TabsContent = Instance.new("Frame")
-TabsContent.Name = "TabsContent"
-TabsContent.Size = UDim2.new(1, -10, 1, -36-10)
-TabsContent.Position = UDim2.new(0, 5, 0, 36+5)
-TabsContent.BackgroundTransparency = 1
-TabsContent.Parent = MainFrame
-
--- Botones de tabs
-local tabsList = {"Main","Teleport","Waypoints","Visual","Ajustes"}
-local Tabs = {}
-
+-- Layout horizontal para los botones de pestañas
 local tabsLayout = Instance.new("UIListLayout")
 tabsLayout.FillDirection = Enum.FillDirection.Horizontal
 tabsLayout.Padding = UDim.new(0, 6)
@@ -161,13 +154,28 @@ tabsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 tabsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 tabsLayout.Parent = TabsBar
 
+-- Contenedor de contenido de pestañas
+local TabsContent = Instance.new("Frame")
+TabsContent.Name = "TabsContent"
+TabsContent.Size = UDim2.new(1, -10, 1, -36-10)
+TabsContent.Position = UDim2.new(0, 5, 0, 36+5)
+TabsContent.BackgroundTransparency = 1
+TabsContent.Parent = MainFrame
+
+-- Lista de pestañas
+local tabsList = {"Main","Teleport","Waypoints","Visual","Ajustes"}
+local Tabs = {}
+
+-- Función para cambiar de pestaña
 local function switchTab(tabName)
     for name, frame in pairs(Tabs) do
         frame.Visible = (name == tabName)
     end
 end
 
+-- Crear pestañas y botones
 for _, name in ipairs(tabsList) do
+    -- Botón de pestaña
     local tabBtn = Instance.new("TextButton")
     tabBtn.Size = UDim2.new(0, 100, 1, 0)
     tabBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
@@ -180,6 +188,7 @@ for _, name in ipairs(tabsList) do
     tabBtn.Parent = TabsBar
     Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
 
+    -- Contenido de pestaña
     local page = Instance.new("Frame")
     page.Name = name
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -189,12 +198,13 @@ for _, name in ipairs(tabsList) do
 
     Tabs[name] = page
 
+    -- Activar pestaña al hacer clic
     tabBtn.MouseButton1Click:Connect(function()
-        toggleSound:Play()
         switchTab(name)
     end)
 end
 
+-- Activar pestaña inicial
 switchTab("Main")
 
 ----------------------------------------------------------
