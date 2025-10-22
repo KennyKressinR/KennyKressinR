@@ -136,14 +136,14 @@ toggleSound.Parent = ToggleButton
 -- openCloseSound, closeClickSound, toggleSound, anchored, initialPosition.
 ----------------------------------------------------------
 ----------------------------------------------------------
--- SISTEMA DE PESTAÑAS VERTICALES (Sidebar Izquierda)
+-- KS HUB – Parte 2: Pestañas, ToggleButton y Animaciones
 ----------------------------------------------------------
 
 -- Barra lateral de pestañas
 local TabsBar = Instance.new("Frame")
 TabsBar.Name = "TabsBar"
-TabsBar.Size = UDim2.new(0, 120, 1, -40) -- ancho fijo, alto total menos TopBar
-TabsBar.Position = UDim2.new(0, 0, 0, 40) -- debajo del TopBar
+TabsBar.Size = UDim2.new(0, 120, 1, -40)
+TabsBar.Position = UDim2.new(0, 0, 0, 40)
 TabsBar.BackgroundColor3 = Color3.fromRGB(22, 32, 52)
 TabsBar.BackgroundTransparency = 0.2
 TabsBar.BorderSizePixel = 0
@@ -156,10 +156,10 @@ tabsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 tabsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 tabsLayout.Parent = TabsBar
 
--- Contenedor de contenido de pestañas (a la derecha)
+-- Contenedor de contenido de pestañas
 local TabsContent = Instance.new("Frame")
 TabsContent.Name = "TabsContent"
-TabsContent.Size = UDim2.new(1, -130, 1, -50) -- ocupa el resto del espacio
+TabsContent.Size = UDim2.new(1, -130, 1, -50)
 TabsContent.Position = UDim2.new(0, 130, 0, 45)
 TabsContent.BackgroundTransparency = 1
 TabsContent.Parent = MainFrame
@@ -207,20 +207,6 @@ end
 switchTab("Main")
 
 ----------------------------------------------------------
--- Funcionalidad de abrir/cerrar
-----------------------------------------------------------
--- Botón X
-CloseButton.MouseButton1Click:Connect(function()
-    closeClickSound:Play()
-    MainFrame.Visible = false
-end)
-
--- Botón flotante ≡
-ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-    toggleSound:Play()
-end)
-----------------------------------------------------------
 -- Animaciones de abrir/cerrar HUB
 ----------------------------------------------------------
 local function openHub()
@@ -228,7 +214,6 @@ local function openHub()
     MainFrame.BackgroundTransparency = 1
     MainFrame.Position = UDim2.new(0.5, -300, 0.5, -210)
 
-    -- Fade in y slide desde izquierda
     TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         BackgroundTransparency = 0.25
     }):Play()
@@ -238,7 +223,6 @@ local function openHub()
 end
 
 local function closeHub()
-    -- Slide a derecha + fade out
     local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Position = UDim2.new(0.5, 600, 0.5, -210),
         BackgroundTransparency = 1
@@ -246,14 +230,14 @@ local function closeHub()
     tween:Play()
     tween.Completed:Connect(function()
         MainFrame.Visible = false
-        MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210) -- reset
+        MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
     end)
 end
 
+----------------------------------------------------------
+-- Conexiones de botones y tecla
+----------------------------------------------------------
 ToggleButton.MouseButton1Click:Connect(function()
-    if anchored == false then
-        -- si está desanclado se puede mover el botón (drag en Parte 6)
-    end
     if not MainFrame.Visible then
         openHub()
     else
@@ -267,14 +251,25 @@ CloseButton.MouseButton1Click:Connect(function()
     closeHub()
 end)
 
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.F4 then
+        if not MainFrame.Visible then
+            openHub()
+        else
+            closeHub()
+        end
+        openCloseSound:Play()
+    end
+end)
+
 ----------------------------------------------------------
--- Sistema de notificaciones flotantes (contenedor + función)
--- Posición configurable en Parte 6 (selector)
+-- Sistema de notificaciones flotantes
 ----------------------------------------------------------
 local notifyFrame = Instance.new("Frame")
 notifyFrame.Name = "NotifyFrame"
 notifyFrame.Size = UDim2.new(0, 300, 0, 200)
-notifyFrame.Position = UDim2.new(1, -310, 1, -210) -- por defecto: abajo derecha
+notifyFrame.Position = UDim2.new(1, -310, 1, -210)
 notifyFrame.BackgroundTransparency = 1
 notifyFrame.Parent = ScreenGui
 
@@ -305,6 +300,7 @@ local function createNotification(text)
         label:Destroy()
     end)
 end
+
 
 ----------------------------------------------------------
 -- Factories de UI: createButton y createToggleButton
