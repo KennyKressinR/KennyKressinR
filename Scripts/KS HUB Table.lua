@@ -625,6 +625,46 @@ print("[KS HUB] Parte 5 lista")
 
 ----------------------------------------------------------
 ----------------------------------------------------------
+-- [Bloque 5.5] Mostrar Coordenadas
+----------------------------------------------------------
+local coordsLabel = Instance.new("TextLabel")
+coordsLabel.Size = UDim2.new(1, 0, 0, 24)
+coordsLabel.Position = UDim2.new(0, 0, 0, 0)
+coordsLabel.BackgroundTransparency = 1
+coordsLabel.TextColor3 = Color3.new(1, 1, 1)
+coordsLabel.Font = Enum.Font.Gotham
+coordsLabel.TextSize = 14
+coordsLabel.Text = ""
+coordsLabel.Visible = false
+coordsLabel.Parent = Tabs["Visual"]
+
+local coordsConnection
+createToggleButton(Tabs["Visual"], "Mostrar Coordenadas", "coordsEnabled",
+    function() -- ON
+        coordsLabel.Visible = true
+        coordsConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                coordsLabel.Text = string.format("X: %.1f | Y: %.1f | Z: %.1f", pos.X, pos.Y, pos.Z)
+            end
+        end)
+        print("[KS HUB] Coordenadas ON")
+    end,
+    function() -- OFF
+        coordsLabel.Visible = false
+        coordsLabel.Text = ""
+        if coordsConnection then
+            coordsConnection:Disconnect()
+            coordsConnection = nil
+        end
+        print("[KS HUB] Coordenadas OFF")
+    end
+)
+
+print("[KS HUB] Parte 5 lista")
+`
+----------------------------------------------------------
 -- PARTE 6: AJUSTES
 ----------------------------------------------------------
 
