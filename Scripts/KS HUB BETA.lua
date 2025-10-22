@@ -395,7 +395,7 @@ end
 -- Adjuntar scroll a todas las pestañas
 local MainScroll = attachScrolling(Tabs["Main"])
 local TeleportScroll = attachScrolling(Tabs["Teleport"])
-local WaypointsScroll = attachScrolling(Tabs["Waypoints"])
+local WaypointsScroll = attachScrolling(Tabs["Waypoints"]) -- 👈 aquí estaba mal escrito
 local VisualScroll = attachScrolling(Tabs["Visual"])
 local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 
@@ -403,10 +403,60 @@ local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 ----------------------------------------------------------
 -- Parte 3: Botones dentro de cada pestaña
 ----------------------------------------------------------
+----------------------------------------------------------
+-- Parte 3: Botones dentro de cada pestaña
+----------------------------------------------------------
 
 ----------------------------------------------------------
 -- MAIN
 ----------------------------------------------------------
+
+-- Título: Movimiento
+local movLabel = Instance.new("TextLabel")
+movLabel.Size = UDim2.new(0.9, 0, 0, 28)
+movLabel.BackgroundTransparency = 1
+movLabel.Text = "Movimiento"
+movLabel.TextColor3 = Color3.fromRGB(200,200,200)
+movLabel.Font = Enum.Font.GothamBold
+movLabel.TextSize = 16
+movLabel.Parent = MainScroll
+
+-- WalkSpeed +
+createButton(MainScroll, "WalkSpeed +", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed += 5
+        createNotification("WalkSpeed: "..hum.WalkSpeed)
+    end
+end)
+
+-- WalkSpeed -
+createButton(MainScroll, "WalkSpeed -", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed -= 5
+        createNotification("WalkSpeed: "..hum.WalkSpeed)
+    end
+end)
+
+-- JumpPower +
+createButton(MainScroll, "JumpPower +", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.JumpPower += 10
+        createNotification("JumpPower: "..hum.JumpPower)
+    end
+end)
+
+-- JumpPower -
+createButton(MainScroll, "JumpPower -", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.JumpPower -= 10
+        createNotification("JumpPower: "..hum.JumpPower)
+    end
+end)
+
 -- Noclip
 createToggleButton(MainScroll, "Noclip", "noclipEnabled",
     function()
@@ -426,25 +476,7 @@ createToggleButton(MainScroll, "Noclip", "noclipEnabled",
     end
 )
 
--- WalkSpeed
-createButton(MainScroll, "WalkSpeed +", function()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed = hum.WalkSpeed + 5
-        createNotification("WalkSpeed: "..hum.WalkSpeed)
-    end
-end)
-
--- JumpPower
-createButton(MainScroll, "JumpPower +", function()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.JumpPower = hum.JumpPower + 10
-        createNotification("JumpPower: "..hum.JumpPower)
-    end
-end)
-
--- AntiDelay Touch interact
+-- AntiDelay Touch
 local antiDelayConnection
 createToggleButton(MainScroll, "Anti Delay Touch", "antiDelayEnabled",
     function()
@@ -469,20 +501,41 @@ createToggleButton(MainScroll, "Anti Delay Touch", "antiDelayEnabled",
     end
 )
 
+----------------------------------------------------------
+-- ESP General
+----------------------------------------------------------
+local espLabel = Instance.new("TextLabel")
+espLabel.Size = UDim2.new(0.9, 0, 0, 28)
+espLabel.BackgroundTransparency = 1
+espLabel.Text = "ESP General"
+espLabel.TextColor3 = Color3.fromRGB(200,200,200)
+espLabel.Font = Enum.Font.GothamBold
+espLabel.TextSize = 16
+espLabel.Parent = MainScroll
+
 -- ESP Jugadores
 createToggleButton(MainScroll, "ESP Jugadores", "espEnabled",
-    function()
-        createNotification("ESP Jugadores ON")
-    end,
-    function()
-        createNotification("ESP Jugadores OFF")
-    end
+    function() createNotification("ESP Jugadores ON") end,
+    function() createNotification("ESP Jugadores OFF") end
 )
 
--- ESP Items
+-- ESP Items con TextBox
+local espItemsBox = Instance.new("TextBox")
+espItemsBox.Size = UDim2.new(0.9, 0, 0, 32)
+espItemsBox.PlaceholderText = "Nombre parcial del item..."
+espItemsBox.Text = ""
+espItemsBox.Font = Enum.Font.Gotham
+espItemsBox.TextSize = 14
+espItemsBox.TextColor3 = Color3.new(1,1,1)
+espItemsBox.BackgroundColor3 = Color3.fromRGB(40, 60, 100)
+espItemsBox.Parent = MainScroll
+Instance.new("UICorner", espItemsBox).CornerRadius = UDim.new(0, 8)
+
 createToggleButton(MainScroll, "ESP Items", "espItemsEnabled",
     function()
-        createNotification("ESP Items ON")
+        local query = espItemsBox.Text
+        createNotification("ESP Items ON: "..query)
+        -- Aquí iría tu lógica de ESP filtrando por query
     end,
     function()
         createNotification("ESP Items OFF")
@@ -491,32 +544,20 @@ createToggleButton(MainScroll, "ESP Items", "espItemsEnabled",
 
 -- Aura Collect
 createToggleButton(MainScroll, "Aura Collect", "auraCollectEnabled",
-    function()
-        createNotification("Aura Collect ON")
-    end,
-    function()
-        createNotification("Aura Collect OFF")
-    end
+    function() createNotification("Aura Collect ON") end,
+    function() createNotification("Aura Collect OFF") end
 )
 
 -- Mostrar Coordenadas
 createToggleButton(MainScroll, "Mostrar Coordenadas", "coordsEnabled",
-    function()
-        createNotification("Coords ON")
-    end,
-    function()
-        createNotification("Coords OFF")
-    end
+    function() createNotification("Coords ON") end,
+    function() createNotification("Coords OFF") end
 )
 
 -- Chams
 createToggleButton(MainScroll, "Chams", "chamsEnabled",
-    function()
-        createNotification("Chams ON")
-    end,
-    function()
-        createNotification("Chams OFF")
-    end
+    function() createNotification("Chams ON") end,
+    function() createNotification("Chams OFF") end
 )
 
 -- Arrastrar HUB
@@ -545,25 +586,38 @@ createButton(TeleportScroll, "Ir al Spawn", function()
 end)
 
 ----------------------------------------------------------
+----------------------------------------------------------
 -- WAYPOINTS
 ----------------------------------------------------------
 local waypoints = {}
 
--- Botón para crear un waypoint
+-- TextBox para nombre de waypoint
+local wpNameBox = Instance.new("TextBox")
+wpNameBox.Size = UDim2.new(0.9, 0, 0, 32)
+wpNameBox.PlaceholderText = "Nombre del Waypoint..."
+wpNameBox.Text = ""
+wpNameBox.Font = Enum.Font.Gotham
+wpNameBox.TextSize = 14
+wpNameBox.TextColor3 = Color3.new(1,1,1)
+wpNameBox.BackgroundColor3 = Color3.fromRGB(40, 60, 100)
+wpNameBox.Parent = WaypointsScroll
+Instance.new("UICorner", wpNameBox).CornerRadius = UDim.new(0, 8)
+
+-- Botón para crear un waypoint con nombre
 createButton(WaypointsScroll, "Crear Waypoint", function()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if hrp then
         local pos = hrp.Position
-        table.insert(waypoints, pos)
-        createNotification("Waypoint creado en "..math.floor(pos.X)..","..math.floor(pos.Y)..","..math.floor(pos.Z))
-        
+        local name = wpNameBox.Text ~= "" and wpNameBox.Text or ("Waypoint "..tostring(#waypoints+1))
+        table.insert(waypoints, {Name = name, Position = pos})
+        createNotification("Waypoint '"..name.."' creado")
+
         -- Crear botón dinámico para teletransportar
-        local wpIndex = #waypoints
-        createButton(WaypointsScroll, "Ir a Waypoint "..wpIndex, function()
+        createButton(WaypointsScroll, "Ir a "..name, function()
             local char = LocalPlayer.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
-                char:MoveTo(waypoints[wpIndex])
-                createNotification("Teletransportado al Waypoint "..wpIndex)
+                char:MoveTo(pos)
+                createNotification("Teletransportado a "..name)
             end
         end)
     end
@@ -572,6 +626,16 @@ end)
 ----------------------------------------------------------
 -- VISUAL
 ----------------------------------------------------------
+local visLabel = Instance.new("TextLabel")
+visLabel.Size = UDim2.new(0.9, 0, 0, 28)
+visLabel.BackgroundTransparency = 1
+visLabel.Text = "Visual"
+visLabel.TextColor3 = Color3.fromRGB(200,200,200)
+visLabel.Font = Enum.Font.GothamBold
+visLabel.TextSize = 16
+visLabel.Parent = VisualScroll
+
+-- Full Bright
 createToggleButton(VisualScroll, "Full Bright", "fullBrightEnabled",
     function()
         Lighting.Brightness = 2
@@ -590,6 +654,16 @@ createToggleButton(VisualScroll, "Full Bright", "fullBrightEnabled",
 ----------------------------------------------------------
 -- AJUSTES
 ----------------------------------------------------------
+local setLabel = Instance.new("TextLabel")
+setLabel.Size = UDim2.new(0.9, 0, 0, 28)
+setLabel.BackgroundTransparency = 1
+setLabel.Text = "Ajustes"
+setLabel.TextColor3 = Color3.fromRGB(200,200,200)
+setLabel.Font = Enum.Font.GothamBold
+setLabel.TextSize = 16
+setLabel.Parent = AjustesScroll
+
+-- Cerrar HUB
 createButton(AjustesScroll, "Cerrar HUB", function()
     closeHub()
     createNotification("HUB cerrado")
