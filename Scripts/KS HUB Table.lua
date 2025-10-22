@@ -12,9 +12,6 @@ print("[KS HUB] Parte 1 lista")
 ----------------------------------------------------------
 -- PARTE 2: INTERFAZ PRINCIPAL
 ----------------------------------------------------------
-----------------------------------------------------------
--- PARTE 2: INTERFAZ PRINCIPAL
-----------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
@@ -663,7 +660,7 @@ createToggleButton(Tabs["Visual"], "Mostrar Coordenadas", "coordsEnabled",
 )
 
 print("[KS HUB] Parte 5 lista")
-`
+
 ----------------------------------------------------------
 -- PARTE 6: AJUSTES
 ----------------------------------------------------------
