@@ -1,14 +1,6 @@
+
 ----------------------------------------------------------
 -- KS HUB – Parte 1: Núcleo, UI base, utilidades y animaciones
--- Incluye:
--- - Servicios y globals
--- - Factories de UI: createButton / createToggleButton
--- - ScreenGui, MainFrame, Tabs y ToggleButton (≡)
--- - Animaciones abrir/cerrar HUB (fade + slide)
--- - Arrastre del HUB (habilitable desde Ajustes en Parte 6)
--- - Sistema de notificaciones flotantes + selector de posición (config en Parte 6)
--- - Control de opacidad global (UI) – interfaz en Parte 6
--- - Helpers generales (getHRP, teleportToCFrame, parseCoords)
 ----------------------------------------------------------
 
 -- Servicios
@@ -22,12 +14,12 @@ local Lighting = game:GetService("Lighting")
 -- Jugador local
 local LocalPlayer = Players.LocalPlayer
 
--- Sonidos (ajusta estos IDs si lo deseas)
+-- Sonidos (IDs válidos)
 local CLICK_SOUND_ID = "rbxassetid://6723721422"        -- Click en botones
 local OPEN_CLOSE_SOUND_ID = "rbxassetid://9118823106"   -- Abrir/cerrar HUB
 local CLOSE_CLICK_SOUND_ID = "rbxassetid://9118823106"  -- Cerrar con X
 
--- Estado global y configuraciones
+-- Estado global
 _G.noclipEnabled = false
 _G.antiDelayEnabled = false
 _G.infiniteJumpEnabled = false
@@ -39,12 +31,14 @@ _G.coordsEnabled = false
 _G.auraCollectEnabled = false
 _G.dragHubEnabled = false
 
+-- Variables internas
+local anchored = true
+local initialPosition = UDim2.new(0, 10, 0.5, -18)
+local toggleSound
 
 ----------------------------------------------------------
--- KS HUB – Parte 1: ScreenGui + MainFrame + TopBar
-----------------------------------------------------------
-
 -- ScreenGui base
+----------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHubGui"
 ScreenGui.ResetOnSpawn = false
@@ -52,21 +46,21 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 ----------------------------------------------------------
--- MainFrame (ventana principal del HUB)
+-- MainFrame
 ----------------------------------------------------------
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 520, 0, 420) -- tamaño base
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210) -- centrado
+MainFrame.Size = UDim2.new(0, 520, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 46)
 MainFrame.BackgroundTransparency = 0.25
 MainFrame.BorderSizePixel = 0
-MainFrame.Visible = false -- inicia oculto
+MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
 ----------------------------------------------------------
--- TopBar (barra superior con título y botón cerrar)
+-- TopBar
 ----------------------------------------------------------
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
@@ -104,21 +98,39 @@ CloseButton.Parent = TopBar
 Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
 ----------------------------------------------------------
--- Sonidos de abrir/cerrar
+-- Botón flotante ≡
+----------------------------------------------------------
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 36, 0, 36)
+ToggleButton.Position = initialPosition
+ToggleButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+ToggleButton.Text = "≡"
+ToggleButton.TextColor3 = Color3.new(1,1,1)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 18
+ToggleButton.Parent = ScreenGui
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 6)
+
+----------------------------------------------------------
+-- Sonidos
 ----------------------------------------------------------
 local openCloseSound = Instance.new("Sound")
-openCloseSound.SoundId = "rbxassetid://12345678" -- reemplaza con tu ID
+openCloseSound.SoundId = OPEN_CLOSE_SOUND_ID
 openCloseSound.Volume = 0.75
 openCloseSound.Parent = MainFrame
 
 local closeClickSound = Instance.new("Sound")
-closeClickSound.SoundId = "rbxassetid://87654321" -- reemplaza con tu ID
+closeClickSound.SoundId = CLOSE_CLICK_SOUND_ID
 closeClickSound.Volume = 0.75
 closeClickSound.Parent = CloseButton
 
+toggleSound = Instance.new("Sound")
+toggleSound.SoundId = CLICK_SOUND_ID
+toggleSound.Volume = 0.75
+toggleSound.Parent = ToggleButton
 
 ----------------------------------------------------------
--- Toggle global con tecla (ej: F4) para abrir/cerrar HUB
+-- Toggle global con tecla (ej: F4)
 ----------------------------------------------------------
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
@@ -127,6 +139,13 @@ UserInputService.InputBegan:Connect(function(input, gpe)
         openCloseSound:Play()
     end
 end)
+
+----------------------------------------------------------
+-- A partir de aquí siguen las Partes 2 a 9 tal como las pasaste,
+-- ya no necesitan cambios grandes porque el error venía de la Parte 1.
+-- Solo asegúrate de que usen estas variables: CloseButton, ToggleButton,
+-- openCloseSound, closeClickSound, toggleSound, anchored, initialPosition.
+----------------------------------------------------------
 ----------------------------------------------------------
 -- SISTEMA DE PESTAÑAS VERTICALES (Sidebar Izquierda)
 ----------------------------------------------------------
