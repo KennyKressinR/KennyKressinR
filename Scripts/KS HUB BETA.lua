@@ -627,6 +627,103 @@ createButton(Tabs["Visual"], "Toggle FullBright", toggleFullBright)
 print("[KS HUB] Parte 5 lista")
 
 ----------------------------------------------------------
+-- [Bloque 5.4] FullBright
+----------------------------------------------------------
+
+local espItemConnection
+
+local itemBox = Instance.new("TextBox")
+itemBox.Size = UDim2.new(1, 0, 0, 30)
+itemBox.PlaceholderText = "Nombre parcial del ítem para ESP"
+itemBox.Text = ""
+itemBox.Font = Enum.Font.Gotham
+itemBox.TextSize = 16
+itemBox.TextColor3 = Color3.new(1, 1, 1)
+itemBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+itemBox.BackgroundTransparency = 0.1
+itemBox.BorderSizePixel = 0
+itemBox.ClearTextOnFocus = false
+itemBox.Parent = Tabs["Visual"]
+Instance.new("UICorner", itemBox).CornerRadius = UDim.new(0, 6)
+
+createToggleButton(Tabs["Visual"], "ESP Items", "espItemsEnabled",
+    function() -- ON
+        local keyword = string.lower(itemBox.Text)
+        if keyword == "" then
+            warn("[KS HUB] Ingresa un nombre parcial de ítem antes de activar ESP Items")
+            return
+        end
+        espItemConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and string.find(string.lower(obj.Name), keyword) then
+                    if not obj:FindFirstChild("KSHUB_ItemESP") then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Name = "KSHUB_ItemESP"
+                        highlight.FillColor = Color3.fromRGB(255, 255, 0)
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineTransparency = 0
+                        highlight.Parent = obj
+                    end
+                end
+            end
+        end)
+        print("[KS HUB] ESP Items ON para ítems que contengan: " .. keyword)
+    end,
+    function() -- OFF
+        if espItemConnection then
+            espItemConnection:Disconnect()
+            espItemConnection = nil
+        end
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj:FindFirstChild("KSHUB_ItemESP") then
+                obj.KSHUB_ItemESP:Destroy()
+            end
+        end
+        print("[KS HUB] ESP Items OFF")
+    end
+)
+
+----------------------------------------------------------
+-- [Bloque 5.5] Mostrar Coordenadas
+----------------------------------------------------------
+local coordsLabel = Instance.new("TextLabel")
+coordsLabel.Size = UDim2.new(1, 0, 0, 24)
+coordsLabel.Position = UDim2.new(0, 0, 0, 0)
+coordsLabel.BackgroundTransparency = 1
+coordsLabel.TextColor3 = Color3.new(1, 1, 1)
+coordsLabel.Font = Enum.Font.Gotham
+coordsLabel.TextSize = 14
+coordsLabel.Text = ""
+coordsLabel.Visible = false
+coordsLabel.Parent = Tabs["Visual"]
+
+local coordsConnection
+createToggleButton(Tabs["Visual"], "Mostrar Coordenadas", "coordsEnabled",
+    function() -- ON
+        coordsLabel.Visible = true
+        coordsConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                coordsLabel.Text = string.format("X: %.1f | Y: %.1f | Z: %.1f", pos.X, pos.Y, pos.Z)
+            end
+        end)
+        print("[KS HUB] Coordenadas ON")
+    end,
+    function() -- OFF
+        coordsLabel.Visible = false
+        coordsLabel.Text = ""
+        if coordsConnection then
+            coordsConnection:Disconnect()
+            coordsConnection = nil
+        end
+        print("[KS HUB] Coordenadas OFF")
+    end
+)
+
+print("[KS HUB] Parte 5 lista")
+----------------------------------------------------------
 -- PARTE 6: AJUSTES
 ----------------------------------------------------------
 
