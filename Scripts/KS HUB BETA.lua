@@ -420,25 +420,34 @@ local function offDragHub()
 end
 
 ----------------------------------------------------------
--- Control de Opacidad Global (aplicador)
--- El input para cambiarla está en Parte 6 (Ajustes)
+----------------------------------------------------------
+-- Control de Opacidad Global (con mínimos)
 ----------------------------------------------------------
 local function setGlobalOpacity(alpha)
+    -- alpha = 0 (transparente) → 1 (opaco)
     local function applyTransparency(obj)
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("TextBox") or obj:IsA("TextLabel") then
-            obj.BackgroundTransparency = 1 - alpha
+            -- Fondo: mínimo 0.1
+            local bgTrans = 1 - alpha
+            if bgTrans < 0.1 then bgTrans = 0.1 end
+            obj.BackgroundTransparency = bgTrans
+
+            -- Texto: mínimo 0.2
             if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                obj.TextTransparency = 1 - alpha
+                local txtTrans = 1 - alpha
+                if txtTrans < 0.2 then txtTrans = 0.2 end
+                obj.TextTransparency = txtTrans
             end
         end
+
         for _, child in ipairs(obj:GetChildren()) do
             applyTransparency(child)
         end
     end
+
     applyTransparency(MainFrame)
     applyTransparency(ToggleButton)
 end
-
 ----------------------------------------------------------
 -- Helpers de gameplay (usados en Teleport y otros)
 ----------------------------------------------------------
