@@ -130,17 +130,6 @@ toggleSound.Volume = 0.75
 toggleSound.Parent = ToggleButton
 
 ----------------------------------------------------------
--- Toggle global con tecla (ej: F4)
-----------------------------------------------------------
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
-    if input.KeyCode == Enum.KeyCode.F4 then
-        MainFrame.Visible = not MainFrame.Visible
-        openCloseSound:Play()
-    end
-end)
-
-----------------------------------------------------------
 -- A partir de aquí siguen las Partes 2 a 9 tal como las pasaste,
 -- ya no necesitan cambios grandes porque el error venía de la Parte 1.
 -- Solo asegúrate de que usen estas variables: CloseButton, ToggleButton,
