@@ -136,7 +136,7 @@ toggleSound.Parent = ToggleButton
 -- openCloseSound, closeClickSound, toggleSound, anchored, initialPosition.
 ----------------------------------------------------------
 ----------------------------------------------------------
--- KS HUB – Parte 2: Pestañas, ToggleButton y Animaciones
+-- KS HUB – Parte 2: Pestañas, ToggleButton, Animaciones y Notificaciones
 ----------------------------------------------------------
 
 -- Barra lateral de pestañas
@@ -300,6 +300,43 @@ local function createNotification(text)
         label:Destroy()
     end)
 end
+
+----------------------------------------------------------
+-- Función attachScrolling con padding y centrado
+----------------------------------------------------------
+local function attachScrolling(parentPage)
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, 0, 1, 0)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.ScrollBarThickness = 6
+    scroll.BackgroundTransparency = 1
+    scroll.Parent = parentPage
+
+    -- Layout de los elementos
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 6) -- espacio entre botones
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- centra horizontalmente
+    layout.Parent = scroll
+
+    -- Padding interno (márgenes dentro del scroll)
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 8)
+    padding.PaddingBottom = UDim.new(0, 8)
+    padding.PaddingLeft = UDim.new(0, 12)
+    padding.PaddingRight = UDim.new(0, 12)
+    padding.Parent = scroll
+
+    return scroll
+end
+
+-- Adjuntar scroll a todas las pestañas
+local MainScroll = attachScrolling(Tabs["Main"])
+local TeleportScroll = attachScrolling(Tabs["Teleport"])
+local WaypointsScroll = attachScrolling(Tabs["Waypoints"])
+local VisualScroll = attachScrolling(Tabs["Visual"])
+local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 
 
 ----------------------------------------------------------
