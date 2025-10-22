@@ -581,7 +581,107 @@ end)
 -- VISUAL
 ----------------------------------------------------------
 local visLabel = Instance.new("TextLabel")
-visLabel.Size = UDim2.new(0
+visLabel.Size = UDim2.new(0.9, 0, 0, 28)
+visLabel.BackgroundTransparency = 1
+visLabel.Text = "Visual"
+visLabel.TextColor3 = Color3.fromRGB(200,200,200)
+visLabel.Font = Enum.Font.GothamBold
+visLabel.TextSize = 16
+visLabel.Parent = VisualScroll
+
+-- Full Bright
+createToggleButton(VisualScroll, "Full Bright", "fullBrightEnabled",
+    function()
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 100000
+        Lighting.GlobalShadows = false
+        Lighting.OutdoorAmbient = Color3.new(1,1,1)
+        createNotification("Full Bright ON")
+    end,
+    function()
+        Lighting.GlobalShadows = true
+        createNotification("Full Bright OFF")
+    end
+)
+
+----------------------------------------------------------
+-- AJUSTES
+----------------------------------------------------------
+local setLabel = Instance.new("TextLabel")
+setLabel.Size = UDim2.new(0.9, 0, 0, 28)
+setLabel.BackgroundTransparency = 1
+setLabel.Text = "Ajustes"
+setLabel.TextColor3 = Color3.fromRGB(200,200,200)
+setLabel.Font = Enum.Font.GothamBold
+setLabel.TextSize = 16
+setLabel.Parent = AjustesScroll
+
+-- Slider de Opacidad
+local opacityLabel = Instance.new("TextLabel")
+opacityLabel.Size = UDim2.new(0.9, 0, 0, 24)
+opacityLabel.BackgroundTransparency = 1
+opacityLabel.Text = "Opacidad del HUB"
+opacityLabel.TextColor3 = Color3.fromRGB(220,220,220)
+opacityLabel.Font = Enum.Font.Gotham
+opacityLabel.TextSize = 14
+opacityLabel.Parent = AjustesScroll
+
+local opacitySlider = Instance.new("Frame")
+opacitySlider.Size = UDim2.new(0.9, 0, 0, 32)
+opacitySlider.BackgroundColor3 = Color3.fromRGB(60, 90, 140)
+opacitySlider.Parent = AjustesScroll
+Instance.new("UICorner", opacitySlider).CornerRadius = UDim.new(0, 8)
+
+local sliderBar = Instance.new("Frame")
+sliderBar.Size = UDim2.new(0.8, 0, 0.3, 0)
+sliderBar.Position = UDim2.new(0.1, 0, 0.35, 0)
+sliderBar.BackgroundColor3 = Color3.fromRGB(100, 120, 180)
+sliderBar.Parent = opacitySlider
+Instance.new("UICorner", sliderBar).CornerRadius = UDim.new(0, 4)
+
+local sliderKnob = Instance.new("Frame")
+sliderKnob.Size = UDim2.new(0, 12, 1.5, 0)
+sliderKnob.Position = UDim2.new(0.25, -6, -0.25, 0)
+sliderKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 255)
+sliderKnob.Parent = sliderBar
+Instance.new("UICorner", sliderKnob).CornerRadius = UDim.new(1, 0)
+
+local dragging = false
+local minTransparency, maxTransparency = 0.2, 0.8
+local function updateTransparency(xPos)
+    local barAbsPos = sliderBar.AbsolutePosition.X
+    local barAbsSize = sliderBar.AbsoluteSize.X
+    local ratio = math.clamp((xPos - barAbsPos) / barAbsSize, 0, 1)
+    sliderKnob.Position = UDim2.new(ratio, -6, -0.25, 0)
+    local transparency = minTransparency + (maxTransparency - minTransparency) * ratio
+    MainFrame.BackgroundTransparency = transparency
+    TopBar.BackgroundTransparency = transparency
+end
+
+sliderKnob.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+    end
+end)
+
+sliderKnob.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        updateTransparency(input.Position.X)
+    end
+end)
+
+-- Botón para cerrar HUB
+createButton(AjustesScroll, "Cerrar HUB", function()
+    closeHub()
+    createNotification("HUB cerrado")
+end)
 ----------------------------------------------------------
 ----------------------------------------------------------
 -- KS HUB – Parte 4: Waypoints (versión final mejorada)
