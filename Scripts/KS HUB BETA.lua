@@ -133,20 +133,19 @@ toggleSound.Parent = ToggleButton
 
 ----------------------------------------------------------
 ----------------------------------------------------------
--- SISTEMA DE PESTAÑAS CORREGIDO (TabsBar + TabsContent)
+-- SISTEMA DE PESTAÑAS CORREGIDO CON ESPACIO INTERNO
 ----------------------------------------------------------
 
--- Contenedor de pestañas (barra superior)
+-- Barra de pestañas (debajo del TopBar)
 local TabsBar = Instance.new("Frame")
 TabsBar.Name = "TabsBar"
-TabsBar.Size = UDim2.new(1, 0, 0, 36)
-TabsBar.Position = UDim2.new(0, 0, 0, 36)
+TabsBar.Size = UDim2.new(1, -10, 0, 36)
+TabsBar.Position = UDim2.new(0, 5, 0, 40) -- debajo del TopBar
 TabsBar.BackgroundColor3 = Color3.fromRGB(22, 32, 52)
 TabsBar.BackgroundTransparency = 0.2
 TabsBar.BorderSizePixel = 0
 TabsBar.Parent = MainFrame
 
--- Layout horizontal para los botones de pestañas
 local tabsLayout = Instance.new("UIListLayout")
 tabsLayout.FillDirection = Enum.FillDirection.Horizontal
 tabsLayout.Padding = UDim.new(0, 6)
@@ -157,8 +156,8 @@ tabsLayout.Parent = TabsBar
 -- Contenedor de contenido de pestañas
 local TabsContent = Instance.new("Frame")
 TabsContent.Name = "TabsContent"
-TabsContent.Size = UDim2.new(1, -10, 1, -36-10)
-TabsContent.Position = UDim2.new(0, 5, 0, 36+5)
+TabsContent.Size = UDim2.new(1, -10, 1, -90) -- ocupa todo el espacio restante
+TabsContent.Position = UDim2.new(0, 5, 0, 80) -- debajo de TabsBar
 TabsContent.BackgroundTransparency = 1
 TabsContent.Parent = MainFrame
 
@@ -175,7 +174,6 @@ end
 
 -- Crear pestañas y botones
 for _, name in ipairs(tabsList) do
-    -- Botón de pestaña
     local tabBtn = Instance.new("TextButton")
     tabBtn.Size = UDim2.new(0, 100, 1, 0)
     tabBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
@@ -188,7 +186,6 @@ for _, name in ipairs(tabsList) do
     tabBtn.Parent = TabsBar
     Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
 
-    -- Contenido de pestaña
     local page = Instance.new("Frame")
     page.Name = name
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -198,7 +195,6 @@ for _, name in ipairs(tabsList) do
 
     Tabs[name] = page
 
-    -- Activar pestaña al hacer clic
     tabBtn.MouseButton1Click:Connect(function()
         switchTab(name)
     end)
