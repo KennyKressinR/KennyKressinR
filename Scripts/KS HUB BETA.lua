@@ -41,14 +41,8 @@ _G.dragHubEnabled = false
 
 
 ----------------------------------------------------------
-----------------------------------------------------------
 -- KS HUB – Parte 1: ScreenGui + MainFrame + TopBar
 ----------------------------------------------------------
-
--- Referencia al jugador local
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
 
 -- ScreenGui base
 local ScreenGui = Instance.new("ScreenGui")
