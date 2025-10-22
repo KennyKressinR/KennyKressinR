@@ -12,11 +12,19 @@ print("[KS HUB] Parte 1 lista")
 ----------------------------------------------------------
 -- PARTE 2: INTERFAZ PRINCIPAL
 ----------------------------------------------------------
+----------------------------------------------------------
+-- PARTE 2: INTERFAZ PRINCIPAL
+----------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Config de sonidos
+local OPEN_CLOSE_SOUND_ID = "rbxassetid://77300603936003" -- ✅ Sonido abrir/cerrar HUB
+local CLICK_SOUND_ID = "rbxassetid://9120507525"          -- Sonido genérico de click
+
+-- Marco principal
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
@@ -41,7 +49,36 @@ ToggleButton.BorderSizePixel = 0
 ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
+-- 🔊 Sonido abrir/cerrar HUB
+local openCloseSound = Instance.new("Sound")
+openCloseSound.SoundId = OPEN_CLOSE_SOUND_ID
+openCloseSound.Volume = 1
+openCloseSound.Parent = ToggleButton
+
 anchored, initialPosition = true, ToggleButton.Position
+
+-- Botón X (cerrar HUB)
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 32, 0, 32)
+CloseButton.Position = UDim2.new(1, -40, 0, 8)
+CloseButton.Text = "X"
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 16
+CloseButton.TextColor3 = Color3.new(1, 1, 1)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+CloseButton.BackgroundTransparency = 0.1
+CloseButton.BorderSizePixel = 0
+CloseButton.Parent = MainFrame
+Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(1, 0)
+
+local closeClickSound = Instance.new("Sound")
+closeClickSound.SoundId = CLICK_SOUND_ID
+closeClickSound.Volume = 1
+closeClickSound.Parent = CloseButton
+CloseButton.MouseButton1Click:Connect(function()
+    closeClickSound:Play()
+    MainFrame.Visible = false
+end)
 
 -- Contenedor de pestañas
 local TabContainer = Instance.new("Frame")
@@ -100,10 +137,66 @@ createTab("Visual")
 createTab("Ajustes")
 createTab("Waypoints")
 
--- Toggle HUB
+-- Toggle HUB con sonido abrir/cerrar
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
+    openCloseSound:Play()
 end)
+
+----------------------------------------------------------
+-- Arrastre del HUB y del botón Toggle (cuando NO está anclado)
+----------------------------------------------------------
+local draggingMain, dragStartMain, startPosMain
+local draggingToggle, dragStartToggle, startPosToggle
+
+local function enableDraggingMain(frame)
+    frame.InputBegan:Connect(function(input)
+        if anchored then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingMain = true
+            dragStartMain = input.Position
+            startPosMain = frame.Position
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if anchored then return end
+        if draggingMain and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStartMain
+            frame.Position = UDim2.new(startPosMain.X.Scale, startPosMain.X.Offset + delta.X, startPosMain.Y.Scale, startPosMain.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingMain = false
+        end
+    end)
+end
+
+local function enableDraggingToggle(button)
+    button.InputBegan:Connect(function(input)
+        if anchored then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingToggle = true
+            dragStartToggle = input.Position
+            startPosToggle = button.Position
+        end
+    end)
+    button.InputChanged:Connect(function(input)
+        if anchored then return end
+        if draggingToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStartToggle
+            button.Position = UDim2.new(startPosToggle.X.Scale, startPosToggle.X.Offset + delta.X, startPosToggle.Y.Scale, startPosToggle.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingToggle = false
+        end
+    end)
+end
+
+enableDraggingMain(MainFrame)
+enableDraggingToggle(ToggleButton)
 
 ----------------------------------------------------------
 -- Funciones para crear botones
