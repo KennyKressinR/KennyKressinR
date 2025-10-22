@@ -351,19 +351,18 @@ local function attachClickSound(guiObject)
     s.Parent = guiObject
     return s
 end
-
 function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 36)
+    button.Size = UDim2.new(0.9, 0, 0, 32) -- más estrecho y compacto
     button.Text = text
     button.Font = Enum.Font.Gotham
-    button.TextSize = 16
+    button.TextSize = 14
     button.TextColor3 = Color3.new(1, 1, 1)
     button.BackgroundColor3 = Color3.fromRGB(60, 140, 220)
     button.BackgroundTransparency = 0.1
     button.BorderSizePixel = 0
     button.Parent = parent
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
 
     local clickSound = attachClickSound(button)
     button.MouseButton1Click:Connect(function()
