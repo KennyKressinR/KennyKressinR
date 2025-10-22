@@ -131,6 +131,68 @@ toggleSound.Volume = 0.75
 toggleSound.Parent = ToggleButton
 
 ----------------------------------------------------------
+-- Funciones para crear botones
+----------------------------------------------------------
+
+-- Botón simple
+local function createButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9, 0, 0, 32) -- más estrecho
+    button.Text = text
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 14
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.BackgroundColor3 = Color3.fromRGB(60, 140, 220)
+    button.BackgroundTransparency = 0.1
+    button.BorderSizePixel = 0
+    button.Parent = parent
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+    local clickSound = attachClickSound(button)
+    button.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        if callback then
+            local ok, err = pcall(callback)
+            if not ok then
+                warn("[KS HUB] Error en botón '"..text.."': ".. tostring(err))
+            end
+        end
+    end)
+
+    return button
+end
+
+-- Botón con toggle ON/OFF
+local function createToggleButton(parent, text, globalVarName, onFunc, offFunc)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9, 0, 0, 32) -- igual que createButton
+    button.BackgroundColor3 = Color3.fromRGB(60, 90, 140)
+    button.BackgroundTransparency = 0.1
+    button.BorderSizePixel = 0
+    button.Text = text.." [OFF]"
+    button.TextColor3 = Color3.new(1,1,1)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 14
+    button.Parent = parent
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+    button.MouseButton1Click:Connect(function()
+        toggleSound:Play()
+        _G[globalVarName] = not _G[globalVarName]
+        if _G[globalVarName] then
+            button.Text = text.." [ON]"
+            button.BackgroundColor3 = Color3.fromRGB(40, 120, 70)
+            if onFunc then onFunc() end
+        else
+            button.Text = text.." [OFF]"
+            button.BackgroundColor3 = Color3.fromRGB(60, 90, 140)
+            if offFunc then offFunc() end
+        end
+    end)
+
+    return button
+end
+----------------------------------------------------------
 -- A partir de aquí siguen las Partes 2 a 9 tal como las pasaste,
 -- ya no necesitan cambios grandes porque el error venía de la Parte 1.
 -- Solo asegúrate de que usen estas variables: CloseButton, ToggleButton,
