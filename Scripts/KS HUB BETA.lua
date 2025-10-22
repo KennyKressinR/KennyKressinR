@@ -39,6 +39,17 @@ _G.coordsEnabled = false
 _G.auraCollectEnabled = false
 _G.dragHubEnabled = false
 
+
+----------------------------------------------------------
+----------------------------------------------------------
+-- KS HUB – Parte 1: ScreenGui + MainFrame + TopBar
+----------------------------------------------------------
+
+-- Referencia al jugador local
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
 -- ScreenGui base
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHubGui"
@@ -51,16 +62,18 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ----------------------------------------------------------
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 520, 0, 420)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
+MainFrame.Size = UDim2.new(0, 520, 0, 420) -- tamaño base
+MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210) -- centrado
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 46)
 MainFrame.BackgroundTransparency = 0.25
 MainFrame.BorderSizePixel = 0
-MainFrame.Visible = false
+MainFrame.Visible = false -- inicia oculto
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
--- Barra superior (título + botón cerrar)
+----------------------------------------------------------
+-- TopBar (barra superior con título y botón cerrar)
+----------------------------------------------------------
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 36)
@@ -70,6 +83,7 @@ TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 10)
 
+-- Título
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -80, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
@@ -81,6 +95,7 @@ Title.TextSize = 18
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TopBar
 
+-- Botón cerrar
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 36, 0, 28)
 CloseButton.Position = UDim2.new(1, -46, 0, 4)
@@ -94,44 +109,37 @@ CloseButton.TextSize = 16
 CloseButton.Parent = TopBar
 Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
+----------------------------------------------------------
 -- Sonidos de abrir/cerrar
+----------------------------------------------------------
 local openCloseSound = Instance.new("Sound")
-openCloseSound.SoundId = OPEN_CLOSE_SOUND_ID
+openCloseSound.SoundId = "rbxassetid://12345678" -- reemplaza con tu ID
 openCloseSound.Volume = 0.75
 openCloseSound.Parent = MainFrame
 
 local closeClickSound = Instance.new("Sound")
-closeClickSound.SoundId = CLOSE_CLICK_SOUND_ID
+closeClickSound.SoundId = "rbxassetid://87654321" -- reemplaza con tu ID
 closeClickSound.Volume = 0.75
 closeClickSound.Parent = CloseButton
 
 ----------------------------------------------------------
--- ToggleButton (≡) para abrir/cerrar el HUB
+-- Funcionalidad del botón cerrar
 ----------------------------------------------------------
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Name = "ToggleButton"
-ToggleButton.Size = UDim2.new(0, 42, 0, 42)
-ToggleButton.Position = UDim2.new(0, 20, 0.5, -21)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 40, 70)
-ToggleButton.BackgroundTransparency = 0.15
-ToggleButton.BorderSizePixel = 0
-ToggleButton.Text = "≡"
-ToggleButton.TextColor3 = Color3.new(1,1,1)
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 20
-ToggleButton.Parent = ScreenGui
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 8)
-
-local initialPosition = ToggleButton.Position
-local anchored = true -- El botón puede anclarse/desanclarse desde Ajustes (Parte 6)
-
--- Sonido en ToggleButton
-local toggleSound = Instance.new("Sound")
-toggleSound.SoundId = OPEN_CLOSE_SOUND_ID
-toggleSound.Volume = 0.75
-toggleSound.Parent = ToggleButton
+CloseButton.MouseButton1Click:Connect(function()
+    closeClickSound:Play()
+    MainFrame.Visible = false
+end)
 
 ----------------------------------------------------------
+-- Toggle global con tecla (ej: F4) para abrir/cerrar HUB
+----------------------------------------------------------
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.F4 then
+        MainFrame.Visible = not MainFrame.Visible
+        openCloseSound:Play()
+    end
+end)
 ----------------------------------------------------------
 -- SISTEMA DE PESTAÑAS VERTICALES (Sidebar Izquierda)
 ----------------------------------------------------------
@@ -203,6 +211,20 @@ end
 -- Activar pestaña inicial
 switchTab("Main")
 
+----------------------------------------------------------
+-- Funcionalidad de abrir/cerrar
+----------------------------------------------------------
+-- Botón X
+CloseButton.MouseButton1Click:Connect(function()
+    closeClickSound:Play()
+    MainFrame.Visible = false
+end)
+
+-- Botón flotante ≡
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    toggleSound:Play()
+end)
 ----------------------------------------------------------
 -- Animaciones de abrir/cerrar HUB
 ----------------------------------------------------------
