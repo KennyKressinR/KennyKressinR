@@ -624,10 +624,10 @@ createToggleButton(Tabs["Visual"], "ESP Items", "espItemsEnabled",
 print("[KS HUB] Parte 5 lista")
 
 ----------------------------------------------------------
+----------------------------------------------------------
 -- PARTE 6: AJUSTES
 ----------------------------------------------------------
 
--- ScrollingFrame para Ajustes
 local ajustesScroll = Instance.new("ScrollingFrame")
 ajustesScroll.Size = UDim2.new(1, 0, 1, 0)
 ajustesScroll.BackgroundTransparency = 1
@@ -671,8 +671,34 @@ createButton(ajustesScroll, "Toggle Anclar Botón Abrir", function()
     end
 end)
 
-print("[KS HUB] Parte 6 lista")
+----------------------------------------------------------
+-- [Bloque 6.4] Cerrar HUB por completo
+----------------------------------------------------------
+createButton(ajustesScroll, "Cerrar HUB", function()
+    -- Desconectar conexiones activas
+    if noclipConnection then noclipConnection:Disconnect() end
+    if antiDelayConnection then antiDelayConnection:Disconnect() end
+    if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
+    if espItemConnection then espItemConnection:Disconnect() end
+    for _, conn in pairs(espConnections or {}) do conn:Disconnect() end
 
+    -- Resetear flags globales
+    _G.noclipEnabled = false
+    _G.antiDelayEnabled = false
+    _G.infiniteJumpEnabled = false
+    _G.espEnabled = false
+    _G.chamsEnabled = false
+    _G.fullBrightEnabled = false
+    _G.espItemsEnabled = false
+
+    -- Destruir GUI
+    if ScreenGui then
+        ScreenGui:Destroy()
+    end
+    print("[KS HUB] HUB cerrado completamente")
+end)
+
+print("[KS HUB] Parte 6 lista")
 
 ----------------------------------------------------------
 -- PARTE 7: WAYPOINTS
