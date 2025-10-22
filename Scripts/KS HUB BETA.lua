@@ -395,7 +395,7 @@ end
 -- Adjuntar scroll a todas las pestañas
 local MainScroll = attachScrolling(Tabs["Main"])
 local TeleportScroll = attachScrolling(Tabs["Teleport"])
-local WaypointsScroll = attachScrolling(Tabs["Waypoints"])
+local WaypointsScroll = atachScrolling(Tabs["Waypoints"])
 local VisualScroll = attachScrolling(Tabs["Visual"])
 local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 
@@ -408,112 +408,199 @@ local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 ----------------------------------------------------------
 
 ----------------------------------------------------------
--- Teleport a Spawn
+-- Parte 3: Botones dentro de cada pestaña
 ----------------------------------------------------------
-createButton(TeleportScroll, "Teleport to Spawn", function()
-    local hrp = getHRP()
-    if not hrp then
-        warn("[KS HUB] HumanoidRootPart no disponible")
-        return
-    end
-
-    local spawnLocation = workspace:FindFirstChildOfClass("SpawnLocation")
-    local possibleNames = { "Spawn", "Lobby", "Start", "Inicio" }
-    local target
-
-    if spawnLocation then
-        target = spawnLocation
-    else
-        for _, name in ipairs(possibleNames) do
-            local found = workspace:FindFirstChild(name)
-            if found and found:IsA("BasePart") then
-                target = found
-                break
-            end
-        end
-    end
-
-    if target and target.CFrame then
-        teleportToCFrame(target.CFrame)
-    else
-        warn("[KS HUB] No se encontró una ubicación de Spawn válida")
-    end
-end)
 
 ----------------------------------------------------------
--- Teleport a Coordenadas
+-- MAIN
 ----------------------------------------------------------
-local coordBox = Instance.new("TextBox")
-coordBox.Size = UDim2.new(1, 0, 0, 30)
-coordBox.PlaceholderText = "Coordenadas: ejemplo 120, 35, -240"
-coordBox.Text = ""
-coordBox.Font = Enum.Font.Gotham
-coordBox.TextSize = 16
-coordBox.TextColor3 = Color3.new(1, 1, 1)
-coordBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-coordBox.BackgroundTransparency = 0.1
-coordBox.BorderSizePixel = 0
-coordBox.ClearTextOnFocus = false
-coordBox.Parent = TeleportScroll
-Instance.new("UICorner", coordBox).CornerRadius = UDim.new(0, 6)
-
-createButton(TeleportScroll, "Teleport to Coordinates", function()
-    local vec = parseCoords(coordBox.Text)
-    if not vec then
-        warn("[KS HUB] Coordenadas inválidas. Usa: 120, 35, -240 o 120 35 -240")
-        return
-    end
-    teleportToCFrame(CFrame.new(vec))
-end)
-
-----------------------------------------------------------
--- Teleport a Jugadores
-----------------------------------------------------------
-local playersFrame = Instance.new("Frame")
-playersFrame.Size = UDim2.new(1, 0, 0, 200)
-playersFrame.BackgroundTransparency = 1
-playersFrame.Parent = TeleportScroll
-
-local playersScroll = Instance.new("ScrollingFrame")
-playersScroll.Size = UDim2.new(1, 0, 1, 0)
-playersScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-playersScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-playersScroll.ScrollBarThickness = 6
-playersScroll.BackgroundTransparency = 1
-playersScroll.Parent = playersFrame
-
-local listLayout = Instance.new("UIListLayout")
-listLayout.Padding = UDim.new(0, 6)
-listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.Parent = playersScroll
-
-local function refreshPlayers()
-    for _, child in ipairs(playersScroll:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            createButton(playersScroll, "TP to " .. plr.Name, function()
-                -- Espera a que el Character exista
-                local targetChar = plr.Character or plr.CharacterAdded:Wait()
-                local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-                if targetHRP then
-                    teleportToCFrame(targetHRP.CFrame)
-                else
-                    warn("[KS HUB] El jugador no tiene HumanoidRootPart disponible")
+-- Noclip
+createToggleButton(MainScroll, "Noclip", "noclipEnabled",
+    function()
+        RunService.Stepped:Connect(function()
+            if _G.noclipEnabled and LocalPlayer.Character then
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
                 end
-            end)
-        end
+            end
+        end)
+        createNotification("Noclip ON")
+    end,
+    function()
+        createNotification("Noclip OFF")
     end
-end
+)
 
+-- WalkSpeed
+createButton(MainScroll, "WalkSpeed +", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = hum.WalkSpeed + 5
+        createNotification("WalkSpeed: "..hum.WalkSpeed)
+    end
+end)
 
-Players.PlayerAdded:Connect(refreshPlayers)
-Players.PlayerRemoving:Connect(refreshPlayers)
-refreshPlayers()
+-- JumpPower
+createButton(MainScroll, "JumpPower +", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.JumpPower = hum.JumpPower + 10
+        createNotification("JumpPower: "..hum.JumpPower)
+    end
+end)
 
-print("[KS HUB] Parte 3 lista: Teleport configurado")
+-- AntiDelay Touch interact
+local antiDelayConnection
+createToggleButton(MainScroll, "Anti Delay Touch", "antiDelayEnabled",
+    function()
+        antiDelayConnection = RunService.Heartbeat:Connect(function()
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and obj:FindFirstChildOfClass("TouchTransmitter") then
+                    firetouchinterest(hrp, obj, 0)
+                    firetouchinterest(hrp, obj, 1)
+                end
+            end
+        end)
+        createNotification("Anti Delay ON")
+    end,
+    function()
+        if antiDelayConnection then
+            antiDelayConnection:Disconnect()
+            antiDelayConnection = nil
+        end
+        createNotification("Anti Delay OFF")
+    end
+)
 
+-- ESP Jugadores
+createToggleButton(MainScroll, "ESP Jugadores", "espEnabled",
+    function()
+        createNotification("ESP Jugadores ON")
+    end,
+    function()
+        createNotification("ESP Jugadores OFF")
+    end
+)
+
+-- ESP Items
+createToggleButton(MainScroll, "ESP Items", "espItemsEnabled",
+    function()
+        createNotification("ESP Items ON")
+    end,
+    function()
+        createNotification("ESP Items OFF")
+    end
+)
+
+-- Aura Collect
+createToggleButton(MainScroll, "Aura Collect", "auraCollectEnabled",
+    function()
+        createNotification("Aura Collect ON")
+    end,
+    function()
+        createNotification("Aura Collect OFF")
+    end
+)
+
+-- Mostrar Coordenadas
+createToggleButton(MainScroll, "Mostrar Coordenadas", "coordsEnabled",
+    function()
+        createNotification("Coords ON")
+    end,
+    function()
+        createNotification("Coords OFF")
+    end
+)
+
+-- Chams
+createToggleButton(MainScroll, "Chams", "chamsEnabled",
+    function()
+        createNotification("Chams ON")
+    end,
+    function()
+        createNotification("Chams OFF")
+    end
+)
+
+-- Arrastrar HUB
+createToggleButton(MainScroll, "Arrastrar HUB", "dragHubEnabled",
+    function()
+        MainFrame.Active = true
+        MainFrame.Draggable = true
+        createNotification("Arrastrar HUB ON")
+    end,
+    function()
+        MainFrame.Active = false
+        MainFrame.Draggable = false
+        createNotification("Arrastrar HUB OFF")
+    end
+)
+
+----------------------------------------------------------
+-- TELEPORT
+----------------------------------------------------------
+createButton(TeleportScroll, "Ir al Spawn", function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char:MoveTo(Vector3.new(0, 5, 0))
+        createNotification("Teletransportado al Spawn")
+    end
+end)
+
+----------------------------------------------------------
+-- WAYPOINTS
+----------------------------------------------------------
+local waypoints = {}
+
+-- Botón para crear un waypoint
+createButton(WaypointsScroll, "Crear Waypoint", function()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local pos = hrp.Position
+        table.insert(waypoints, pos)
+        createNotification("Waypoint creado en "..math.floor(pos.X)..","..math.floor(pos.Y)..","..math.floor(pos.Z))
+        
+        -- Crear botón dinámico para teletransportar
+        local wpIndex = #waypoints
+        createButton(WaypointsScroll, "Ir a Waypoint "..wpIndex, function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char:MoveTo(waypoints[wpIndex])
+                createNotification("Teletransportado al Waypoint "..wpIndex)
+            end
+        end)
+    end
+end)
+
+----------------------------------------------------------
+-- VISUAL
+----------------------------------------------------------
+createToggleButton(VisualScroll, "Full Bright", "fullBrightEnabled",
+    function()
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 100000
+        Lighting.GlobalShadows = false
+        Lighting.OutdoorAmbient = Color3.new(1,1,1)
+        createNotification("Full Bright ON")
+    end,
+    function()
+        Lighting.GlobalShadows = true
+        createNotification("Full Bright OFF")
+    end
+)
+
+----------------------------------------------------------
+-- AJUSTES
+----------------------------------------------------------
+createButton(AjustesScroll, "Cerrar HUB", function()
+    closeHub()
+    createNotification("HUB cerrado")
+end)
 
 
 ----------------------------------------------------------
