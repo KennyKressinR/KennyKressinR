@@ -603,8 +603,7 @@ local function offNoclip()
     _G.noclipEnabled = false
     createNotification("Noclip desactivado")
 end
-
-----------------------------------------------------------
+-------------------------------------------------------
 -- AntiDelay (para eliminar tiempo de touch)
 ----------------------------------------------------------
 local antiDelayConnection
@@ -630,8 +629,8 @@ createToggleButton(MainScroll, "Anti Delay", "antiDelayEnabled",
             antiDelayConnection = nil
         end
         createNotification("Anti Delay (Touch) OFF")
-    end
-)
+    end -- ← este end cierra la segunda función
+)       -- ← este paréntesis cierra la llamada a createToggleButton--
 
 -- Infinite Jump
 local infiniteJumpConnection
