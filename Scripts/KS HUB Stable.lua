@@ -1,725 +1,616 @@
 ----------------------------------------------------------
--- PARTE 1: INICIALIZACIÓN
+-- Parte 1: Servicios, estados globales y utilidades
 ----------------------------------------------------------
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+
 local LocalPlayer = Players.LocalPlayer
-local Tabs = {}
 
-print("[KS HUB] Parte 1 lista")
+-- Sonidos (IDs configurables)
+local CLICK_SOUND_ID = "rbxassetid://6723721422"
+local OPEN_CLOSE_SOUND_ID = "rbxassetid://9118823106"
+local CLOSE_CLICK_SOUND_ID = "rbxassetid://9118823106"
 
+-- Estados globales
+_G.noclipEnabled = false
+_G.antiDelayEnabled = false
+_G.infiniteJumpEnabled = false
+_G.espEnabled = false
+_G.chamsEnabled = false
+_G.fullBrightEnabled = false
+_G.espItemsEnabled = false
+_G.coordsEnabled = false
+_G.auraCollectEnabled = false
+_G.dragHubEnabled = true
+
+-- Utilidades
+local function getHRP()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local function teleportToCFrame(cf)
+    local hrp = getHRP()
+    if hrp then hrp.CFrame = cf end
+end
+
+local function createNotification(msg)
+    print("[KS HUB] " .. msg)
+end
 
 ----------------------------------------------------------
--- PARTE 2: INTERFAZ PRINCIPAL
+-- Parte 2: ScreenGui, MainFrame, TopBar, Toggle flotante
 ----------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KSHub"
+ScreenGui.Name = "KSHubGui"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- Config de sonidos
-local OPEN_CLOSE_SOUND_ID = "rbxassetid://77300603936003" -- ✅ Sonido abrir/cerrar HUB
-local CLICK_SOUND_ID = "rbxassetid://9120507525"          -- Sonido genérico de click
-
--- Marco principal
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 520, 0, 420)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80)
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 420, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 46)
 MainFrame.BackgroundTransparency = 0.25
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
--- Botón Toggle (abrir/cerrar HUB)
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 40, 0, 40)
-ToggleButton.Position = UDim2.new(0, 10, 1, -120)
-ToggleButton.Text = "≡"
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 20
-ToggleButton.TextColor3 = Color3.new(1, 1, 1)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-ToggleButton.BackgroundTransparency = 0.1
-ToggleButton.BorderSizePixel = 0
-ToggleButton.Parent = ScreenGui
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 36)
+TopBar.BackgroundColor3 = Color3.fromRGB(25, 40, 70)
+TopBar.BackgroundTransparency = 0.15
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 10)
 
--- 🔊 Sonido abrir/cerrar HUB
-local openCloseSound = Instance.new("Sound")
-openCloseSound.SoundId = OPEN_CLOSE_SOUND_ID
-openCloseSound.Volume = 1
-openCloseSound.Parent = ToggleButton
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "KS HUB"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
 
-anchored, initialPosition = true, ToggleButton.Position
-
--- Botón X (cerrar HUB)
 local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 32, 0, 32)
-CloseButton.Position = UDim2.new(1, -40, 0, 8)
-CloseButton.Text = "X"
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.TextSize = 16
-CloseButton.TextColor3 = Color3.new(1, 1, 1)
-CloseButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+CloseButton.Size = UDim2.new(0, 36, 0, 28)
+CloseButton.Position = UDim2.new(1, -46, 0, 4)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
 CloseButton.BackgroundTransparency = 0.1
 CloseButton.BorderSizePixel = 0
-CloseButton.Parent = MainFrame
-Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(1, 0)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.new(1,1,1)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 16
+CloseButton.Parent = TopBar
+Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
+
+-- Sonidos
+local openCloseSound = Instance.new("Sound")
+openCloseSound.SoundId = OPEN_CLOSE_SOUND_ID
+openCloseSound.Volume = 0.75
+openCloseSound.Parent = MainFrame
 
 local closeClickSound = Instance.new("Sound")
-closeClickSound.SoundId = CLICK_SOUND_ID
-closeClickSound.Volume = 1
+closeClickSound.SoundId = CLOSE_CLICK_SOUND_ID
+closeClickSound.Volume = 0.75
 closeClickSound.Parent = CloseButton
+
+-- Toggle flotante ≡
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 42, 0, 42)
+ToggleButton.Position = UDim2.new(0, 20, 0.5, -21)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 40, 70)
+ToggleButton.BackgroundTransparency = 0.15
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "≡"
+ToggleButton.TextColor3 = Color3.new(1,1,1)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 20
+ToggleButton.Parent = ScreenGui
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 8)
+
+local toggleSound = Instance.new("Sound")
+toggleSound.SoundId = OPEN_CLOSE_SOUND_ID
+toggleSound.Volume = 0.75
+toggleSound.Parent = ToggleButton
+
+-- Animaciones
+local function openHub()
+    MainFrame.Visible = true
+    MainFrame.BackgroundTransparency = 1
+    MainFrame.Position = UDim2.new(0.5, -260, 0.5, -160)
+    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.25,
+        Position = UDim2.new(0.5, -210, 0.5, -160)
+    }):Play()
+end
+
+local function closeHub()
+    local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Position = UDim2.new(0.5, 600, 0.5, -160),
+        BackgroundTransparency = 1
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        MainFrame.Visible = false
+        MainFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
+    end)
+end
+
+-- Acciones
 CloseButton.MouseButton1Click:Connect(function()
     closeClickSound:Play()
-    MainFrame.Visible = false
+    closeHub()
 end)
 
--- Contenedor de pestañas
-local TabContainer = Instance.new("Frame")
-TabContainer.Size = UDim2.new(0, 120, 1, -50)
-TabContainer.Position = UDim2.new(0, 5, 0, 50)
-TabContainer.BackgroundTransparency = 1
-TabContainer.Parent = MainFrame
-
-local tabLayout = Instance.new("UIListLayout")
-tabLayout.Padding = UDim.new(0, 6)
-tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-tabLayout.Parent = TabContainer
-
--- Contenido
-local ContentFrame = Instance.new("Frame")
-ContentFrame.Size = UDim2.new(1, -130, 1, -50)
-ContentFrame.Position = UDim2.new(0, 130, 0, 50)
-ContentFrame.BackgroundTransparency = 1
-ContentFrame.Parent = MainFrame
-
--- Crear pestañas
-local function createTab(name)
-    local tabButton = Instance.new("TextButton")
-    tabButton.Size = UDim2.new(1, 0, 0, 36)
-    tabButton.Text = name
-    tabButton.Font = Enum.Font.Gotham
-    tabButton.TextSize = 16
-    tabButton.TextColor3 = Color3.new(1, 1, 1)
-    tabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    tabButton.BackgroundTransparency = 0.1
-    tabButton.BorderSizePixel = 0
-    tabButton.Parent = TabContainer
-    Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
-
-    local sectionFrame = Instance.new("Frame")
-    sectionFrame.Size = UDim2.new(1, 0, 1, 0)
-    sectionFrame.BackgroundTransparency = 1
-    sectionFrame.Visible = false
-    sectionFrame.Parent = ContentFrame
-
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 8)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = sectionFrame
-
-    Tabs[name] = sectionFrame
-    tabButton.MouseButton1Click:Connect(function()
-        for _, frame in pairs(Tabs) do frame.Visible = false end
-        sectionFrame.Visible = true
-    end)
-end
-
-createTab("Main")
-createTab("Teleport")
-createTab("Visual")
-createTab("Ajustes")
-createTab("Waypoints")
-
--- Toggle HUB con sonido abrir/cerrar
 ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-    openCloseSound:Play()
+    if not MainFrame.Visible then openHub() else closeHub() end
+    toggleSound:Play()
 end)
 
-----------------------------------------------------------
--- Arrastre del HUB y del botón Toggle (cuando NO está anclado)
-----------------------------------------------------------
-local draggingMain, dragStartMain, startPosMain
-local draggingToggle, dragStartToggle, startPosToggle
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.F4 then
+        if not MainFrame.Visible then openHub() else closeHub() end
+        openCloseSound:Play()
+    end
+end)
 
-local function enableDraggingMain(frame)
-    frame.InputBegan:Connect(function(input)
-        if anchored then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingMain = true
-            dragStartMain = input.Position
-            startPosMain = frame.Position
-        end
-    end)
-    frame.InputChanged:Connect(function(input)
-        if anchored then return end
-        if draggingMain and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStartMain
-            frame.Position = UDim2.new(startPosMain.X.Scale, startPosMain.X.Offset + delta.X, startPosMain.Y.Scale, startPosMain.Y.Offset + delta.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingMain = false
-        end
-    end)
-end
-
-local function enableDraggingToggle(button)
-    button.InputBegan:Connect(function(input)
-        if anchored then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingToggle = true
-            dragStartToggle = input.Position
-            startPosToggle = button.Position
-        end
-    end)
-    button.InputChanged:Connect(function(input)
-        if anchored then return end
-        if draggingToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStartToggle
-            button.Position = UDim2.new(startPosToggle.X.Scale, startPosToggle.X.Offset + delta.X, startPosToggle.Y.Scale, startPosToggle.Y.Offset + delta.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingToggle = false
-        end
-    end)
-end
-
-enableDraggingMain(MainFrame)
-enableDraggingToggle(ToggleButton)
 
 ----------------------------------------------------------
--- Funciones para crear botones
+-- Parte 3: Sidebar vertical, páginas y helpers
 ----------------------------------------------------------
+local TabsBar = Instance.new("Frame")
+TabsBar.Name = "TabsBar"
+TabsBar.Size = UDim2.new(0, 118, 1, -40)
+TabsBar.Position = UDim2.new(0, 6, 0, 40)
+TabsBar.BackgroundColor3 = Color3.fromRGB(22, 32, 52)
+TabsBar.BackgroundTransparency = 0.2
+TabsBar.BorderSizePixel = 0
+TabsBar.Parent = MainFrame
 
--- Botón simple con sonido
-function createButton(parent, text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 36)
-    button.Text = text
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 16
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    button.BackgroundTransparency = 0.1
-    button.BorderSizePixel = 0
-    button.Parent = parent
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+local tabsLayout = Instance.new("UIListLayout")
+tabsLayout.FillDirection = Enum.FillDirection.Vertical
+tabsLayout.Padding = UDim.new(0, 6)
+tabsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tabsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+tabsLayout.Parent = TabsBar
 
-    -- 🔊 Sonido de click
-    local clickSound = Instance.new("Sound")
-    clickSound.SoundId = "rbxassetid://9120507525"
-    clickSound.Volume = 1
-    clickSound.Parent = button
+local TabsContent = Instance.new("Frame")
+TabsContent.Name = "TabsContent"
+TabsContent.Size = UDim2.new(1, -130, 1, -50)
+TabsContent.Position = UDim2.new(0, 130, 0, 45)
+TabsContent.BackgroundTransparency = 1
+TabsContent.Parent = MainFrame
 
-    button.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        local ok, err = pcall(callback)
-        if not ok then
-            warn("[KS HUB] Error en botón:", err)
-        end
-    end)
+-- Helpers
+local function createButton(parent, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
+    btn.BackgroundTransparency = 0.1
+    btn.BorderSizePixel = 0
+    btn.Text = text
+    btn.TextColor3 = Color3
 
-    return button
-end
 
--- Botón con estado ON/OFF y sonido
-function createToggleButton(parent, text, stateVar, callbackOn, callbackOff)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 36)
-    button.Text = text .. " [OFF]"
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 16
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
-    button.BackgroundTransparency = 0.1
-    button.BorderSizePixel = 0
-    button.Parent = parent
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
 
-    -- 🔊 Sonido de click
-    local clickSound = Instance.new("Sound")
-    clickSound.SoundId = "rbxassetid://9120507525"
-    clickSound.Volume = 1
-    clickSound.Parent = button
 
-    _G[stateVar] = false
-
-    button.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        _G[stateVar] = not _G[stateVar]
-        if _G[stateVar] then
-            button.Text = text .. " [ON]"
-            if callbackOn then callbackOn() end
-            print("[KS HUB] " .. text .. " ON")
-        else
-            button.Text = text .. " [OFF]"
-            if callbackOff then callbackOff() end
-            print("[KS HUB] " .. text .. " OFF")
-        end
-    end)
-
-    return button
-end
-
-print("[KS HUB] Parte 2 lista")
-
+    ----------------------------------------------------------
+-- Parte 4: Main (acciones rápidas y toggles base)
 ----------------------------------------------------------
--- PARTE 3: MAIN
-----------------------------------------------------------
-local noclipConnection
-createToggleButton(Tabs["Main"], "Noclip", "noclipEnabled",
-    function()
-        noclipConnection = game:GetService("RunService").Stepped:Connect(function()
-            if LocalPlayer.Character then
-                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanCollide = false end
-                end
-            end
-        end)
-    end,
-    function() if noclipConnection then noclipConnection:Disconnect() end end
-)
+local MainScroll = Scrolls["Main"]
 
+-- AntiDelay (Touch global)
 local antiDelayConnection
-createToggleButton(Tabs["Main"], "Anti-Delay", "antiDelayEnabled",
-    function()
-        antiDelayConnection = game:GetService("RunService").Heartbeat:Connect(function()
-            sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
-        end)
-    end,
-    function() if antiDelayConnection then antiDelayConnection:Disconnect() end end
-)
+createButton(MainScroll, "AntiDelay Touch (toggle)", function()
+    if antiDelayConnection then
+        antiDelayConnection:Disconnect()
+        antiDelayConnection = nil
+        createNotification("AntiDelay OFF")
+        return
+    end
+    antiDelayConnection = RunService.Heartbeat:Connect(function()
+        local hrp = getHRP()
+        if not hrp then return end
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj:FindFirstChildOfClass("TouchTransmitter") then
+                firetouchinterest(hrp, obj, 0)
+                firetouchinterest(hrp, obj, 1)
+            end
+        end
+    end)
+    createNotification("AntiDelay ON")
+end)
 
-local infiniteJumpConnection
-createToggleButton(Tabs["Main"], "Infinite Jump", "infiniteJumpEnabled",
-    function()
-        infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
-            if _G.infiniteJumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+-- Noclip
+local noclipConn
+createButton(MainScroll, "Noclip (toggle)", function()
+    _G.noclipEnabled = not _G.noclipEnabled
+    if _G.noclipEnabled and not noclipConn then
+        noclipConn = RunService.Stepped:Connect(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
             end
         end)
-    end,
-    function() if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end end
-)
-
--- WalkSpeed
-local wsBox = Instance.new("TextBox")
-wsBox.Size = UDim2.new(1, 0, 0, 30)
-wsBox.PlaceholderText = "Introduce WalkSpeed (default 16)"
-wsBox.Text = ""
-wsBox.Font = Enum.Font.Gotham
-wsBox.TextSize = 16
-wsBox.TextColor3 = Color3.new(1, 1, 1)
-wsBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-wsBox.BackgroundTransparency = 0.1
-wsBox.BorderSizePixel = 0
-wsBox.ClearTextOnFocus = false
-wsBox.Parent = Tabs["Main"]
-Instance.new("UICorner", wsBox).CornerRadius = UDim.new(0, 6)
-
-wsBox.FocusLost:Connect(function(enter)
-    if enter then
-        local val = tonumber(wsBox.Text)
-        if val and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
-            print("[KS HUB] WalkSpeed set to", val)
-        end
+        createNotification("Noclip ON")
+    elseif noclipConn then
+        noclipConn:Disconnect()
+        noclipConn = nil
+        createNotification("Noclip OFF")
     end
 end)
 
--- JumpPower
-local jpBox = Instance.new("TextBox")
-jpBox.Size = UDim2.new(1, 0, 0, 30)
-jpBox.PlaceholderText = "Introduce JumpPower (default 50)"
-jpBox.Text = ""
-jpBox.Font = Enum.Font.Gotham
-jpBox.TextSize = 16
-jpBox.TextColor3 = Color3.new(1, 1, 1)
-jpBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-jpBox.BackgroundTransparency = 0.1
-jpBox.BorderSizePixel = 0
-jpBox.ClearTextOnFocus = false
-jpBox.Parent = Tabs["Main"]
-Instance.new("UICorner", jpBox).CornerRadius = UDim.new(0, 6)
-
-jpBox.FocusLost:Connect(function(enter)
-    if enter then
-        local val = tonumber(jpBox.Text)
-        if val and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").UseJumpPower = true
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = val
-            print("[KS HUB] JumpPower set to", val)
-        end
-    end
-end)
-
-print("[KS HUB] Parte 3 lista")
-
-
-----------------------------------------------------------
--- PARTE 4: TELEPORT
-----------------------------------------------------------
-
--- [Bloque 4.1] Lista automática de jugadores
-local playerList = Instance.new("ScrollingFrame")
-playerList.Size = UDim2.new(1, 0, 0, 150)
-playerList.BackgroundTransparency = 1
-playerList.ScrollBarThickness = 6
-playerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-playerList.Parent = Tabs["Teleport"]
-
-local listLayout = Instance.new("UIListLayout")
-listLayout.Padding = UDim.new(0, 4)
-listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.Parent = playerList
-
-local function refreshPlayerList()
-    for _, child in pairs(playerList:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            createButton(playerList, plr.Name, function()
-                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        hrp.CFrame = plr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-                        print("[KS HUB] Teleport a " .. plr.Name)
-                    end
-                end
-            end)
-        end
-    end
-end
-
-refreshPlayerList()
-Players.PlayerAdded:Connect(refreshPlayerList)
-Players.PlayerRemoving:Connect(refreshPlayerList)
-
-----------------------------------------------------------
--- [Bloque 4.2] Teleport a CFrame personalizado
-----------------------------------------------------------
-local function teleportToCFrame(cf)
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+-- Coordenadas
+createButton(MainScroll, "Mostrar coordenadas (print)", function()
+    local hrp = getHRP()
     if hrp then
-        hrp.CFrame = cf
-        print("[KS HUB] Teleport a CFrame:", cf)
+        print(string.format("[KS HUB] Pos: (%.1f, %.1f, %.1f)", hrp.Position.X, hrp.Position.Y, hrp.Position.Z))
+        createNotification("Coordenadas en consola")
+    end
+end)
+
+-- Infinite Jump
+local infiniteJumpConn
+createButton(MainScroll, "Infinite Jump (toggle)", function()
+    _G.infiniteJumpEnabled = not _G.infiniteJumpEnabled
+    if _G.infiniteJumpEnabled and not infiniteJumpConn then
+        infiniteJumpConn = UserInputService.JumpRequest:Connect(function()
+            local hrp = getHRP()
+            if hrp then
+                local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+            end
+        end)
+        createNotification("Infinite Jump ON")
+    elseif infiniteJumpConn then
+        infiniteJumpConn:Disconnect()
+        infiniteJumpConn = nil
+        createNotification("Infinite Jump OFF")
+    end
+end)
+
+
+    ----------------------------------------------------------
+-- Parte 5: Teleport a jugadores
+----------------------------------------------------------
+local TeleportScroll = Scrolls["Teleport"]
+
+-- Refrescar lista de jugadores
+local function refreshPlayers()
+    -- Limpia botones previos
+    for _, child in ipairs(TeleportScroll:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    -- Crea un botón por cada jugador
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            createButton(TeleportScroll, "TP a " .. plr.Name, function()
+                local targetChar = plr.Character or plr.CharacterAdded:Wait()
+                local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+                if targetHRP then
+                    teleportToCFrame(targetHRP.CFrame)
+                    createNotification("Teletransportado a " .. plr.Name)
+                else
+                    warn("[KS HUB] El jugador " .. plr.Name .. " no tiene HumanoidRootPart")
+                end
+            end)
+        end
     end
 end
 
-local coordBox = Instance.new("TextBox")
-coordBox.Size = UDim2.new(1, 0, 0, 30)
-coordBox.PlaceholderText = "Coordenadas: x,y,z"
-coordBox.Text = ""
-coordBox.Font = Enum.Font.Gotham
-coordBox.TextSize = 16
-coordBox.TextColor3 = Color3.new(1, 1, 1)
-coordBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-coordBox.BackgroundTransparency = 0.1
-coordBox.BorderSizePixel = 0
-coordBox.ClearTextOnFocus = false
-coordBox.Parent = Tabs["Teleport"]
-Instance.new("UICorner", coordBox).CornerRadius = UDim.new(0, 6)
+-- Eventos para actualizar lista
+Players.PlayerAdded:Connect(refreshPlayers)
+Players.PlayerRemoving:Connect(refreshPlayers)
 
-createButton(Tabs["Teleport"], "Teleport to Coords", function()
-    local coords = {}
-    for num in string.gmatch(coordBox.Text, "([^,]+)") do
-        table.insert(coords, tonumber(num))
-    end
-    if #coords == 3 then
-        teleportToCFrame(CFrame.new(coords[1], coords[2], coords[3]))
-    else
-        warn("[KS HUB] Coordenadas inválidas, usa formato x,y,z")
-    end
-end)
+-- Inicializar lista
+refreshPlayers()
 
+
+
+    ----------------------------------------------------------
+-- Parte 6: Waypoints
 ----------------------------------------------------------
--- [Bloque 4.3] Teleport a Spawn
-----------------------------------------------------------
-createButton(Tabs["Teleport"], "Teleport to Spawn", function()
-    local spawnLocation = workspace:FindFirstChildOfClass("SpawnLocation")
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if spawnLocation and hrp then
-        hrp.CFrame = spawnLocation.CFrame + Vector3.new(0, 5, 0)
-        print("[KS HUB] Teleport a Spawn")
-    else
-        warn("[KS HUB] No se encontró SpawnLocation o HumanoidRootPart")
-    end
-end)
+local WaypointsScroll = Scrolls["Waypoints"]
+local savedWaypoints = {}
 
-print("[KS HUB] Parte 4 lista")
-
-
-----------------------------------------------------------
--- PARTE 5: VISUAL
-----------------------------------------------------------
-
--- [Bloque 5.1] ESP (resalta jugadores con Highlight)
-local espConnections = {}
-createToggleButton(Tabs["Visual"], "ESP", "espEnabled",
-    function() -- ON
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "KSHUB_ESP"
-                highlight.FillColor = Color3.fromRGB(0, 255, 0)
-                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                highlight.FillTransparency = 0.5
-                highlight.OutlineTransparency = 0
-                highlight.Parent = plr.Character
-            end
+-- Refrescar lista de waypoints
+local function refreshWaypoints()
+    -- Limpia frames previos
+    for _, child in ipairs(WaypointsScroll:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
         end
-        espConnections["PlayerAdded"] = Players.PlayerAdded:Connect(function(plr)
-            plr.CharacterAdded:Connect(function(char)
-                task.wait(1)
-                if _G.espEnabled and char:FindFirstChild("HumanoidRootPart") then
-                    local highlight = Instance.new("Highlight")
-                    highlight.Name = "KSHUB_ESP"
-                    highlight.FillColor = Color3.fromRGB(0, 255, 0)
-                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                    highlight.FillTransparency = 0.5
-                    highlight.OutlineTransparency = 0
-                    highlight.Parent = char
-                end
-            end)
+    end
+
+    -- Crea un frame por cada waypoint guardado
+    for name, pos in pairs(savedWaypoints) do
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 0, 36)
+        frame.BackgroundTransparency = 1
+        frame.Parent = WaypointsScroll
+
+        -- Botón TP
+        local btnTP = createButton(frame, "TP: " .. name, function()
+            teleportToCFrame(CFrame.new(pos))
+            createNotification("Teletransportado a '"..name.."'")
         end)
-    end,
-    function() -- OFF
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr.Character and plr.Character:FindFirstChild("KSHUB_ESP") then
-                plr.Character.KSHUB_ESP:Destroy()
-            end
-        end
-        for _, conn in pairs(espConnections) do conn:Disconnect() end
-        espConnections = {}
-    end
-)
+        btnTP.Size = UDim2.new(0.65, -3, 1, 0)
+        btnTP.Position = UDim2.new(0, 0, 0, 0)
 
--- [Bloque 5.2] Chams (colorea personajes con Neon)
-createToggleButton(Tabs["Visual"], "Chams", "chamsEnabled",
-    function() -- ON
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character then
-                for _, part in pairs(plr.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Material = Enum.Material.Neon
-                        part.Color = Color3.fromRGB(255, 0, 0)
-                    end
-                end
-            end
-        end
-    end,
-    function() -- OFF
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character then
-                for _, part in pairs(plr.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Material = Enum.Material.Plastic
-                        part.Color = Color3.fromRGB(255, 255, 255)
-                    end
-                end
-            end
-        end
-    end
-)
+        -- Botón DEL rojo
+        local btnDel = Instance.new("TextButton")
+        btnDel.Size = UDim2.new(0.3, 0, 1, 0)
+        btnDel.Position = UDim2.new(0.7, 0, 0, 0)
+        btnDel.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+        btnDel.Text = "DEL"
+        btnDel.TextColor3 = Color3.new(1,1,1)
+        btnDel.Font = Enum.Font.GothamBold
+        btnDel.TextSize = 14
+        btnDel.Parent = frame
+        Instance.new("UICorner", btnDel).CornerRadius = UDim.new(0, 6)
 
--- [Bloque 5.3] FullBright
-local oldLightingSettings = {}
-createToggleButton(Tabs["Visual"], "FullBright", "fullBrightEnabled",
-    function() -- ON
-        local Lighting = game:GetService("Lighting")
-        oldLightingSettings = {
-            Brightness = Lighting.Brightness,
-            ClockTime = Lighting.ClockTime,
-            FogEnd = Lighting.FogEnd,
-            GlobalShadows = Lighting.GlobalShadows,
-            OutdoorAmbient = Lighting.OutdoorAmbient
-        }
+        btnDel.MouseButton1Click:Connect(function()
+            savedWaypoints[name] = nil
+            refreshWaypoints()
+            createNotification("Waypoint '"..name.."' eliminado")
+        end)
+    end
+end
+
+-- Caja de texto para nombre
+local wpBox = Instance.new("TextBox")
+wpBox.Size = UDim2.new(1, 0, 0, 30)
+wpBox.PlaceholderText = "Nombre del Waypoint"
+wpBox.Text = ""
+wpBox.Font = Enum.Font.Gotham
+wpBox.TextSize = 16
+wpBox.TextColor3 = Color3.new(1, 1, 1)
+wpBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+wpBox.BackgroundTransparency = 0.1
+wpBox.BorderSizePixel = 0
+wpBox.ClearTextOnFocus = false
+wpBox.Parent = WaypointsScroll
+Instance.new("UICorner", wpBox).CornerRadius = UDim.new(0, 6)
+
+-- Botón Crear Waypoint
+createButton(WaypointsScroll, "Crear Waypoint", function()
+    local hrp = getHRP()
+    if hrp then
+        local name = wpBox.Text ~= "" and wpBox.Text or ("WP"..tostring(#savedWaypoints+1))
+        savedWaypoints[name] = hrp.Position
+        wpBox.Text = ""
+        refreshWaypoints()
+        createNotification("Waypoint '"..name.."' creado")
+    end
+end)
+
+-- Botón Borrar Todos
+local clearAllBtn = Instance.new("TextButton")
+clearAllBtn.Size = UDim2.new(1, 0, 0, 30)
+clearAllBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+clearAllBtn.Text = "Borrar TODOS los Waypoints"
+clearAllBtn.TextColor3 = Color3.new(1,1,1)
+clearAllBtn.Font = Enum.Font.GothamBold
+clearAllBtn.TextSize = 14
+clearAllBtn.Parent = WaypointsScroll
+Instance.new("UICorner", clearAllBtn).CornerRadius = UDim.new(0, 6)
+
+clearAllBtn.MouseButton1Click:Connect(function()
+    savedWaypoints = {}
+    refreshWaypoints()
+    createNotification("Todos los waypoints borrados")
+end)
+
+-- Inicializar lista
+refreshWaypoints()
+
+
+    ----------------------------------------------------------
+-- Parte 7: Visual + Auto Collect (AntiDelay integrado)
+----------------------------------------------------------
+local VisualScroll = Scrolls["Visual"]
+
+-- FullBright (toggle)
+createButton(VisualScroll, "Full Bright (toggle)", function()
+    _G.fullBrightEnabled = not _G.fullBrightEnabled
+    if _G.fullBrightEnabled then
+        Lighting.Ambient = Color3.new(1,1,1)
+        Lighting.Brightness = 4
+        createNotification("FullBright ON")
+    else
+        -- Restaurar valores por defecto (ajústalos según el juego)
+        Lighting.Ambient = Color3.new(0.5,0.5,0.5)
         Lighting.Brightness = 2
-        Lighting.ClockTime = 14
-        Lighting.FogEnd = 1e10
-        Lighting.GlobalShadows = false
-        Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
-    end,
-    function() -- OFF
-        local Lighting = game:GetService("Lighting")
-        for prop, val in pairs(oldLightingSettings) do
-            Lighting[prop] = val
-        end
+        createNotification("FullBright OFF")
     end
-)
+end)
 
-print("[KS HUB] Parte 5 lista")
+-- Auto Collect universal con AntiDelay Touch interno
+local autoCollectConn
+-- Configuración inicial (puede modificarse en Ajustes)
+collectNameFilter = "coin"
+collectRadius = 50
 
-----------------------------------------------------------
--- [Bloque 5.4] ESP Items
-----------------------------------------------------------
-local espItems = {}
-local espItemConnection
+createButton(VisualScroll, "Auto Collect (toggle)", function()
+    if autoCollectConn then
+        autoCollectConn:Disconnect()
+        autoCollectConn = nil
+        createNotification("Auto Collect OFF")
+        return
+    end
 
--- Caja de texto para nombre parcial del ítem
-local itemBox = Instance.new("TextBox")
-itemBox.Size = UDim2.new(1, 0, 0, 30)
-itemBox.PlaceholderText = "Nombre parcial del ítem para ESP"
-itemBox.Text = ""
-itemBox.Font = Enum.Font.Gotham
-itemBox.TextSize = 16
-itemBox.TextColor3 = Color3.new(1, 1, 1)
-itemBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-itemBox.BackgroundTransparency = 0.1
-itemBox.BorderSizePixel = 0
-itemBox.ClearTextOnFocus = false
-itemBox.Parent = Tabs["Visual"]
-Instance.new("UICorner", itemBox).CornerRadius = UDim.new(0, 6)
+    autoCollectConn = RunService.Heartbeat:Connect(function()
+        local hrp = getHRP()
+        if not hrp then return end
 
-createToggleButton(Tabs["Visual"], "ESP Items", "espItemsEnabled",
-    function() -- ON
-        local keyword = string.lower(itemBox.Text)
-        if keyword == "" then
-            warn("[KS HUB] Ingresa un nombre parcial de ítem antes de activar ESP Items")
-            return
-        end
-        espItemConnection = game:GetService("RunService").RenderStepped:Connect(function()
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and string.find(string.lower(obj.Name), keyword) then
-                    if not obj:FindFirstChild("KSHUB_ItemESP") then
-                        local highlight = Instance.new("Highlight")
-                        highlight.Name = "KSHUB_ItemESP"
-                        highlight.FillColor = Color3.fromRGB(255, 255, 0)
-                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                        highlight.FillTransparency = 0.5
-                        highlight.OutlineTransparency = 0
-                        highlight.Parent = obj
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and string.find(string.lower(obj.Name), collectNameFilter) then
+                local dist = (obj.Position - hrp.Position).Magnitude
+                if dist < collectRadius then
+                    -- AntiDelay integrado: fuerza el touch sin cooldown
+                    local touch = obj:FindFirstChildOfClass("TouchTransmitter")
+                    if touch then
+                        firetouchinterest(hrp, obj, 0)
+                        firetouchinterest(hrp, obj, 1)
                     end
+                    local click = obj:FindFirstChildOfClass("ClickDetector")
+                    if click then fireclickdetector(click) end
+                    local prompt = obj:FindFirstChildOfClass("ProximityPrompt")
+                    if prompt then fireproximityprompt(prompt, math.huge) end
                 end
             end
-        end)
-        print("[KS HUB] ESP Items ON para ítems que contengan: " .. keyword)
-    end,
-    function() -- OFF
-        if espItemConnection then
-            espItemConnection:Disconnect()
-            espItemConnection = nil
         end
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and obj:FindFirstChild("KSHUB_ItemESP") then
-                obj.KSHUB_ItemESP:Destroy()
-            end
-        end
-        print("[KS HUB] ESP Items OFF")
-    end
-)
+    end)
 
-print("[KS HUB] Parte 5 lista")
-
-----------------------------------------------------------
-----------------------------------------------------------
--- [Bloque 5.5] Mostrar Coordenadas
-----------------------------------------------------------
-local coordsLabel = Instance.new("TextLabel")
-coordsLabel.Size = UDim2.new(1, 0, 0, 24)
-coordsLabel.Position = UDim2.new(0, 0, 0, 0)
-coordsLabel.BackgroundTransparency = 1
-coordsLabel.TextColor3 = Color3.new(1, 1, 1)
-coordsLabel.Font = Enum.Font.Gotham
-coordsLabel.TextSize = 14
-coordsLabel.Text = ""
-coordsLabel.Visible = false
-coordsLabel.Parent = Tabs["Visual"]
-
-local coordsConnection
-createToggleButton(Tabs["Visual"], "Mostrar Coordenadas", "coordsEnabled",
-    function() -- ON
-        coordsLabel.Visible = true
-        coordsConnection = game:GetService("RunService").RenderStepped:Connect(function()
-            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local pos = hrp.Position
-                coordsLabel.Text = string.format("X: %.1f | Y: %.1f | Z: %.1f", pos.X, pos.Y, pos.Z)
-            end
-        end)
-        print("[KS HUB] Coordenadas ON")
-    end,
-    function() -- OFF
-        coordsLabel.Visible = false
-        coordsLabel.Text = ""
-        if coordsConnection then
-            coordsConnection:Disconnect()
-            coordsConnection = nil
-        end
-        print("[KS HUB] Coordenadas OFF")
-    end
-)
-
-print("[KS HUB] Parte 5 lista")
-
-----------------------------------------------------------
--- PARTE 6: AJUSTES
-----------------------------------------------------------
-
-local ajustesScroll = Instance.new("ScrollingFrame")
-ajustesScroll.Size = UDim2.new(1, 0, 1, 0)
-ajustesScroll.BackgroundTransparency = 1
-ajustesScroll.ScrollBarThickness = 6
-ajustesScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-ajustesScroll.Parent = Tabs["Ajustes"]
-
-local ajustesLayout = Instance.new("UIListLayout")
-ajustesLayout.Padding = UDim.new(0, 6)
-ajustesLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ajustesLayout.Parent = ajustesScroll
-
-----------------------------------------------------------
--- [Bloque 6.1] Reset Character
-----------------------------------------------------------
-createButton(ajustesScroll, "Reset Character", function()
-    if LocalPlayer.Character then
-        LocalPlayer.Character:BreakJoints()
-        print("[KS HUB] Character reset")
-    end
+    createNotification("Auto Collect ON")
 end)
 
-----------------------------------------------------------
--- [Bloque 6.2] Rejoin
-----------------------------------------------------------
-createButton(ajustesScroll, "Rejoin", function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-    print("[KS HUB] Rejoin ejecutado")
-end)
 
+
+    ----------------------------------------------------------
+-- Parte 8: Ajustes (opacidad, drag y Auto Collect config)
 ----------------------------------------------------------
--- [Bloque 6.3] Toggle Anclar/Desanclar Botón de abrir
-----------------------------------------------------------
-createButton(ajustesScroll, "Toggle Anclar Botón Abrir", function()
-    anchored = not anchored
-    if anchored then
-        ToggleButton.Position = initialPosition
-        print("[KS HUB] 📌 Botón de abrir ANCLADO")
+local AjustesScroll = Scrolls["Ajustes"]
+
+-- Control de Opacidad Global (con mínimos)
+local function setGlobalOpacity(alpha)
+    -- alpha = 0 (transparente) → 1 (opaco)
+    local function applyTransparency(obj)
+        if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("TextBox") or obj:IsA("TextLabel") then
+            -- Fondo: mínimo 0.1
+            local bgTrans = 1 - alpha
+            if bgTrans < 0.1 then bgTrans = 0.1 end
+            obj.BackgroundTransparency = bgTrans
+
+            -- Texto: mínimo 0.2
+            if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                local txtTrans = 1 - alpha
+                if txtTrans < 0.2 then txtTrans = 0.2 end
+                obj.TextTransparency = txtTrans
+            end
+        end
+        for _, child in ipairs(obj:GetChildren()) do
+            applyTransparency(child)
+        end
+    end
+    applyTransparency(MainFrame)
+    applyTransparency(ToggleButton)
+end
+
+-- Caja de texto para opacidad
+local opacityBox = Instance.new("TextBox")
+opacityBox.Size = UDim2.new(1, 0, 0, 30)
+opacityBox.PlaceholderText = "Opacidad 0.0–1.0 (mín: fondos 0.1, texto 0.2)"
+opacityBox.Text = "0.85"
+opacityBox.Font = Enum.Font.Gotham
+opacityBox.TextSize = 14
+opacityBox.TextColor3 = Color3.new(1,1,1)
+opacityBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+opacityBox.BackgroundTransparency = 0.1
+opacityBox.BorderSizePixel = 0
+opacityBox.ClearTextOnFocus = false
+opacityBox.Parent = AjustesScroll
+Instance.new("UICorner", opacityBox).CornerRadius = UDim.new(0, 6)
+
+createButton(AjustesScroll, "Aplicar Opacidad", function()
+    local v = tonumber(opacityBox.Text)
+    if v then
+        setGlobalOpacity(math.clamp(v, 0, 1))
+        createNotification("Opacidad aplicada: "..tostring(v))
     else
-        print("[KS HUB] 📌 Botón de abrir DESANCLADO (puede moverse)")
+        createNotification("Valor inválido")
     end
 end)
 
-----------------------------------------------------------
--- [Bloque 6.4] Cerrar HUB por completo
-----------------------------------------------------------
-createButton(ajustesScroll, "Cerrar HUB", function()
-    -- Desconectar conexiones activas
-    if noclipConnection then noclipConnection:Disconnect() end
-    if antiDelayConnection then antiDelayConnection:Disconnect() end
-    if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
-    if espItemConnection then espItemConnection:Disconnect() end
-    for _, conn in pairs(espConnections or {}) do conn:Disconnect() end
+-- Drag del HUB (arrastrar desde TopBar)
+local dragging, dragStart, startPos
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and _G.dragHubEnabled then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
 
-    -- Resetear flags globales
+TopBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Configuración de Auto Collect
+local nameFilterBox = Instance.new("TextBox")
+nameFilterBox.Size = UDim2.new(1, 0, 0, 30)
+nameFilterBox.PlaceholderText = "Filtro nombre (ej: coin, gem, star)"
+nameFilterBox.Text = "coin"
+nameFilterBox.Font = Enum.Font.Gotham
+nameFilterBox.TextSize = 14
+nameFilterBox.TextColor3 = Color3.new(1,1,1)
+nameFilterBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+nameFilterBox.BackgroundTransparency = 0.1
+nameFilterBox.BorderSizePixel = 0
+nameFilterBox.ClearTextOnFocus = false
+nameFilterBox.Parent = AjustesScroll
+Instance.new("UICorner", nameFilterBox).CornerRadius = UDim.new(0, 6)
+
+local radiusBox = Instance.new("TextBox")
+radiusBox.Size = UDim2.new(1, 0, 0, 30)
+radiusBox.PlaceholderText = "Radio de recogida (ej: 50)"
+radiusBox.Text = "50"
+radiusBox.Font = Enum.Font.Gotham
+radiusBox.TextSize = 14
+radiusBox.TextColor3 = Color3.new(1,1,1)
+radiusBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+radiusBox.BackgroundTransparency = 0.1
+radiusBox.BorderSizePixel = 0
+radiusBox.ClearTextOnFocus = false
+radiusBox.Parent = AjustesScroll
+Instance.new("UICorner", radiusBox).CornerRadius = UDim.new(0, 6)
+
+createButton(AjustesScroll, "Aplicar Auto Collect", function()
+    local nf = nameFilterBox.Text ~= "" and string.lower(nameFilterBox.Text) or "coin"
+    local r = tonumber(radiusBox.Text) or 50
+    collectNameFilter = nf
+    collectRadius = r
+    createNotification("AutoCollect: filtro '"..nf.."', radio "..tostring(r))
+end)
+
+
+
+    ----------------------------------------------------------
+-- Parte 9: QoL, limpieza y arranque inicial
+----------------------------------------------------------
+
+-- Al iniciar, abrimos el HUB y dejamos la pestaña Main activa
+openHub()
+switchTab("Main")
+
+-- Reset de estados al respawnear (opcional)
+LocalPlayer.CharacterAdded:Connect(function()
+    -- Aquí puedes resetear flags si lo deseas
     _G.noclipEnabled = false
     _G.antiDelayEnabled = false
     _G.infiniteJumpEnabled = false
@@ -727,67 +618,10 @@ createButton(ajustesScroll, "Cerrar HUB", function()
     _G.chamsEnabled = false
     _G.fullBrightEnabled = false
     _G.espItemsEnabled = false
-
-    -- Destruir GUI
-    if ScreenGui then
-        ScreenGui:Destroy()
-    end
-    print("[KS HUB] HUB cerrado completamente")
+    _G.coordsEnabled = false
+    _G.auraCollectEnabled = false
+    createNotification("Personaje respawneado, estados reseteados")
 end)
 
-print("[KS HUB] Parte 6 lista")
-
-----------------------------------------------------------
--- PARTE 7: WAYPOINTS
-----------------------------------------------------------
-
-local waypoints = {}       -- Guardamos los CFrame
-local waypointNames = {}   -- Guardamos nombres opcionales
-
-for i = 1, 8 do
-    -- Caja de texto para nombre opcional
-    local nameBox = Instance.new("TextBox")
-    nameBox.Size = UDim2.new(1, 0, 0, 24)
-    nameBox.PlaceholderText = "Nombre (opcional) para Slot " .. i
-    nameBox.Text = ""
-    nameBox.Font = Enum.Font.Gotham
-    nameBox.TextSize = 14
-    nameBox.TextColor3 = Color3.new(1, 1, 1)
-    nameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    nameBox.BackgroundTransparency = 0.1
-    nameBox.BorderSizePixel = 0
-    nameBox.ClearTextOnFocus = false
-    nameBox.Parent = Tabs["Waypoints"]
-    Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 6)
-
-    -- Botón Save
-    createButton(Tabs["Waypoints"], "Save " .. i, function()
-        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            waypoints[i] = hrp.CFrame
-            waypointNames[i] = nameBox.Text ~= "" and nameBox.Text or ("Waypoint " .. i)
-            print("[KS HUB] Guardado Waypoint " .. i .. " (" .. waypointNames[i] .. ")")
-        else
-            warn("[KS HUB] No se pudo guardar, personaje no encontrado")
-        end
-    end)
-
-    -- Botón Load
-    createButton(Tabs["Waypoints"], "Load " .. i, function()
-        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp and waypoints[i] then
-            hrp.CFrame = waypoints[i]
-            print("[KS HUB] Teleport a Waypoint " .. i .. " (" .. (waypointNames[i] or "sin nombre") .. ")")
-        else
-            warn("[KS HUB] No hay Waypoint guardado en slot " .. i)
-        end
-    end)
-end
-
-----------------------------------------------------------
--- Mensaje final de carga
-----------------------------------------------------------
-print("=======================================")
-print("✅ KS HUB cargado correctamente")
-print("✅ Todas las partes (1 a 7) listas")
-print("=======================================")
+-- Mensaje de confirmación en consola
+print("[KS HUB] Inicializado correctamente: UI compacta, sidebar vertical, animaciones, sonidos y módulos listos.")
