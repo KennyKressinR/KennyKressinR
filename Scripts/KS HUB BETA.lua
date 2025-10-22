@@ -1,28 +1,17 @@
-
 ----------------------------------------------------------
--- KS HUB – Parte 1: Núcleo, UI base, utilidades y animaciones
+-- KS HUB – Parte 1: Núcleo, UI base, utilidades
 ----------------------------------------------------------
-
--- Servicios
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TeleportService = game:GetService("TeleportService")
 local Lighting = game:GetService("Lighting")
 
--- Jugador local
 local LocalPlayer = Players.LocalPlayer
 
--- Sonidos (IDs válidos, cámbialos si quieres otros)
-local CLICK_SOUND_ID = "rbxassetid://6723721422"        -- Click en botones
-local OPEN_CLOSE_SOUND_ID = "rbxassetid://9118823106"   -- Abrir/cerrar HUB
-local CLOSE_CLICK_SOUND_ID = "rbxassetid://9118823106"  -- Cerrar con X
-
--- Estado global
+-- Estados globales
 _G.noclipEnabled = false
 _G.antiDelayEnabled = false
-_G.infiniteJumpEnabled = false
 _G.espEnabled = false
 _G.chamsEnabled = false
 _G.fullBrightEnabled = false
@@ -31,27 +20,17 @@ _G.coordsEnabled = false
 _G.auraCollectEnabled = false
 _G.dragHubEnabled = false
 
--- Variables internas
-local anchored = true
-local initialPosition = UDim2.new(0, 10, 0.5, -18)
-local toggleSound
-
-----------------------------------------------------------
--- ScreenGui base
-----------------------------------------------------------
+-- GUI base
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KSHubGui"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-----------------------------------------------------------
--- MainFrame (ventana principal del HUB)
-----------------------------------------------------------
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 400, 0, 420) -- más estrecho que antes (520 → 400)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -210) -- centrado con nuevo ancho
+MainFrame.Size = UDim2.new(0, 400, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -210)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 46)
 MainFrame.BackgroundTransparency = 0.25
 MainFrame.BorderSizePixel = 0
@@ -59,11 +38,7 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
-----------------------------------------------------------
--- TopBar (barra superior con título y botón cerrar)
-----------------------------------------------------------
 local TopBar = Instance.new("Frame")
-TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 36)
 TopBar.BackgroundColor3 = Color3.fromRGB(25, 40, 70)
 TopBar.BackgroundTransparency = 0.15
@@ -71,25 +46,21 @@ TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 10)
 
--- Título
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -80, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "KS HUB"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 18
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TopBar
 
--- Botón cerrar
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 36, 0, 28)
 CloseButton.Position = UDim2.new(1, -46, 0, 4)
 CloseButton.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
-CloseButton.BackgroundTransparency = 0.1
-CloseButton.BorderSizePixel = 0
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.new(1,1,1)
 CloseButton.Font = Enum.Font.GothamBold
@@ -97,12 +68,9 @@ CloseButton.TextSize = 16
 CloseButton.Parent = TopBar
 Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
-----------------------------------------------------------
--- Botón flotante ≡
-----------------------------------------------------------
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 36, 0, 36)
-ToggleButton.Position = initialPosition
+ToggleButton.Position = UDim2.new(0, 10, 0.5, -18)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
 ToggleButton.Text = "≡"
 ToggleButton.TextColor3 = Color3.new(1,1,1)
@@ -111,67 +79,39 @@ ToggleButton.TextSize = 18
 ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 6)
 
-----------------------------------------------------------
--- Sonidos
-----------------------------------------------------------
-local openCloseSound = Instance.new("Sound")
-openCloseSound.SoundId = OPEN_CLOSE_SOUND_ID
-openCloseSound.Volume = 0.75
-openCloseSound.Parent = MainFrame
-
-local closeClickSound = Instance.new("Sound")
-closeClickSound.SoundId = CLOSE_CLICK_SOUND_ID
-closeClickSound.Volume = 0.75
-closeClickSound.Parent = CloseButton
-
-toggleSound = Instance.new("Sound")
-toggleSound.SoundId = CLICK_SOUND_ID
+-- Sonido click
+local toggleSound = Instance.new("Sound")
+toggleSound.SoundId = "rbxassetid://6723721422"
 toggleSound.Volume = 0.75
 toggleSound.Parent = ToggleButton
 
 ----------------------------------------------------------
--- Funciones para crear botones
+-- Funciones utilitarias
 ----------------------------------------------------------
-
--- Botón simple
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.9, 0, 0, 32) -- más estrecho y compacto
+    button.Size = UDim2.new(0.9, 0, 0, 32)
     button.Text = text
     button.Font = Enum.Font.Gotham
     button.TextSize = 14
-    button.TextColor3 = Color3.new(1, 1, 1)
+    button.TextColor3 = Color3.new(1,1,1)
     button.BackgroundColor3 = Color3.fromRGB(60, 140, 220)
     button.BackgroundTransparency = 0.1
     button.BorderSizePixel = 0
     button.Parent = parent
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
 
-    local clickSound = Instance.new("Sound")
-    clickSound.SoundId = CLICK_SOUND_ID
-    clickSound.Volume = 0.75
-    clickSound.Parent = button
-
     button.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        if callback then
-            local ok, err = pcall(callback)
-            if not ok then
-                warn("[KS HUB] Error en botón '"..text.."': ".. tostring(err))
-            end
-        end
+        toggleSound:Play()
+        if callback then pcall(callback) end
     end)
-
     return button
 end
 
--- Botón con toggle ON/OFF
 local function createToggleButton(parent, text, globalVarName, onFunc, offFunc)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.9, 0, 0, 32) -- igual que createButton
+    button.Size = UDim2.new(0.9, 0, 0, 32)
     button.BackgroundColor3 = Color3.fromRGB(60, 90, 140)
-    button.BackgroundTransparency = 0.1
-    button.BorderSizePixel = 0
     button.Text = text.." [OFF]"
     button.TextColor3 = Color3.new(1,1,1)
     button.Font = Enum.Font.Gotham
@@ -192,14 +132,11 @@ local function createToggleButton(parent, text, globalVarName, onFunc, offFunc)
             if offFunc then offFunc() end
         end
     end)
-
     return button
 end
 
 ----------------------------------------------------------
-
-----------------------------------------------------------
--- KS HUB – Parte 2: Pestañas, ToggleButton, Animaciones y Notificaciones
+-- KS HUB – Parte 2: Pestañas, Animaciones, Notificaciones
 ----------------------------------------------------------
 
 -- Barra lateral de pestañas
@@ -306,11 +243,11 @@ ToggleButton.MouseButton1Click:Connect(function()
     else
         closeHub()
     end
-    openCloseSound:Play()
+    toggleSound:Play()
 end)
 
 CloseButton.MouseButton1Click:Connect(function()
-    closeClickSound:Play()
+    toggleSound:Play()
     closeHub()
 end)
 
@@ -322,7 +259,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
         else
             closeHub()
         end
-        openCloseSound:Play()
+        toggleSound:Play()
     end
 end)
 
@@ -376,14 +313,12 @@ local function attachScrolling(parentPage)
     scroll.BackgroundTransparency = 1
     scroll.Parent = parentPage
 
-    -- Layout de los elementos
     local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 8) -- más aire
+    layout.Padding = UDim.new(0, 8)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.Parent = scroll
 
-    -- Padding interno
     local padding = Instance.new("UIPadding")
     padding.PaddingTop = UDim.new(0, 12)
     padding.PaddingBottom = UDim.new(0, 12)
@@ -409,7 +344,6 @@ local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 ----------------------------------------------------------
 -- MAIN
 ----------------------------------------------------------
-
 -- Título: Movimiento
 local movLabel = Instance.new("TextLabel")
 movLabel.Size = UDim2.new(0.9, 0, 0, 28)
@@ -585,7 +519,6 @@ createButton(TeleportScroll, "Ir al Spawn", function()
 end)
 
 ----------------------------------------------------------
-----------------------------------------------------------
 -- WAYPOINTS
 ----------------------------------------------------------
 local waypoints = {}
@@ -602,7 +535,7 @@ wpNameBox.BackgroundColor3 = Color3.fromRGB(40, 60, 100)
 wpNameBox.Parent = WaypointsScroll
 Instance.new("UICorner", wpNameBox).CornerRadius = UDim.new(0, 8)
 
--- Botón para crear un waypoint con nombre
+-- Crear Waypoint
 createButton(WaypointsScroll, "Crear Waypoint", function()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if hrp then
@@ -611,7 +544,7 @@ createButton(WaypointsScroll, "Crear Waypoint", function()
         table.insert(waypoints, {Name = name, Position = pos})
         createNotification("Waypoint '"..name.."' creado")
 
-        -- Crear botón dinámico para teletransportar
+        -- Botón dinámico para teletransportar
         createButton(WaypointsScroll, "Ir a "..name, function()
             local char = LocalPlayer.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
@@ -622,53 +555,33 @@ createButton(WaypointsScroll, "Crear Waypoint", function()
     end
 end)
 
+-- Borrar último waypoint
+createButton(WaypointsScroll, "Borrar último Waypoint", function()
+    if #waypoints > 0 then
+        local removed = table.remove(waypoints)
+        createNotification("Waypoint '"..removed.Name.."' borrado")
+        -- Aquí podrías refrescar la lista de botones si quieres
+    else
+        createNotification("No hay waypoints para borrar")
+    end
+end)
+
+-- Borrar todos los waypoints
+createButton(WaypointsScroll, "Borrar todos los Waypoints", function()
+    waypoints = {}
+    for _, child in pairs(WaypointsScroll:GetChildren()) do
+        if child:IsA("TextButton") and child.Text:match("^Ir a") then
+            child:Destroy()
+        end
+    end
+    createNotification("Todos los waypoints borrados")
+end)
+
 ----------------------------------------------------------
 -- VISUAL
 ----------------------------------------------------------
 local visLabel = Instance.new("TextLabel")
-visLabel.Size = UDim2.new(0.9, 0, 0, 28)
-visLabel.BackgroundTransparency = 1
-visLabel.Text = "Visual"
-visLabel.TextColor3 = Color3.fromRGB(200,200,200)
-visLabel.Font = Enum.Font.GothamBold
-visLabel.TextSize = 16
-visLabel.Parent = VisualScroll
-
--- Full Bright
-createToggleButton(VisualScroll, "Full Bright", "fullBrightEnabled",
-    function()
-        Lighting.Brightness = 2
-        Lighting.ClockTime = 14
-        Lighting.FogEnd = 100000
-        Lighting.GlobalShadows = false
-        Lighting.OutdoorAmbient = Color3.new(1,1,1)
-        createNotification("Full Bright ON")
-    end,
-    function()
-        Lighting.GlobalShadows = true
-        createNotification("Full Bright OFF")
-    end
-)
-
-----------------------------------------------------------
--- AJUSTES
-----------------------------------------------------------
-local setLabel = Instance.new("TextLabel")
-setLabel.Size = UDim2.new(0.9, 0, 0, 28)
-setLabel.BackgroundTransparency = 1
-setLabel.Text = "Ajustes"
-setLabel.TextColor3 = Color3.fromRGB(200,200,200)
-setLabel.Font = Enum.Font.GothamBold
-setLabel.TextSize = 16
-setLabel.Parent = AjustesScroll
-
--- Cerrar HUB
-createButton(AjustesScroll, "Cerrar HUB", function()
-    closeHub()
-    createNotification("HUB cerrado")
-end)
-
-
+visLabel.Size = UDim2.new(0
 ----------------------------------------------------------
 ----------------------------------------------------------
 -- KS HUB – Parte 4: Waypoints (versión final mejorada)
