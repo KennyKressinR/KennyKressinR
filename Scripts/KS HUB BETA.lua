@@ -197,6 +197,8 @@ local function createToggleButton(parent, text, globalVarName, onFunc, offFunc)
 end
 
 ----------------------------------------------------------
+
+----------------------------------------------------------
 -- KS HUB – Parte 2: Pestañas, ToggleButton, Animaciones y Notificaciones
 ----------------------------------------------------------
 
@@ -376,17 +378,17 @@ local function attachScrolling(parentPage)
 
     -- Layout de los elementos
     local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 6) -- espacio entre botones
+    layout.Padding = UDim.new(0, 8) -- más aire
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- centra horizontalmente
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.Parent = scroll
 
-    -- Padding interno (márgenes dentro del scroll)
+    -- Padding interno
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 8)
-    padding.PaddingBottom = UDim.new(0, 8)
-    padding.PaddingLeft = UDim.new(0, 8)
-    padding.PaddingRight = UDim.new(0, 8)
+    padding.PaddingTop = UDim.new(0, 12)
+    padding.PaddingBottom = UDim.new(0, 12)
+    padding.PaddingLeft = UDim.new(0, 12)
+    padding.PaddingRight = UDim.new(0, 12)
     padding.Parent = scroll
 
     return scroll
@@ -395,14 +397,11 @@ end
 -- Adjuntar scroll a todas las pestañas
 local MainScroll = attachScrolling(Tabs["Main"])
 local TeleportScroll = attachScrolling(Tabs["Teleport"])
-local WaypointsScroll = attachScrolling(Tabs["Waypoints"]) -- 👈 aquí estaba mal escrito
+local WaypointsScroll = attachScrolling(Tabs["Waypoints"])
 local VisualScroll = attachScrolling(Tabs["Visual"])
 local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 
 
-----------------------------------------------------------
--- Parte 3: Botones dentro de cada pestaña
-----------------------------------------------------------
 ----------------------------------------------------------
 -- Parte 3: Botones dentro de cada pestaña
 ----------------------------------------------------------
