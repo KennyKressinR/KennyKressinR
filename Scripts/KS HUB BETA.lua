@@ -14,7 +14,7 @@ local Lighting = game:GetService("Lighting")
 -- Jugador local
 local LocalPlayer = Players.LocalPlayer
 
--- Sonidos (IDs válidos)
+-- Sonidos (IDs válidos, cámbialos si quieres otros)
 local CLICK_SOUND_ID = "rbxassetid://6723721422"        -- Click en botones
 local OPEN_CLOSE_SOUND_ID = "rbxassetid://9118823106"   -- Abrir/cerrar HUB
 local CLOSE_CLICK_SOUND_ID = "rbxassetid://9118823106"  -- Cerrar con X
@@ -46,13 +46,12 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 ----------------------------------------------------------
--- MainFrame
+-- MainFrame (ventana principal del HUB)
 ----------------------------------------------------------
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-
-MainFrame.Size = UDim2.new(0, 400, 0, 440) -- antes 520 px de ancho
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -200) -- centrado con el nuevo ancho
+MainFrame.Size = UDim2.new(0, 400, 0, 420) -- más estrecho que antes (520 → 400)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -210) -- centrado con nuevo ancho
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 46)
 MainFrame.BackgroundTransparency = 0.25
 MainFrame.BorderSizePixel = 0
@@ -61,7 +60,7 @@ MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
 ----------------------------------------------------------
--- TopBar
+-- TopBar (barra superior con título y botón cerrar)
 ----------------------------------------------------------
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
@@ -137,7 +136,7 @@ toggleSound.Parent = ToggleButton
 -- Botón simple
 local function createButton(parent, text, callback)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.9, 0, 0, 32) -- más estrecho
+    button.Size = UDim2.new(0.9, 0, 0, 32) -- más estrecho y compacto
     button.Text = text
     button.Font = Enum.Font.Gotham
     button.TextSize = 14
@@ -148,7 +147,11 @@ local function createButton(parent, text, callback)
     button.Parent = parent
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
 
-    local clickSound = attachClickSound(button)
+    local clickSound = Instance.new("Sound")
+    clickSound.SoundId = CLICK_SOUND_ID
+    clickSound.Volume = 0.75
+    clickSound.Parent = button
+
     button.MouseButton1Click:Connect(function()
         clickSound:Play()
         if callback then
@@ -192,12 +195,7 @@ local function createToggleButton(parent, text, globalVarName, onFunc, offFunc)
 
     return button
 end
-----------------------------------------------------------
--- A partir de aquí siguen las Partes 2 a 9 tal como las pasaste,
--- ya no necesitan cambios grandes porque el error venía de la Parte 1.
--- Solo asegúrate de que usen estas variables: CloseButton, ToggleButton,
--- openCloseSound, closeClickSound, toggleSound, anchored, initialPosition.
-----------------------------------------------------------
+
 ----------------------------------------------------------
 -- KS HUB – Parte 2: Pestañas, ToggleButton, Animaciones y Notificaciones
 ----------------------------------------------------------
@@ -281,7 +279,7 @@ local function openHub()
         BackgroundTransparency = 0.25
     }):Play()
     TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0.5, -260, 0.5, -210)
+        Position = UDim2.new(0.5, -200, 0.5, -210)
     }):Play()
 end
 
@@ -293,7 +291,7 @@ local function closeHub()
     tween:Play()
     tween.Completed:Connect(function()
         MainFrame.Visible = false
-        MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
+        MainFrame.Position = UDim2.new(0.5, -200, 0.5, -210)
     end)
 end
 
@@ -387,8 +385,8 @@ local function attachScrolling(parentPage)
     local padding = Instance.new("UIPadding")
     padding.PaddingTop = UDim.new(0, 8)
     padding.PaddingBottom = UDim.new(0, 8)
-    padding.PaddingLeft = UDim.new(0, 12)
-    padding.PaddingRight = UDim.new(0, 12)
+    padding.PaddingLeft = UDim.new(0, 8)
+    padding.PaddingRight = UDim.new(0, 8)
     padding.Parent = scroll
 
     return scroll
@@ -400,333 +398,6 @@ local TeleportScroll = attachScrolling(Tabs["Teleport"])
 local WaypointsScroll = attachScrolling(Tabs["Waypoints"])
 local VisualScroll = attachScrolling(Tabs["Visual"])
 local AjustesScroll = attachScrolling(Tabs["Ajustes"])
-
-
-----------------------------------------------------------
--- Factories de UI: createButton y createToggleButton
--- Con sonido y colores dinámicos (celeste ON / azul OFF)
-----------------------------------------------------------
-local function attachClickSound(guiObject)
-    local s = Instance.new("Sound")
-    s.SoundId = CLICK_SOUND_ID
-    s.Volume = 1
-    s.Parent = guiObject
-    return s
-end
-function createButton(parent, text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.9, 0, 0, 32) -- más estrecho y compacto
-    button.Text = text
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 14
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(60, 140, 220)
-    button.BackgroundTransparency = 0.1
-    button.BorderSizePixel = 0
-    button.Parent = parent
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
-
-    local clickSound = attachClickSound(button)
-    button.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        if callback then
-            local ok, err = pcall(callback)
-            if not ok then
-                warn("[KS HUB] Error en botón '"..text.."': ".. tostring(err))
-            end
-        end
-    end)
-
-    return button
-end
-
-function createToggleButton(parent, text, stateVar, callbackOn, callbackOff)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 36)
-    button.Text = text .. " [OFF]"
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 16
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- Azul normal (OFF)
-    button.BackgroundTransparency = 0.1
-    button.BorderSizePixel = 0
-    button.Parent = parent
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
-
-    local clickSound = attachClickSound(button)
-    _G[stateVar] = false
-
-    button.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        _G[stateVar] = not _G[stateVar]
-        if _G[stateVar] then
-            button.Text = text .. " [ON]"
-            button.BackgroundColor3 = Color3.fromRGB(120, 220, 255) -- Celeste más claro (ON)
-            if callbackOn then
-                local ok, err = pcall(callbackOn)
-                if not ok then warn("[KS HUB] Error ON '"..text.."': "..tostring(err)) end
-            end
-            print("[KS HUB] " .. text .. " ON")
-        else
-            button.Text = text .. " [OFF]"
-            button.BackgroundColor3 = Color3.fromRGB(80, 180, 255) -- Azul normal (OFF)
-            if callbackOff then
-                local ok, err = pcall(callbackOff)
-                if not ok then warn("[KS HUB] Error OFF '"..text.."': "..tostring(err)) end
-            end
-            print("[KS HUB] " .. text .. " OFF")
-        end
-    end)
-
-    return button
-end
-
-----------------------------------------------------------
--- Arrastre del HUB (se controla con toggle en Parte 6)
-----------------------------------------------------------
-local draggingHubEnabled = false
-local hubDragConnectionBegan, hubDragConnectionChanged, hubDragConnectionEnded
-local draggingMain, dragStartMain, startPosMain
-
-local function enableHubDragging()
-    if hubDragConnectionBegan then return end
-    hubDragConnectionBegan = MainFrame.InputBegan:Connect(function(input)
-        if not draggingHubEnabled then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingMain = true
-            dragStartMain = input.Position
-            startPosMain = MainFrame.Position
-        end
-    end)
-    hubDragConnectionChanged = MainFrame.InputChanged:Connect(function(input)
-        if not draggingHubEnabled then return end
-        if draggingMain and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStartMain
-            MainFrame.Position = UDim2.new(startPosMain.X.Scale, startPosMain.X.Offset + delta.X,
-                                           startPosMain.Y.Scale, startPosMain.Y.Offset + delta.Y)
-        end
-    end)
-    hubDragConnectionEnded = UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingMain = false
-        end
-    end)
-end
-
-local function disableHubDragging()
-    if hubDragConnectionBegan then hubDragConnectionBegan:Disconnect() hubDragConnectionBegan = nil end
-    if hubDragConnectionChanged then hubDragConnectionChanged:Disconnect() hubDragConnectionChanged = nil end
-    if hubDragConnectionEnded then hubDragConnectionEnded:Disconnect() hubDragConnectionEnded = nil end
-end
-
--- Estas funciones se expondrán en Parte 6 con un toggle:
-local function onDragHub()
-    draggingHubEnabled = true
-    enableHubDragging()
-    createNotification("Arrastre del HUB: ON")
-end
-local function offDragHub()
-    draggingHubEnabled = false
-    disableHubDragging()
-    createNotification("Arrastre del HUB: OFF")
-end
-
-----------------------------------------------------------
-----------------------------------------------------------
--- Control de Opacidad Global (con mínimos)
-----------------------------------------------------------
-local function setGlobalOpacity(alpha)
-    -- alpha = 0 (transparente) → 1 (opaco)
-    local function applyTransparency(obj)
-        if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("TextBox") or obj:IsA("TextLabel") then
-            -- Fondo: mínimo 0.1
-            local bgTrans = 1 - alpha
-            if bgTrans < 0.1 then bgTrans = 0.1 end
-            obj.BackgroundTransparency = bgTrans
-
-            -- Texto: mínimo 0.2
-            if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                local txtTrans = 1 - alpha
-                if txtTrans < 0.2 then txtTrans = 0.2 end
-                obj.TextTransparency = txtTrans
-            end
-        end
-
-        for _, child in ipairs(obj:GetChildren()) do
-            applyTransparency(child)
-        end
-    end
-
-    applyTransparency(MainFrame)
-    applyTransparency(ToggleButton)
-end
-----------------------------------------------------------
--- Helpers de gameplay (usados en Teleport y otros)
-----------------------------------------------------------
-local function getHRP()
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then
-        char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        char:WaitForChild("HumanoidRootPart")
-    end
-    return char:FindFirstChild("HumanoidRootPart")
-end
-
-local function teleportToCFrame(cf)
-    local hrp = getHRP()
-    if hrp then
-        hrp.CFrame = cf + Vector3.new(0, 3, 0)
-        print(string.format("[KS HUB] Teleport a: X %.1f | Y %.1f | Z %.1f", cf.X, cf.Y, cf.Z))
-    else
-        warn("[KS HUB] No se pudo obtener HumanoidRootPart")
-    end
-end
-
-local function parseCoords(text)
-    if not text or text == "" then return nil end
-    local normalized = text:gsub(",", " ")
-    normalized = normalized:gsub("%s+", " ")
-    normalized = normalized:match("^%s*(.-)%s*$") or normalized
-    local xStr, yStr, zStr = normalized:match("([%+%-]?%d+%.?%d*)%s+([%+%-]?%d+%.?%d*)%s+([%+%-]?%d+%.?%d*)")
-    if not xStr or not yStr or not zStr then return nil end
-    local x, y, z = tonumber(xStr), tonumber(yStr), tonumber(zStr)
-    if not x or not y or not z then return nil end
-    return Vector3.new(x, y, z)
-end
-
-print("[KS HUB] Parte 1 lista: Núcleo y UI base inicializada")
-
-
-----------------------------------------------------------
--- KS HUB – Parte 2: Páginas con ScrollingFrame y MAIN
--- Incluye:
--- - ScrollingFrame + UIListLayout por cada pestaña
--- - Funciones principales (Main): Noclip, Anti Delay, Infinite Jump
--- - Botón de prueba de notificación
-----------------------------------------------------------
-
--- Crear ScrollingFrame estándar en una página
-local function attachScrolling(parentPage)
-    local scroll = Instance.new("ScrollingFrame")
-    scroll.Size = UDim2.new(1, 0, 1, 0)
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    scroll.ScrollBarThickness = 6
-    scroll.BackgroundTransparency = 1
-    scroll.Parent = parentPage
-
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 6)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = scroll
-
-    return scroll
-end
-
--- Adjuntar scroll a todas las pestañas definidas en Parte 1
-local MainScroll = attachScrolling(Tabs["Main"])
-local TeleportScroll = attachScrolling(Tabs["Teleport"])
-local WaypointsScroll = attachScrolling(Tabs["Waypoints"])
-local VisualScroll = attachScrolling(Tabs["Visual"])
-local AjustesScroll = attachScrolling(Tabs["Ajustes"])
-
-----------------------------------------------------------
--- MAIN: Noclip, Anti Delay, Infinite Jump
-----------------------------------------------------------
-
--- Noclip
-local noclipConnection
-local function onNoclip()
-    if noclipConnection then noclipConnection:Disconnect() end
-    noclipConnection = RunService.Stepped:Connect(function()
-        local char = LocalPlayer.Character
-        if char then
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end)
-    _G.noclipEnabled = true
-    createNotification("Noclip activado")
-end
-local function offNoclip()
-    if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
-    -- Restaurar colisiones básicas (best effort)
-    local char = LocalPlayer.Character
-    if char then
-        for _, part in ipairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
-    end
-    _G.noclipEnabled = false
-    createNotification("Noclip desactivado")
-end
--------------------------------------------------------
--- AntiDelay (para eliminar tiempo de touch)
-----------------------------------------------------------
-local antiDelayConnection
-
-createToggleButton(MainScroll, "Anti Delay", "antiDelayEnabled",
-    function()
-        antiDelayConnection = RunService.Heartbeat:Connect(function()
-            local hrp = getHRP()
-            if not hrp then return end
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj:FindFirstChildOfClass("TouchTransmitter") then
-                    -- Fuerza el touch sin delay
-                    firetouchinterest(hrp, obj, 0)
-                    firetouchinterest(hrp, obj, 1)
-                end
-            end
-        end)
-        createNotification("Anti Delay (Touch) ON")
-    end,
-    function()
-        if antiDelayConnection then
-            antiDelayConnection:Disconnect()
-            antiDelayConnection = nil
-        end
-        createNotification("Anti Delay (Touch) OFF")
-    end -- ← este end cierra la segunda función
-)       -- ← este paréntesis cierra la llamada a createToggleButton--
-
--- Infinite Jump
-local infiniteJumpConnection
-local function onInfiniteJump()
-    if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
-    infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
-        local char = LocalPlayer.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-    end)
-    _G.infiniteJumpEnabled = true
-    createNotification("Infinite Jump activado")
-end
-local function offInfiniteJump()
-    if infiniteJumpConnection then infiniteJumpConnection:Disconnect() infiniteJumpConnection = nil end
-    _G.infiniteJumpEnabled = false
-    createNotification("Infinite Jump desactivado")
-end
-
-----------------------------------------------------------
--- MAIN: Botones
-----------------------------------------------------------
-createToggleButton(MainScroll, "Noclip", "noclipEnabled", onNoclip, offNoclip)
-createToggleButton(MainScroll, "Anti Delay", "antiDelayEnabled", onAntiDelay, offAntiDelay)
-createToggleButton(MainScroll, "Infinite Jump", "infiniteJumpEnabled", onInfiniteJump, offInfiniteJump)
-
--- Notificación de prueba
-createButton(MainScroll, "Probar notificación", function()
-    createNotification("Funciona el sistema de notificaciones ✔")
-end)
-
-print("[KS HUB] Parte 2 lista: Páginas con scroll y Main configurado")
-
-
 
 ----------------------------------------------------------
 -- KS HUB – Parte 3: Teleport
