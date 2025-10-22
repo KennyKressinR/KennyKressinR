@@ -395,17 +395,10 @@ end
 -- Adjuntar scroll a todas las pestañas
 local MainScroll = attachScrolling(Tabs["Main"])
 local TeleportScroll = attachScrolling(Tabs["Teleport"])
-local WaypointsScroll = atachScrolling(Tabs["Waypoints"])
+local WaypointsScroll = attachScrolling(Tabs["Waypoints"])
 local VisualScroll = attachScrolling(Tabs["Visual"])
 local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 
-----------------------------------------------------------
--- KS HUB – Parte 3: Teleport
--- Incluye:
--- - Teleport a Spawn (robusto)
--- - Teleport a Coordenadas (con TextBox)
--- - Teleport a Jugadores (lista dinámica con scroll)
-----------------------------------------------------------
 
 ----------------------------------------------------------
 -- Parte 3: Botones dentro de cada pestaña
