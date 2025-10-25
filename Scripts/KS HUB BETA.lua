@@ -456,6 +456,134 @@ createButton(MainScroll, "Infinite Jump (toggle)", function()
 end)
 
 ----------------------------------------------------------
+-- MAIN (WalkSpeed y JumpPower mejorados)
+----------------------------------------------------------
+local MainScroll = Scrolls["Main"]
+
+-- Helpers de humanoide
+local function getHumanoid()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+----------------------------------------------------------
+-- Sección: Movilidad (extensión)
+----------------------------------------------------------
+createSectionLabel(MainScroll, "Movilidad avanzada")
+
+-- Valores por defecto y límites seguros
+local defaultWalkSpeed = 16
+local defaultJumpPower = 50
+local minWalkSpeed, maxWalkSpeed = 8, 200
+local minJumpPower, maxJumpPower = 25, 250
+
+-- UI inputs
+local wsBox = Instance.new("TextBox")
+wsBox.Size = UDim2.new(1, 0, 0, 30)
+wsBox.PlaceholderText = "WalkSpeed (ej: 16, 50, 120)"
+wsBox.Text = tostring(defaultWalkSpeed)
+wsBox.Font = Enum.Font.Gotham
+wsBox.TextSize = 14
+wsBox.TextColor3 = Color3.new(1,1,1)
+wsBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+wsBox.BackgroundTransparency = 0.1
+wsBox.BorderSizePixel = 0
+wsBox.ClearTextOnFocus = false
+wsBox.Parent = MainScroll
+Instance.new("UICorner", wsBox).CornerRadius = UDim.new(0, 6)
+
+local jpBox = Instance.new("TextBox")
+jpBox.Size = UDim2.new(1, 0, 0, 30)
+jpBox.PlaceholderText = "JumpPower (ej: 50, 100, 200)"
+jpBox.Text = tostring(defaultJumpPower)
+jpBox.Font = Enum.Font.Gotham
+jpBox.TextSize = 14
+jpBox.TextColor3 = Color3.new(1,1,1)
+jpBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+jpBox.BackgroundTransparency = 0.1
+jpBox.BorderSizePixel = 0
+jpBox.ClearTextOnFocus = false
+jpBox.Parent = MainScroll
+Instance.new("UICorner", jpBox).CornerRadius = UDim.new(0, 6)
+
+-- Aplicar ajustes
+createButton(MainScroll, "Aplicar WalkSpeed/JumpPower", function()
+    local hum = getHumanoid()
+    if not hum then return end
+
+    local ws = tonumber(wsBox.Text) or defaultWalkSpeed
+    local jp = tonumber(jpBox.Text) or defaultJumpPower
+
+    ws = math.clamp(ws, minWalkSpeed, maxWalkSpeed)
+    jp = math.clamp(jp, minJumpPower, maxJumpPower)
+
+    -- Compatibilidad con R6/R15: usar JumpPower
+    hum.WalkSpeed = ws
+    hum.JumpPower = jp
+    hum.UseJumpPower = true
+
+    createNotification(("Movilidad aplicada → WS: %d | JP: %d"):format(ws, jp))
+end)
+
+-- Presets rápidos
+createSectionLabel(MainScroll, "Presets rápidos")
+createButton(MainScroll, "Preset: Normal (WS 16 | JP 50)", function()
+    local hum = getHumanoid()
+    if not hum then return end
+    hum.WalkSpeed = 16
+    hum.JumpPower = 50
+    hum.UseJumpPower = true
+    wsBox.Text, jpBox.Text = "16", "50"
+    createNotification("Preset Normal aplicado")
+end)
+
+createButton(MainScroll, "Preset: Rápido (WS 60 | JP 80)", function()
+    local hum = getHumanoid()
+    if not hum then return end
+    hum.WalkSpeed = 60
+    hum.JumpPower = 80
+    hum.UseJumpPower = true
+    wsBox.Text, jpBox.Text = "60", "80"
+    createNotification("Preset Rápido aplicado")
+end)
+
+createButton(MainScroll, "Preset: Ultra (WS 120 | JP 120)", function()
+    local hum = getHumanoid()
+    if not hum then return end
+    hum.WalkSpeed = 120
+    hum.JumpPower = 120
+    hum.UseJumpPower = true
+    wsBox.Text, jpBox.Text = "120", "120"
+    createNotification("Preset Ultra aplicado")
+end)
+
+-- Reset movilidad
+createButton(MainScroll, "Reset movilidad (WS/JP)", function()
+    local hum = getHumanoid()
+    if not hum then return end
+    hum.WalkSpeed = defaultWalkSpeed
+    hum.JumpPower = defaultJumpPower
+    hum.UseJumpPower = true
+    wsBox.Text, jpBox.Text = tostring(defaultWalkSpeed), tostring(defaultJumpPower)
+    createNotification("Movilidad reseteada a valores por defecto")
+end)
+
+-- Persistencia en respawn
+LocalPlayer.CharacterAdded:Connect(function(char)
+    -- Reaplicar cajas como recordatorio visual, no forzamos valores
+    -- Para reaplicar automáticamente, descomenta estas líneas:
+    -- local hum = char:WaitForChild("Humanoid", 5)
+    -- if hum then
+    --     local ws = tonumber(wsBox.Text) or defaultWalkSpeed
+    --     local jp = tonumber(jpBox.Text) or defaultJumpPower
+    --     hum.WalkSpeed = math.clamp(ws, minWalkSpeed, maxWalkSpeed)
+    --     hum.JumpPower = math.clamp(jp, minJumpPower, maxJumpPower)
+    --     hum.UseJumpPower = true
+    -- end
+    createNotification("Respawn detectado (movilidad configurable en MAIN)")
+end)
+
+----------------------------------------------------------
 -- Sección: Utilidades
 ----------------------------------------------------------
 createSectionLabel(MainScroll, "Utilidades")
