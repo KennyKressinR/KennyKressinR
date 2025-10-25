@@ -1021,37 +1021,70 @@ end
 
 
 ----------------------------------------------------------
--- Parte 11: Sistema de temas (Dark, Light, Neon)
+-- Parte 11: Sistema de temas (Dark, Light, Neon, Solarized)
 ----------------------------------------------------------
 local Themes = {
     Dark = {
         main = Color3.fromRGB(20, 30, 46),
         top = Color3.fromRGB(25, 40, 70),
         accent = Color3.fromRGB(30, 50, 80),
-        highlight = Color3.fromRGB(50, 90, 150)
+        highlight = Color3.fromRGB(50, 90, 150),
+        hover = Color3.fromRGB(40, 70, 120)
     },
     Light = {
         main = Color3.fromRGB(230, 235, 245),
         top = Color3.fromRGB(210, 220, 240),
         accent = Color3.fromRGB(200, 210, 230),
-        highlight = Color3.fromRGB(140, 170, 220)
+        highlight = Color3.fromRGB(140, 170, 220),
+        hover = Color3.fromRGB(170, 190, 230)
     },
     Neon = {
         main = Color3.fromRGB(18, 20, 28),
         top = Color3.fromRGB(30, 30, 60),
         accent = Color3.fromRGB(40, 70, 120),
-        highlight = Color3.fromRGB(0, 200, 255)
+        highlight = Color3.fromRGB(0, 200, 255),
+        hover = Color3.fromRGB(0, 150, 200)
+    },
+    Solarized = {
+        main = Color3.fromRGB(253, 246, 227),
+        top = Color3.fromRGB(238, 232, 213),
+        accent = Color3.fromRGB(181, 137, 0),
+        highlight = Color3.fromRGB(203, 75, 22),
+        hover = Color3.fromRGB(133, 153, 0)
     }
 }
 
-local function applyTheme(t)
+_G.currentTheme = "Dark"
+
+local function applyTheme(t, themeName)
+    -- Guardar tema actual
+    _G.currentTheme = themeName or _G.currentTheme
+
+    -- Colores base
     MainFrame.BackgroundColor3 = t.main
     TopBar.BackgroundColor3 = t.top
     TabsBar.BackgroundColor3 = t.top
-    -- Botones activos/hover usan highlight/accent
+
+    -- Botones de pestañas
     for name, btn in pairs(TabButtons) do
         btn.BackgroundColor3 = t.accent
+        -- Resetear conexiones previas de hover
+        for _, conn in ipairs(btn:GetPropertyChangedSignal("BackgroundColor3"):GetConnections()) do
+            conn:Disconnect()
+        end
+        -- Hover dinámico
+        btn.MouseEnter:Connect(function()
+            if not Tabs[name].Visible then
+                btn.BackgroundColor3 = t.hover
+            end
+        end)
+        btn.MouseLeave:Connect(function()
+            if not Tabs[name].Visible then
+                btn.BackgroundColor3 = t.accent
+            end
+        end)
     end
+
     -- Reaplicar resaltado de tab activa
     local activeTab
     for name, frame in pairs(Tabs) do
@@ -1060,15 +1093,25 @@ local function applyTheme(t)
     if activeTab and TabButtons[activeTab] then
         TabButtons[activeTab].BackgroundColor3 = t.highlight
     end
-    createNotification("Tema aplicado")
+
+    createNotification("Tema aplicado: " .. _G.currentTheme)
 end
 
--- Agregar selector de temas en Ajustes
+-- Selector de temas en Ajustes
 createSectionLabel(AjustesScroll, "Tema")
-createButton(AjustesScroll, "Tema Dark", function() applyTheme(Themes.Dark) end)
-createButton(AjustesScroll, "Tema Light", function() applyTheme(Themes.Light) end)
-createButton(AjustesScroll, "Tema Neon", function() applyTheme(Themes.Neon) end)
 
+createButton(AjustesScroll, "Tema Dark", function() applyTheme(Themes.Dark, "Dark") end)
+createButton(AjustesScroll, "Tema Light", function() applyTheme(Themes.Light, "Light") end)
+createButton(AjustesScroll, "Tema Neon", function() applyTheme(Themes.Neon, "Neon") end)
+createButton(AjustesScroll, "Tema Solarized", function() applyTheme(Themes.Solarized, "Solarized") end)
+
+-- Reset a tema por defecto
+createButton(AjustesScroll, "Reset Tema (Dark)", function()
+    applyTheme(Themes.Dark, "Dark")
+end)
+
+-- Aplicar tema inicial
+applyTheme(Themes[_G.currentTheme], _G.currentTheme)
 
 ----------------------------------------------------------
 -- Parte 12: QoL, arranque y limpieza
