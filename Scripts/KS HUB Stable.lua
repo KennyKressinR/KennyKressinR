@@ -326,22 +326,19 @@ refreshPlayers()
 
 
 
-    ----------------------------------------------------------
--- Parte 6: Waypoints
+----------------------------------------------------------
+-- Parte 6: Waypoints (actualizado)
 ----------------------------------------------------------
 local WaypointsScroll = Scrolls["Waypoints"]
 local savedWaypoints = {}
+local lastCreated = nil -- guardamos el último creado
 
 -- Refrescar lista de waypoints
 local function refreshWaypoints()
-    -- Limpia frames previos
     for _, child in ipairs(WaypointsScroll:GetChildren()) do
-        if child:IsA("Frame") then
-            child:Destroy()
-        end
+        if child:IsA("Frame") then child:Destroy() end
     end
 
-    -- Crea un frame por cada waypoint guardado
     for name, pos in pairs(savedWaypoints) do
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(1, 0, 0, 36)
@@ -356,7 +353,7 @@ local function refreshWaypoints()
         btnTP.Size = UDim2.new(0.65, -3, 1, 0)
         btnTP.Position = UDim2.new(0, 0, 0, 0)
 
-        -- Botón DEL rojo
+        -- Botón DEL
         local btnDel = Instance.new("TextButton")
         btnDel.Size = UDim2.new(0.3, 0, 1, 0)
         btnDel.Position = UDim2.new(0.7, 0, 0, 0)
@@ -370,6 +367,7 @@ local function refreshWaypoints()
 
         btnDel.MouseButton1Click:Connect(function()
             savedWaypoints[name] = nil
+            if lastCreated == name then lastCreated = nil end
             refreshWaypoints()
             createNotification("Waypoint '"..name.."' eliminado")
         end)
@@ -391,15 +389,35 @@ wpBox.ClearTextOnFocus = false
 wpBox.Parent = WaypointsScroll
 Instance.new("UICorner", wpBox).CornerRadius = UDim.new(0, 6)
 
--- Botón Crear Waypoint
-createButton(WaypointsScroll, "Crear Waypoint", function()
+-- Botón Crear / Sobrescribir
+createButton(WaypointsScroll, "Crear / Actualizar Waypoint", function()
     local hrp = getHRP()
     if hrp then
         local name = wpBox.Text ~= "" and wpBox.Text or ("WP"..tostring(#savedWaypoints+1))
         savedWaypoints[name] = hrp.Position
+        lastCreated = name
         wpBox.Text = ""
         refreshWaypoints()
-        createNotification("Waypoint '"..name.."' creado")
+        createNotification("Waypoint '"..name.."' guardado/actualizado")
+    end
+end)
+
+-- Botón Renombrar último creado
+createButton(WaypointsScroll, "Renombrar último Waypoint", function()
+    if lastCreated and savedWaypoints[lastCreated] then
+        local newName = wpBox.Text
+        if newName ~= "" then
+            savedWaypoints[newName] = savedWaypoints[lastCreated]
+            savedWaypoints[lastCreated] = nil
+            lastCreated = newName
+            wpBox.Text = ""
+            refreshWaypoints()
+            createNotification("Waypoint renombrado a '"..newName.."'")
+        else
+            createNotification("Escribe un nuevo nombre en la caja")
+        end
+    else
+        createNotification("No hay waypoint reciente para renombrar")
     end
 end)
 
@@ -416,13 +434,13 @@ Instance.new("UICorner", clearAllBtn).CornerRadius = UDim.new(0, 6)
 
 clearAllBtn.MouseButton1Click:Connect(function()
     savedWaypoints = {}
+    lastCreated = nil
     refreshWaypoints()
     createNotification("Todos los waypoints borrados")
 end)
 
 -- Inicializar lista
 refreshWaypoints()
-
 
     ----------------------------------------------------------
 -- Parte 7: Visual + Auto Collect (AntiDelay integrado)
