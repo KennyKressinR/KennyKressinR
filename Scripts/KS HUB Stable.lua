@@ -169,7 +169,7 @@ end)
 
 
 ----------------------------------------------------------
--- Parte 3: Sidebar vertical, páginas y helpers
+-- Parte 3: Sidebar vertical, páginas y helpers (mejorada)
 ----------------------------------------------------------
 local TabsBar = Instance.new("Frame")
 TabsBar.Name = "TabsBar"
@@ -194,7 +194,10 @@ TabsContent.Position = UDim2.new(0, 130, 0, 45)
 TabsContent.BackgroundTransparency = 1
 TabsContent.Parent = MainFrame
 
+----------------------------------------------------------
 -- Helpers
+----------------------------------------------------------
+-- Botón genérico con callback
 local function createButton(parent, text, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 32)
@@ -202,39 +205,193 @@ local function createButton(parent, text, callback)
     btn.BackgroundTransparency = 0.1
     btn.BorderSizePixel = 0
     btn.Text = text
-    btn.TextColor3 = Color3
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.Parent = parent
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
+    -- Hover feedback
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(40, 70, 120)
+    end)
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
+    end)
 
+    btn.MouseButton1Click:Connect(function()
+        local s = Instance.new("Sound")
+        s.SoundId = CLICK_SOUND_ID
+        s.Volume = 0.7
+        s.Parent = btn
+        s:Play()
+        callback()
+        s:Destroy()
+    end)
+    return btn
+end
 
+-- Subtítulo dentro de pestañas
+local function createSectionLabel(parent, text)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, 0, 0, 24)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "» " .. text
+    lbl.TextColor3 = Color3.fromRGB(180, 200, 255)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 14
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = parent
+    return lbl
+end
 
-    ----------------------------------------------------------
--- Parte 4: Main (acciones rápidas y toggles base)
+-- Scroll automático para cada pestaña
+local function attachScrolling(parentFrame)
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, 0, 1, 0)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.ScrollBarThickness = 6
+    scroll.ScrollBarImageColor3 = Color3.fromRGB(120, 160, 220)
+    scroll.BackgroundTransparency = 1
+    scroll.Parent = parentFrame
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 6)
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    layout.VerticalAlignment = Enum.VerticalAlignment.Top
+    layout.Parent = scroll
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingLeft = UDim.new(0, 6)
+    padding.PaddingRight = UDim.new(0, 6)
+    padding.PaddingTop = UDim.new(0, 6)
+    padding.PaddingBottom = UDim.new(0, 6)
+    padding.Parent = scroll
+
+    return scroll
+end
+
+----------------------------------------------------------
+-- Tabs dinámicos
+----------------------------------------------------------
+local tabsList = {"Main","Teleport","Waypoints","Visual","Ajustes"}
+local Tabs = {}
+local Scrolls = {}
+local TabButtons = {}
+
+-- Cambiar de pestaña
+local function switchTab(tabName)
+    for name, frame in pairs(Tabs) do
+        frame.Visible = (name == tabName)
+        if TabButtons[name] then
+            TabButtons[name].BackgroundColor3 = (name == tabName)
+                and Color3.fromRGB(50, 90, 150)
+                or Color3.fromRGB(30, 50, 80)
+        end
+    end
+end
+
+-- Crear pestañas
+for _, name in ipairs(tabsList) do
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Size = UDim2.new(1, -10, 0, 30)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
+    tabBtn.BackgroundTransparency = 0.1
+    tabBtn.BorderSizePixel = 0
+    tabBtn.Text = name
+    tabBtn.TextColor3 = Color3.new(1,1,1)
+    tabBtn.Font = Enum.Font.Gotham
+    tabBtn.TextSize = 14
+    tabBtn.Parent = TabsBar
+    Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
+
+    local page = Instance.new("Frame")
+    page.Name = name
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.Parent = TabsContent
+    Tabs[name] = page
+
+    Scrolls[name] = attachScrolling(page)
+    TabButtons[name] = tabBtn
+
+    tabBtn.MouseButton1Click:Connect(function()
+        switchTab(name)
+    end)
+end
+
+-- Activar pestaña inicial
+switchTab("Main")
+
+----------------------------------------------------------
+-- Parte 4: MAIN (refactorizado y mejorado)
 ----------------------------------------------------------
 local MainScroll = Scrolls["Main"]
 
--- AntiDelay (Touch global)
-local antiDelayConnection
-createButton(MainScroll, "AntiDelay Touch (toggle)", function()
-    if antiDelayConnection then
-        antiDelayConnection:Disconnect()
-        antiDelayConnection = nil
-        createNotification("AntiDelay OFF")
+----------------------------------------------------------
+-- 1. Farm (Auto Touch/Click) - antes AntiDelay
+----------------------------------------------------------
+local farmConn
+createButton(MainScroll, "Farm (Auto Touch/Click)", function()
+    if farmConn then
+        farmConn:Disconnect()
+        farmConn = nil
+        createNotification("Farm OFF")
         return
     end
-    antiDelayConnection = RunService.Heartbeat:Connect(function()
+
+    farmConn = RunService.Heartbeat:Connect(function()
         local hrp = getHRP()
         if not hrp then return end
+
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and obj:FindFirstChildOfClass("TouchTransmitter") then
-                firetouchinterest(hrp, obj, 0)
-                firetouchinterest(hrp, obj, 1)
+            if obj:IsA("BasePart") then
+                -- Detecta objetos con TouchTransmitter
+                if obj:FindFirstChildOfClass("TouchTransmitter") then
+                    firetouchinterest(hrp, obj, 0)
+                    firetouchinterest(hrp, obj, 1)
+                end
+                -- Detecta objetos clickeables
+                local click = obj:FindFirstChildOfClass("ClickDetector")
+                if click then fireclickdetector(click) end
             end
         end
     end)
-    createNotification("AntiDelay ON")
+
+    createNotification("Farm ON (Touch + Click)")
 end)
 
--- Noclip
+----------------------------------------------------------
+-- 2. Quick Interact - nuevo
+----------------------------------------------------------
+createButton(MainScroll, "Quick Interact (ProximityPrompt)", function()
+    local hrp = getHRP()
+    if not hrp then return end
+
+    local closestPrompt, closestDist
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") and obj.Enabled then
+            local dist = (obj.Parent.Position - hrp.Position).Magnitude
+            if not closestDist or dist < closestDist then
+                closestPrompt = obj
+                closestDist = dist
+            end
+        end
+    end
+
+    if closestPrompt and closestDist < 20 then
+        fireproximityprompt(closestPrompt, math.huge)
+        createNotification("Quick Interact ejecutado en "..closestPrompt.Parent.Name)
+    else
+        createNotification("No hay prompt cercano (<20 studs)")
+    end
+end)
+
+----------------------------------------------------------
+-- 3. Noclip
+----------------------------------------------------------
 local noclipConn
 createButton(MainScroll, "Noclip (toggle)", function()
     _G.noclipEnabled = not _G.noclipEnabled
@@ -256,26 +413,16 @@ createButton(MainScroll, "Noclip (toggle)", function()
     end
 end)
 
--- Coordenadas
-createButton(MainScroll, "Mostrar coordenadas (print)", function()
-    local hrp = getHRP()
-    if hrp then
-        print(string.format("[KS HUB] Pos: (%.1f, %.1f, %.1f)", hrp.Position.X, hrp.Position.Y, hrp.Position.Z))
-        createNotification("Coordenadas en consola")
-    end
-end)
-
--- Infinite Jump
+----------------------------------------------------------
+-- 4. Infinite Jump
+----------------------------------------------------------
 local infiniteJumpConn
 createButton(MainScroll, "Infinite Jump (toggle)", function()
     _G.infiniteJumpEnabled = not _G.infiniteJumpEnabled
     if _G.infiniteJumpEnabled and not infiniteJumpConn then
         infiniteJumpConn = UserInputService.JumpRequest:Connect(function()
-            local hrp = getHRP()
-            if hrp then
-                local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
-            end
+            local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
         end)
         createNotification("Infinite Jump ON")
     elseif infiniteJumpConn then
@@ -285,7 +432,16 @@ createButton(MainScroll, "Infinite Jump (toggle)", function()
     end
 end)
 
-
+----------------------------------------------------------
+-- 5. Mostrar Coordenadas
+----------------------------------------------------------
+createButton(MainScroll, "Mostrar Coordenadas (print)", function()
+    local hrp = getHRP()
+    if hrp then
+        print(string.format("[KS HUB] Pos: (%.1f, %.1f, %.1f)", hrp.Position.X, hrp.Position.Y, hrp.Position.Z))
+        createNotification("Coordenadas en consola")
+    end
+end)
     ----------------------------------------------------------
 -- Parte 5: Teleport a jugadores
 ----------------------------------------------------------
