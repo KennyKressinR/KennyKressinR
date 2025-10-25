@@ -518,64 +518,122 @@ createButton(TeleportScroll, "Ir al Spawn", function()
     end
 end)
 
+
 ----------------------------------------------------------
--- WAYPOINTS
+-- Waypoints 
 ----------------------------------------------------------
-local waypoints = {}
+local WaypointsScroll = Scrolls["Waypoints"]
+local savedWaypoints = {}
+local lastCreated = nil -- guardamos el último creado
 
--- TextBox para nombre de waypoint
-local wpNameBox = Instance.new("TextBox")
-wpNameBox.Size = UDim2.new(0.9, 0, 0, 32)
-wpNameBox.PlaceholderText = "Nombre del Waypoint..."
-wpNameBox.Text = ""
-wpNameBox.Font = Enum.Font.Gotham
-wpNameBox.TextSize = 14
-wpNameBox.TextColor3 = Color3.new(1,1,1)
-wpNameBox.BackgroundColor3 = Color3.fromRGB(40, 60, 100)
-wpNameBox.Parent = WaypointsScroll
-Instance.new("UICorner", wpNameBox).CornerRadius = UDim.new(0, 8)
+-- Refrescar lista de waypoints
+local function refreshWaypoints()
+    for _, child in ipairs(WaypointsScroll:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
 
--- Crear Waypoint
-createButton(WaypointsScroll, "Crear Waypoint", function()
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        local pos = hrp.Position
-        local name = wpNameBox.Text ~= "" and wpNameBox.Text or ("Waypoint "..tostring(#waypoints+1))
-        table.insert(waypoints, {Name = name, Position = pos})
-        createNotification("Waypoint '"..name.."' creado")
+    for name, pos in pairs(savedWaypoints) do
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 0, 36)
+        frame.BackgroundTransparency = 1
+        frame.Parent = WaypointsScroll
 
-        -- Botón dinámico para teletransportar
-        createButton(WaypointsScroll, "Ir a "..name, function()
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                char:MoveTo(pos)
-                createNotification("Teletransportado a "..name)
-            end
+        -- Botón TP
+        local btnTP = createButton(frame, "TP: " .. name, function()
+            teleportToCFrame(CFrame.new(pos))
+            createNotification("Teletransportado a '"..name.."'")
+        end)
+        btnTP.Size = UDim2.new(0.65, -3, 1, 0)
+        btnTP.Position = UDim2.new(0, 0, 0, 0)
+
+        -- Botón DEL
+        local btnDel = Instance.new("TextButton")
+        btnDel.Size = UDim2.new(0.3, 0, 1, 0)
+        btnDel.Position = UDim2.new(0.7, 0, 0, 0)
+        btnDel.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+        btnDel.Text = "DEL"
+        btnDel.TextColor3 = Color3.new(1,1,1)
+        btnDel.Font = Enum.Font.GothamBold
+        btnDel.TextSize = 14
+        btnDel.Parent = frame
+        Instance.new("UICorner", btnDel).CornerRadius = UDim.new(0, 6)
+
+        btnDel.MouseButton1Click:Connect(function()
+            savedWaypoints[name] = nil
+            if lastCreated == name then lastCreated = nil end
+            refreshWaypoints()
+            createNotification("Waypoint '"..name.."' eliminado")
         end)
     end
-end)
+end
 
--- Borrar último waypoint
-createButton(WaypointsScroll, "Borrar último Waypoint", function()
-    if #waypoints > 0 then
-        local removed = table.remove(waypoints)
-        createNotification("Waypoint '"..removed.Name.."' borrado")
-        -- Aquí podrías refrescar la lista de botones si quieres
-    else
-        createNotification("No hay waypoints para borrar")
+-- Caja de texto para nombre
+local wpBox = Instance.new("TextBox")
+wpBox.Size = UDim2.new(1, 0, 0, 30)
+wpBox.PlaceholderText = "Nombre del Waypoint"
+wpBox.Text = ""
+wpBox.Font = Enum.Font.Gotham
+wpBox.TextSize = 16
+wpBox.TextColor3 = Color3.new(1, 1, 1)
+wpBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+wpBox.BackgroundTransparency = 0.1
+wpBox.BorderSizePixel = 0
+wpBox.ClearTextOnFocus = false
+wpBox.Parent = WaypointsScroll
+Instance.new("UICorner", wpBox).CornerRadius = UDim.new(0, 6)
+
+-- Botón Crear / Sobrescribir
+createButton(WaypointsScroll, "Crear / Actualizar Waypoint", function()
+    local hrp = getHRP()
+    if hrp then
+        local name = wpBox.Text ~= "" and wpBox.Text or ("WP"..tostring(#savedWaypoints+1))
+        savedWaypoints[name] = hrp.Position
+        lastCreated = name
+        wpBox.Text = ""
+        refreshWaypoints()
+        createNotification("Waypoint '"..name.."' guardado/actualizado")
     end
 end)
 
--- Borrar todos los waypoints
-createButton(WaypointsScroll, "Borrar todos los Waypoints", function()
-    waypoints = {}
-    for _, child in pairs(WaypointsScroll:GetChildren()) do
-        if child:IsA("TextButton") and child.Text:match("^Ir a") then
-            child:Destroy()
+-- Botón Renombrar último creado
+createButton(WaypointsScroll, "Renombrar último Waypoint", function()
+    if lastCreated and savedWaypoints[lastCreated] then
+        local newName = wpBox.Text
+        if newName ~= "" then
+            savedWaypoints[newName] = savedWaypoints[lastCreated]
+            savedWaypoints[lastCreated] = nil
+            lastCreated = newName
+            wpBox.Text = ""
+            refreshWaypoints()
+            createNotification("Waypoint renombrado a '"..newName.."'")
+        else
+            createNotification("Escribe un nuevo nombre en la caja")
         end
+    else
+        createNotification("No hay waypoint reciente para renombrar")
     end
+end)
+
+-- Botón Borrar Todos
+local clearAllBtn = Instance.new("TextButton")
+clearAllBtn.Size = UDim2.new(1, 0, 0, 30)
+clearAllBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+clearAllBtn.Text = "Borrar TODOS los Waypoints"
+clearAllBtn.TextColor3 = Color3.new(1,1,1)
+clearAllBtn.Font = Enum.Font.GothamBold
+clearAllBtn.TextSize = 14
+clearAllBtn.Parent = WaypointsScroll
+Instance.new("UICorner", clearAllBtn).CornerRadius = UDim.new(0, 6)
+
+clearAllBtn.MouseButton1Click:Connect(function()
+    savedWaypoints = {}
+    lastCreated = nil
+    refreshWaypoints()
     createNotification("Todos los waypoints borrados")
 end)
+
+-- Inicializar lista
+refreshWaypoints()
 
 ----------------------------------------------------------
 -- VISUAL
