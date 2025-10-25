@@ -660,22 +660,56 @@ end)
 
 
 
-    ----------------------------------------------------------
--- Parte 8: Ajustes (opacidad, drag y Auto Collect config)
+
+
+----------------------------------------------------------
+-- Parte 8: Ajustes (opacidad con slider, drag, reset, etc.)
 ----------------------------------------------------------
 local AjustesScroll = Scrolls["Ajustes"]
 
--- Control de Opacidad Global (con mínimos)
+----------------------------------------------------------
+-- Sección: Apariencia
+----------------------------------------------------------
+createSectionLabel(AjustesScroll, "Apariencia")
+
+-- Slider de Opacidad
+local opacityFrame = Instance.new("Frame")
+opacityFrame.Size = UDim2.new(1, 0, 0, 40)
+opacityFrame.BackgroundTransparency = 1
+opacityFrame.Parent = AjustesScroll
+
+local sliderBar = Instance.new("Frame")
+sliderBar.Size = UDim2.new(1, -20, 0, 6)
+sliderBar.Position = UDim2.new(0, 10, 0.5, -3)
+sliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+sliderBar.BorderSizePixel = 0
+sliderBar.Parent = opacityFrame
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(0.85, 0, 1, 0) -- valor inicial 0.85
+sliderFill.BackgroundColor3 = Color3.fromRGB(120, 180, 255)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBar
+
+local sliderBtn = Instance.new("TextButton")
+sliderBtn.Size = UDim2.new(0, 14, 0, 14)
+sliderBtn.Position = UDim2.new(0.85, -7, 0.5, -7)
+sliderBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 255)
+sliderBtn.Text = ""
+sliderBtn.Parent = sliderBar
+Instance.new("UICorner", sliderBtn).CornerRadius = UDim.new(1, 0)
+
+local opacityValue = 0.85
+
+-- Función para aplicar opacidad global
 local function setGlobalOpacity(alpha)
-    -- alpha = 0 (transparente) → 1 (opaco)
+    alpha = math.clamp(alpha, 0.1, 1) -- mínimo 0.1
+    opacityValue = alpha
     local function applyTransparency(obj)
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("TextBox") or obj:IsA("TextLabel") then
-            -- Fondo: mínimo 0.1
             local bgTrans = 1 - alpha
             if bgTrans < 0.1 then bgTrans = 0.1 end
             obj.BackgroundTransparency = bgTrans
-
-            -- Texto: mínimo 0.2
             if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
                 local txtTrans = 1 - alpha
                 if txtTrans < 0.2 then txtTrans = 0.2 end
@@ -690,52 +724,41 @@ local function setGlobalOpacity(alpha)
     applyTransparency(ToggleButton)
 end
 
--- Caja de texto para opacidad
-local opacityBox = Instance.new("TextBox")
-opacityBox.Size = UDim2.new(1, 0, 0, 30)
-opacityBox.PlaceholderText = "Opacidad 0.0–1.0 (mín: fondos 0.1, texto 0.2)"
-opacityBox.Text = "0.85"
-opacityBox.Font = Enum.Font.Gotham
-opacityBox.TextSize = 14
-opacityBox.TextColor3 = Color3.new(1,1,1)
-opacityBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
-opacityBox.BackgroundTransparency = 0.1
-opacityBox.BorderSizePixel = 0
-opacityBox.ClearTextOnFocus = false
-opacityBox.Parent = AjustesScroll
-Instance.new("UICorner", opacityBox).CornerRadius = UDim.new(0, 6)
-
-createButton(AjustesScroll, "Aplicar Opacidad", function()
-    local v = tonumber(opacityBox.Text)
-    if v then
-        setGlobalOpacity(math.clamp(v, 0, 1))
-        createNotification("Opacidad aplicada: "..tostring(v))
-    else
-        createNotification("Valor inválido")
+-- Drag del slider
+local draggingSlider = false
+sliderBtn.MouseButton1Down:Connect(function()
+    draggingSlider = true
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingSlider = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local relX = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0.1, 1)
+        sliderFill.Size = UDim2.new(relX, 0, 1, 0)
+        sliderBtn.Position = UDim2.new(relX, -7, 0.5, -7)
+        setGlobalOpacity(relX)
     end
 end)
 
--- Drag del HUB (arrastrar desde TopBar)
-local dragging, dragStart, startPos
-TopBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and _G.dragHubEnabled then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
-    end
+----------------------------------------------------------
+-- Sección: Comportamiento
+----------------------------------------------------------
+createSectionLabel(AjustesScroll, "Comportamiento")
+
+-- Toggle Drag HUB
+createButton(AjustesScroll, "Toggle Drag HUB", function()
+    _G.dragHubEnabled = not _G.dragHubEnabled
+    createNotification("Drag HUB: " .. (_G.dragHubEnabled and "ON" or "OFF"))
 end)
 
-TopBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+----------------------------------------------------------
+-- Sección: Auto Collect
+----------------------------------------------------------
+createSectionLabel(AjustesScroll, "Auto Collect")
 
--- Configuración de Auto Collect
 local nameFilterBox = Instance.new("TextBox")
 nameFilterBox.Size = UDim2.new(1, 0, 0, 30)
 nameFilterBox.PlaceholderText = "Filtro nombre (ej: coin, gem, star)"
@@ -768,12 +791,27 @@ createButton(AjustesScroll, "Aplicar Auto Collect", function()
     local nf = nameFilterBox.Text ~= "" and string.lower(nameFilterBox.Text) or "coin"
     local r = tonumber(radiusBox.Text) or 50
     collectNameFilter = nf
-    collectRadius = r
-    createNotification("AutoCollect: filtro '"..nf.."', radio "..tostring(r))
+    collectRadius = math.max(10, r) -- mínimo 10 studs
+    createNotification("AutoCollect: filtro '"..nf.."', radio "..tostring(collectRadius))
 end)
 
+----------------------------------------------------------
+-- Sección: Reset
+----------------------------------------------------------
+createSectionLabel(AjustesScroll, "Reset")
 
-
+createButton(AjustesScroll, "Restaurar Configuración", function()
+    -- Reset a valores por defecto
+    setGlobalOpacity(0.85)
+    sliderFill.Size = UDim2.new(0.85, 0, 1, 0)
+    sliderBtn.Position = UDim2.new(0.85, -7, 0.5, -7)
+    _G.dragHubEnabled = true
+    collectNameFilter = "coin"
+    collectRadius = 50
+    nameFilterBox.Text = "coin"
+    radiusBox.Text = "50"
+    createNotification("Configuración restaurada a valores por defecto")
+end)
     ----------------------------------------------------------
 -- Parte 9: QoL, limpieza y arranque inicial
 ----------------------------------------------------------
