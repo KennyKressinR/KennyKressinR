@@ -342,170 +342,129 @@ local AjustesScroll = attachScrolling(Tabs["Ajustes"])
 ----------------------------------------------------------
 
 ----------------------------------------------------------
--- MAIN
 ----------------------------------------------------------
--- Título: Movimiento
-local movLabel = Instance.new("TextLabel")
-movLabel.Size = UDim2.new(0.9, 0, 0, 28)
-movLabel.BackgroundTransparency = 1
-movLabel.Text = "Movimiento"
-movLabel.TextColor3 = Color3.fromRGB(200,200,200)
-movLabel.Font = Enum.Font.GothamBold
-movLabel.TextSize = 16
-movLabel.Parent = MainScroll
+-- Parte 4: MAIN (fusionada y optimizada)
+----------------------------------------------------------
+local MainScroll = Scrolls["Main"]
 
--- WalkSpeed +
-createButton(MainScroll, "WalkSpeed +", function()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed += 5
-        createNotification("WalkSpeed: "..hum.WalkSpeed)
+----------------------------------------------------------
+-- 1. Auto Interact (fusionado)
+-- Combina: Touch, ClickDetector, ProximityPrompt
+-- Usa filtro por nombre y radio (configurable en Ajustes)
+----------------------------------------------------------
+local autoInteractConn
+collectNameFilter = "coin"   -- valor inicial, editable en Ajustes
+collectRadius = 50           -- valor inicial, editable en Ajustes
+
+createButton(MainScroll, "Auto Interact (Touch/Click/Prompt)", function()
+    if autoInteractConn then
+        autoInteractConn:Disconnect()
+        autoInteractConn = nil
+        createNotification("Auto Interact OFF")
+        return
     end
-end)
 
--- WalkSpeed -
-createButton(MainScroll, "WalkSpeed -", function()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed -= 5
-        createNotification("WalkSpeed: "..hum.WalkSpeed)
-    end
-end)
+    autoInteractConn = RunService.Heartbeat:Connect(function()
+        local hrp = getHRP()
+        if not hrp then return end
 
--- JumpPower +
-createButton(MainScroll, "JumpPower +", function()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.JumpPower += 10
-        createNotification("JumpPower: "..hum.JumpPower)
-    end
-end)
-
--- JumpPower -
-createButton(MainScroll, "JumpPower -", function()
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.JumpPower -= 10
-        createNotification("JumpPower: "..hum.JumpPower)
-    end
-end)
-
--- Noclip
-createToggleButton(MainScroll, "Noclip", "noclipEnabled",
-    function()
-        RunService.Stepped:Connect(function()
-            if _G.noclipEnabled and LocalPlayer.Character then
-                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and string.find(string.lower(obj.Name), collectNameFilter) then
+                local dist = (obj.Position - hrp.Position).Magnitude
+                if dist < collectRadius then
+                    -- Touch
+                    local touch = obj:FindFirstChildOfClass("TouchTransmitter")
+                    if touch then
+                        firetouchinterest(hrp, obj, 0)
+                        firetouchinterest(hrp, obj, 1)
                     end
+                    -- Click
+                    local click = obj:FindFirstChildOfClass("ClickDetector")
+                    if click then fireclickdetector(click) end
+                    -- Prompt
+                    local prompt = obj:FindFirstChildOfClass("ProximityPrompt")
+                    if prompt and prompt.Enabled then
+                        fireproximityprompt(prompt, math.huge)
+                    end
+                end
+            end
+        end
+    end)
+
+    createNotification("Auto Interact ON (Touch + Click + Prompt)")
+end)
+
+----------------------------------------------------------
+-- 2. Quick Interact (manual, ejecuta el prompt más cercano)
+----------------------------------------------------------
+createButton(MainScroll, "Quick Interact (ProximityPrompt)", function()
+    local hrp = getHRP()
+    if not hrp then return end
+
+    local closestPrompt, closestDist
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") and obj.Enabled then
+            local parentPart = obj.Parent:IsA("BasePart") and obj.Parent or nil
+            if parentPart then
+                local dist = (parentPart.Position - hrp.Position).Magnitude
+                if not closestDist or dist < closestDist then
+                    closestPrompt = obj
+                    closestDist = dist
+                end
+            end
+        end
+    end
+
+    if closestPrompt and closestDist < 20 then
+        fireproximityprompt(closestPrompt, math.huge)
+        createNotification("Quick Interact ejecutado en "..closestPrompt.Parent.Name)
+    else
+        createNotification("No hay prompt cercano (<20 studs)")
+    end
+end)
+
+----------------------------------------------------------
+-- 3. Noclip
+----------------------------------------------------------
+local noclipConn
+createButton(MainScroll, "Noclip (toggle)", function()
+    _G.noclipEnabled = not _G.noclipEnabled
+    if _G.noclipEnabled and not noclipConn then
+        noclipConn = RunService.Stepped:Connect(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
                 end
             end
         end)
         createNotification("Noclip ON")
-    end,
-    function()
+    elseif noclipConn then
+        noclipConn:Disconnect()
+        noclipConn = nil
         createNotification("Noclip OFF")
     end
-)
+end)
 
--- AntiDelay Touch
-local antiDelayConnection
-createToggleButton(MainScroll, "Anti Delay Touch", "antiDelayEnabled",
-    function()
-        antiDelayConnection = RunService.Heartbeat:Connect(function()
-            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj:FindFirstChildOfClass("TouchTransmitter") then
-                    firetouchinterest(hrp, obj, 0)
-                    firetouchinterest(hrp, obj, 1)
-                end
-            end
+----------------------------------------------------------
+-- 4. Infinite Jump (opcional, mantenido aquí)
+----------------------------------------------------------
+local infiniteJumpConn
+createButton(MainScroll, "Infinite Jump (toggle)", function()
+    _G.infiniteJumpEnabled = not _G.infiniteJumpEnabled
+    if _G.infiniteJumpEnabled and not infiniteJumpConn then
+        infiniteJumpConn = UserInputService.JumpRequest:Connect(function()
+            local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
         end)
-        createNotification("Anti Delay ON")
-    end,
-    function()
-        if antiDelayConnection then
-            antiDelayConnection:Disconnect()
-            antiDelayConnection = nil
-        end
-        createNotification("Anti Delay OFF")
+        createNotification("Infinite Jump ON")
+    elseif infiniteJumpConn then
+        infiniteJumpConn:Disconnect()
+        infiniteJumpConn = nil
+        createNotification("Infinite Jump OFF")
     end
-)
-
-----------------------------------------------------------
--- ESP General
-----------------------------------------------------------
-local espLabel = Instance.new("TextLabel")
-espLabel.Size = UDim2.new(0.9, 0, 0, 28)
-espLabel.BackgroundTransparency = 1
-espLabel.Text = "ESP General"
-espLabel.TextColor3 = Color3.fromRGB(200,200,200)
-espLabel.Font = Enum.Font.GothamBold
-espLabel.TextSize = 16
-espLabel.Parent = MainScroll
-
--- ESP Jugadores
-createToggleButton(MainScroll, "ESP Jugadores", "espEnabled",
-    function() createNotification("ESP Jugadores ON") end,
-    function() createNotification("ESP Jugadores OFF") end
-)
-
--- ESP Items con TextBox
-local espItemsBox = Instance.new("TextBox")
-espItemsBox.Size = UDim2.new(0.9, 0, 0, 32)
-espItemsBox.PlaceholderText = "Nombre parcial del item..."
-espItemsBox.Text = ""
-espItemsBox.Font = Enum.Font.Gotham
-espItemsBox.TextSize = 14
-espItemsBox.TextColor3 = Color3.new(1,1,1)
-espItemsBox.BackgroundColor3 = Color3.fromRGB(40, 60, 100)
-espItemsBox.Parent = MainScroll
-Instance.new("UICorner", espItemsBox).CornerRadius = UDim.new(0, 8)
-
-createToggleButton(MainScroll, "ESP Items", "espItemsEnabled",
-    function()
-        local query = espItemsBox.Text
-        createNotification("ESP Items ON: "..query)
-        -- Aquí iría tu lógica de ESP filtrando por query
-    end,
-    function()
-        createNotification("ESP Items OFF")
-    end
-)
-
--- Aura Collect
-createToggleButton(MainScroll, "Aura Collect", "auraCollectEnabled",
-    function() createNotification("Aura Collect ON") end,
-    function() createNotification("Aura Collect OFF") end
-)
-
--- Mostrar Coordenadas
-createToggleButton(MainScroll, "Mostrar Coordenadas", "coordsEnabled",
-    function() createNotification("Coords ON") end,
-    function() createNotification("Coords OFF") end
-)
-
--- Chams
-createToggleButton(MainScroll, "Chams", "chamsEnabled",
-    function() createNotification("Chams ON") end,
-    function() createNotification("Chams OFF") end
-)
-
--- Arrastrar HUB
-createToggleButton(MainScroll, "Arrastrar HUB", "dragHubEnabled",
-    function()
-        MainFrame.Active = true
-        MainFrame.Draggable = true
-        createNotification("Arrastrar HUB ON")
-    end,
-    function()
-        MainFrame.Active = false
-        MainFrame.Draggable = false
-        createNotification("Arrastrar HUB OFF")
-    end
-)
+end)
 
 ----------------------------------------------------------
 -- TELEPORT
@@ -638,30 +597,418 @@ refreshWaypoints()
 ----------------------------------------------------------
 -- VISUAL
 ----------------------------------------------------------
-local visLabel = Instance.new("TextLabel")
-visLabel.Size = UDim2.new(0.9, 0, 0, 28)
-visLabel.BackgroundTransparency = 1
-visLabel.Text = "Visual"
-visLabel.TextColor3 = Color3.fromRGB(200,200,200)
-visLabel.Font = Enum.Font.GothamBold
-visLabel.TextSize = 16
-visLabel.Parent = VisualScroll
+----------------------------------------------------------
+-- Parte 7: Visual – ESP jugadores, ESP ítems, FullBright
+----------------------------------------------------------
+local VisualScroll = Scrolls["Visual"]
 
--- Full Bright
-createToggleButton(VisualScroll, "Full Bright", "fullBrightEnabled",
-    function()
-        Lighting.Brightness = 2
-        Lighting.ClockTime = 14
-        Lighting.FogEnd = 100000
-        Lighting.GlobalShadows = false
-        Lighting.OutdoorAmbient = Color3.new(1,1,1)
-        createNotification("Full Bright ON")
-    end,
-    function()
-        Lighting.GlobalShadows = true
-        createNotification("Full Bright OFF")
+-- Estado visual
+local espPlayersEnabled = false
+local espItemsEnabled = false
+local fullBrightEnabled = false
+
+-- Config jugadores
+local espPlayerColor = Color3.fromRGB(120, 200, 255)
+local espPlayerMode = "Boxes" -- "Boxes" | "Tracers" | "Chams"
+local espMaxDistance = 1000
+local espFilterSameTeam = false
+local espFilterAliveOnly = true
+
+-- Config ítems
+local espItemNameFilter = "coin"
+local espItemColor = Color3.fromRGB(255, 220, 120)
+local espItemRadius = 200
+
+-- Colecciones
+local playerEspDrawings = {}  -- {player = {box=Drawing, line=Drawing}}
+local itemEspDrawings = {}    -- {[BasePart] = Drawing}
+local chamsApplied = {}       -- {character = true}
+
+----------------------------------------------------------
+-- Helpers de Drawing (2D overlay). Requiere exploit con Drawings.
+-- Si no hay Drawing disponible, la sección Boxes/Tracers no hará nada visible.
+----------------------------------------------------------
+local function newLine(color)
+    local d = Drawing and Drawing.new("Line") or nil
+    if d then
+        d.Visible = true
+        d.Color = color
+        d.Thickness = 1.5
+        d.Transparency = 1
     end
-)
+    return d
+end
+
+local function newRect(color)
+    local d = Drawing and Drawing.new("Square") or nil
+    if d then
+        d.Visible = true
+        d.Color = color
+        d.Filled = false
+        d.Thickness = 1.5
+        d.Transparency = 1
+        d.Size = Vector2.new(40, 60)
+        d.Position = Vector2.new(0, 0)
+    end
+    return d
+end
+
+local function clearDrawings(map)
+    for k, v in pairs(map) do
+        if typeof(v) == "table" then
+            for _, d in pairs(v) do
+                if d and d.Remove then d:Remove() end
+            end
+        elseif v and v.Remove then
+            v:Remove()
+        end
+        map[k] = nil
+    end
+end
+
+----------------------------------------------------------
+-- Proyección 3D → 2D
+----------------------------------------------------------
+local camera = workspace.CurrentCamera
+local function worldToViewport(vec3)
+    local v, onScreen = camera:WorldToViewportPoint(vec3)
+    return Vector2.new(v.X, v.Y), onScreen, v.Z
+end
+
+----------------------------------------------------------
+-- ESP jugadores: render loop
+----------------------------------------------------------
+local espPlayersConn
+local function renderPlayersESP()
+    clearDrawings(playerEspDrawings)
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            if espFilterSameTeam and plr.Team == LocalPlayer.Team then
+                -- Saltar mismo equipo
+            else
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                local alive = hum and hum.Health > 0
+
+                if char and hrp then
+                    local dist = (hrp.Position - (getHRP() and getHRP().Position or hrp.Position)).Magnitude
+                    if dist <= espMaxDistance and (not espFilterAliveOnly or alive) then
+                        if espPlayerMode == "Boxes" or espPlayerMode == "Tracers" then
+                            -- Calcula bounding box aproximada
+                            local head = char:FindFirstChild("Head")
+                            local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
+                            local feetPos = hrp.Position - Vector3.new(0, 3, 0)
+                            local topPos = head and head.Position + Vector3.new(0, 0.5, 0) or hrp.Position + Vector3.new(0, 2, 0)
+
+                            local top2D, onTop, _ = worldToViewport(topPos)
+                            local feet2D, onFeet, _ = worldToViewport(feetPos)
+
+                            if onTop and onFeet then
+                                playerEspDrawings[plr] = playerEspDrawings[plr] or {}
+                                if espPlayerMode == "Boxes" then
+                                    local box = playerEspDrawings[plr].box or newRect(espPlayerColor)
+                                    playerEspDrawings[plr].box = box
+                                    if box then
+                                        local height = math.abs(top2D.Y - feet2D.Y)
+                                        local width = height * 0.6
+                                        local x = top2D.X - width/2
+                                        local y = top2D.Y
+                                        box.Color = espPlayerColor
+                                        box.Size = Vector2.new(width, height)
+                                        box.Position = Vector2.new(x, y)
+                                        box.Visible = true
+                                    end
+                                elseif espPlayerMode == "Tracers" then
+                                    local line = playerEspDrawings[plr].line or newLine(espPlayerColor)
+                                    playerEspDrawings[plr].line = line
+                                    if line then
+                                        line.Color = espPlayerColor
+                                        line.From = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y)
+                                        line.To = top2D
+                                        line.Visible = true
+                                    end
+                                end
+                            end
+                        elseif espPlayerMode == "Chams" then
+                            if not chamsApplied[char] then
+                                for _, part in ipairs(char:GetDescendants()) do
+                                    if part:IsA("BasePart") then
+                                        part.Material = Enum.Material.ForceField
+                                        part.Color = espPlayerColor
+                                        part.Transparency = 0.3
+                                    end
+                                end
+                                chamsApplied[char] = true
+                            else
+                                for _, part in ipairs(char:GetDescendants()) do
+                                    if part:IsA("BasePart") then
+                                        part.Color = espPlayerColor -- permite recolor en tiempo real
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+----------------------------------------------------------
+-- ESP ítems: render loop
+----------------------------------------------------------
+local espItemsConn
+local function renderItemsESP()
+    clearDrawings(itemEspDrawings)
+
+    local hrp = getHRP()
+    if not hrp then return end
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and string.find(string.lower(obj.Name), string.lower(espItemNameFilter)) then
+            local dist = (obj.Position - hrp.Position).Magnitude
+            if dist <= espItemRadius then
+                local pos2D, onScreen = worldToViewport(obj.Position)
+                if onScreen then
+                    local rect = itemEspDrawings[obj] or newRect(espItemColor)
+                    itemEspDrawings[obj] = rect
+                    if rect then
+                        rect.Color = espItemColor
+                        rect.Size = Vector2.new(16, 16)
+                        rect.Position = pos2D - Vector2.new(8, 8)
+                        rect.Visible = true
+                    end
+                end
+            end
+        end
+    end
+end
+
+----------------------------------------------------------
+-- Ticker de render
+----------------------------------------------------------
+local function ensurePlayersLoop(state)
+    if state and not espPlayersConn then
+        espPlayersConn = RunService.RenderStepped:Connect(function()
+            renderPlayersESP()
+        end)
+    elseif not state and espPlayersConn then
+        espPlayersConn:Disconnect()
+        espPlayersConn = nil
+        clearDrawings(playerEspDrawings)
+    end
+end
+
+local function ensureItemsLoop(state)
+    if state and not espItemsConn then
+        espItemsConn = RunService.RenderStepped:Connect(function()
+            renderItemsESP()
+        end)
+    elseif not state and espItemsConn then
+        espItemsConn:Disconnect()
+        espItemsConn = nil
+        clearDrawings(itemEspDrawings)
+    end
+end
+
+----------------------------------------------------------
+-- UI: sección ESP Jugadores
+----------------------------------------------------------
+createSectionLabel(VisualScroll, "ESP jugadores")
+
+-- Toggle principal
+createButton(VisualScroll, "Toggle ESP jugadores", function()
+    espPlayersEnabled = not espPlayersEnabled
+    ensurePlayersLoop(espPlayersEnabled)
+    createNotification("ESP jugadores: " .. (espPlayersEnabled and "ON" or "OFF"))
+end)
+
+-- Modo: Boxes / Tracers / Chams
+createButton(VisualScroll, "Modo: Boxes", function() espPlayerMode = "Boxes"; createNotification("Modo ESP: Boxes") end)
+createButton(VisualScroll, "Modo: Tracers", function() espPlayerMode = "Tracers"; createNotification("Modo ESP: Tracers") end)
+createButton(VisualScroll, "Modo: Chams", function() espPlayerMode = "Chams"; createNotification("Modo ESP: Chams") end)
+
+-- Color rápido
+createSectionLabel(VisualScroll, "Color rápido")
+createButton(VisualScroll, "Azul", function() espPlayerColor = Color3.fromRGB(120, 200, 255) end)
+createButton(VisualScroll, "Rojo", function() espPlayerColor = Color3.fromRGB(255, 120, 120) end)
+createButton(VisualScroll, "Verde", function() espPlayerColor = Color3.fromRGB(140, 255, 140) end)
+createButton(VisualScroll, "Amarillo", function() espPlayerColor = Color3.fromRGB(255, 230, 120) end)
+
+-- Color personalizado RGB (input)
+local rgbBox = Instance.new("TextBox")
+rgbBox.Size = UDim2.new(1, 0, 0, 30)
+rgbBox.PlaceholderText = "Color RGB (ej: 120,200,255)"
+rgbBox.Text = ""
+rgbBox.Font = Enum.Font.Gotham
+rgbBox.TextSize = 14
+rgbBox.TextColor3 = Color3.new(1,1,1)
+rgbBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+rgbBox.BackgroundTransparency = 0.1
+rgbBox.BorderSizePixel = 0
+rgbBox.ClearTextOnFocus = false
+rgbBox.Parent = VisualScroll
+Instance.new("UICorner", rgbBox).CornerRadius = UDim.new(0, 6)
+
+createButton(VisualScroll, "Aplicar color RGB", function()
+    local r, g, b = rgbBox.Text:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
+    r, g, b = tonumber(r), tonumber(g), tonumber(b)
+    if r and g and b then
+        espPlayerColor = Color3.fromRGB(math.clamp(r,0,255), math.clamp(g,0,255), math.clamp(b,0,255))
+        createNotification("Color aplicado")
+    else
+        createNotification("Formato inválido. Usa: 120,200,255")
+    end
+end)
+
+-- Filtros
+createSectionLabel(VisualScroll, "Filtros")
+createButton(VisualScroll, "Filtrar mismo equipo (toggle)", function()
+    espFilterSameTeam = not espFilterSameTeam
+    createNotification("Filtro mismo equipo: " .. (espFilterSameTeam and "ON" or "OFF"))
+end)
+createButton(VisualScroll, "Solo vivos (toggle)", function()
+    espFilterAliveOnly = not espFilterAliveOnly
+    createNotification("Solo vivos: " .. (espFilterAliveOnly and "ON" or "OFF"))
+end)
+
+local distBox = Instance.new("TextBox")
+distBox.Size = UDim2.new(1, 0, 0, 30)
+distBox.PlaceholderText = "Distancia máx ESP (ej: 1000)"
+distBox.Text = tostring(espMaxDistance)
+distBox.Font = Enum.Font.Gotham
+distBox.TextSize = 14
+distBox.TextColor3 = Color3.new(1,1,1)
+distBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+distBox.BackgroundTransparency = 0.1
+distBox.BorderSizePixel = 0
+distBox.ClearTextOnFocus = false
+distBox.Parent = VisualScroll
+Instance.new("UICorner", distBox).CornerRadius = UDim.new(0, 6)
+
+createButton(VisualScroll, "Aplicar distancia", function()
+    local v = tonumber(distBox.Text)
+    if v and v >= 100 then
+        espMaxDistance = v
+        createNotification("Distancia máx: " .. tostring(v))
+    else
+        createNotification("Valor inválido (mín: 100)")
+    end
+end)
+
+----------------------------------------------------------
+-- UI: sección ESP Ítems
+----------------------------------------------------------
+createSectionLabel(VisualScroll, "ESP ítems")
+
+local itemNameBox = Instance.new("TextBox")
+itemNameBox.Size = UDim2.new(1, 0, 0, 30)
+itemNameBox.PlaceholderText = "Nombre ítem (ej: coin, gem)"
+itemNameBox.Text = espItemNameFilter
+itemNameBox.Font = Enum.Font.Gotham
+itemNameBox.TextSize = 14
+itemNameBox.TextColor3 = Color3.new(1,1,1)
+itemNameBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+itemNameBox.BackgroundTransparency = 0.1
+itemNameBox.BorderSizePixel = 0
+itemNameBox.ClearTextOnFocus = false
+itemNameBox.Parent = VisualScroll
+Instance.new("UICorner", itemNameBox).CornerRadius = UDim.new(0, 6)
+
+local itemRadiusBox = Instance.new("TextBox")
+itemRadiusBox.Size = UDim2.new(1, 0, 0, 30)
+itemRadiusBox.PlaceholderText = "Radio (ej: 200)"
+itemRadiusBox.Text = tostring(espItemRadius)
+itemRadiusBox.Font = Enum.Font.Gotham
+itemRadiusBox.TextSize = 14
+itemRadiusBox.TextColor3 = Color3.new(1,1,1)
+itemRadiusBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+itemRadiusBox.BackgroundTransparency = 0.1
+itemRadiusBox.BorderSizePixel = 0
+itemRadiusBox.ClearTextOnFocus = false
+itemRadiusBox.Parent = VisualScroll
+Instance.new("UICorner", itemRadiusBox).CornerRadius = UDim.new(0, 6)
+
+-- Color rápido para ítems
+createButton(VisualScroll, "Color ítems: Dorado", function() espItemColor = Color3.fromRGB(255, 220, 120) end)
+createButton(VisualScroll, "Color ítems: Rosa", function() espItemColor = Color3.fromRGB(255, 140, 220) end)
+createButton(VisualScroll, "Color ítems: Cian", function() espItemColor = Color3.fromRGB(120, 255, 255) end)
+
+-- Toggle y aplicar filtros
+createButton(VisualScroll, "Toggle ESP ítems", function()
+    espItemsEnabled = not espItemsEnabled
+    ensureItemsLoop(espItemsEnabled)
+    createNotification("ESP ítems: " .. (espItemsEnabled and "ON" or "OFF"))
+end)
+
+createButton(VisualScroll, "Aplicar filtros ítems", function()
+    espItemNameFilter = itemNameBox.Text ~= "" and itemNameBox.Text or espItemNameFilter
+    local r = tonumber(itemRadiusBox.Text)
+    if r and r >= 25 then
+        espItemRadius = r
+    else
+        createNotification("Radio inválido (mín: 25)")
+        return
+    end
+    createNotification("Ítems: filtro '"..espItemNameFilter.."', radio "..tostring(espItemRadius))
+end)
+
+----------------------------------------------------------
+-- FullBright + Reset visual
+----------------------------------------------------------
+createSectionLabel(VisualScroll, "FullBright y Reset")
+
+createButton(VisualScroll, "FullBright (toggle)", function()
+    fullBrightEnabled = not fullBrightEnabled
+    if fullBrightEnabled then
+        Lighting.Ambient = Color3.new(1,1,1)
+        Lighting.Brightness = 4
+        Lighting.FogEnd = 100000
+        createNotification("FullBright ON")
+    else
+        -- Restaurar aproximado
+        Lighting.Ambient = Color3.new(0.5,0.5,0.5)
+        Lighting.Brightness = 2
+        Lighting.FogEnd = 1000
+        createNotification("FullBright OFF")
+    end
+end)
+
+createButton(VisualScroll, "Reset Visual", function()
+    -- Apagar loops
+    ensurePlayersLoop(false)
+    ensureItemsLoop(false)
+    espPlayersEnabled = false
+    espItemsEnabled = false
+
+    -- Limpiar dibujos y chams
+    clearDrawings(playerEspDrawings)
+    clearDrawings(itemEspDrawings)
+    for char, _ in pairs(chamsApplied) do
+        if char and char.Parent then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    -- Intento de restauración básica (no siempre perfecto)
+                    part.Material = Enum.Material.Plastic
+                    part.Transparency = 0
+                end
+            end
+        end
+        chamsApplied[char] = nil
+    end
+
+    -- FullBright off
+    if fullBrightEnabled then
+        fullBrightEnabled = false
+        Lighting.Ambient = Color3.new(0.5,0.5,0.5)
+        Lighting.Brightness = 2
+        Lighting.FogEnd = 1000
+    end
+
+    createNotification("Visuales reseteados")
+end)
 
 ----------------------------------------------------------
 -- AJUSTES
