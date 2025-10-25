@@ -326,26 +326,34 @@ switchTab("Main")
 
 
 ----------------------------------------------------------
--- Parte 4: MAIN (fusionada y optimizada)
+----------------------------------------------------------
+-- Parte 4: MAIN (actualizado y mejorado)
 ----------------------------------------------------------
 local MainScroll = Scrolls["Main"]
 
--- 1. Auto Interact (Touch/Click/Prompt) con filtro y radio
-local autoInteractConn
-collectNameFilter = "coin"   -- configurable en Ajustes
-collectRadius = 50           -- configurable en Ajustes
-
+----------------------------------------------------------
+-- Sección: Interacciones
+----------------------------------------------------------
 createSectionLabel(MainScroll, "Interacciones")
+
+-- Auto Interact (fusionado y mejorado)
+local autoInteractConn
+collectNameFilter = collectNameFilter or "coin"
+collectRadius = collectRadius or 50
+
 createButton(MainScroll, "Auto Interact (Touch/Click/Prompt)", function()
     if autoInteractConn then
         autoInteractConn:Disconnect()
         autoInteractConn = nil
         createNotification("Auto Interact OFF")
+        updateAutoInteractHUD(false)
         return
     end
+
     autoInteractConn = RunService.Heartbeat:Connect(function()
         local hrp = getHRP()
         if not hrp then return end
+        local count = 0
         for _, obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("BasePart") and string.find(string.lower(obj.Name), collectNameFilter) then
                 local dist = (obj.Position - hrp.Position).Magnitude
@@ -354,21 +362,30 @@ createButton(MainScroll, "Auto Interact (Touch/Click/Prompt)", function()
                     if touch then
                         firetouchinterest(hrp, obj, 0)
                         firetouchinterest(hrp, obj, 1)
+                        count += 1
                     end
                     local click = obj:FindFirstChildOfClass("ClickDetector")
-                    if click then fireclickdetector(click) end
+                    if click then fireclickdetector(click) count += 1 end
                     local prompt = obj:FindFirstChildOfClass("ProximityPrompt")
                     if prompt and prompt.Enabled then
                         fireproximityprompt(prompt, math.huge)
+                        count += 1
                     end
                 end
             end
         end
+        if count > 0 then
+            print("[KS HUB] Auto Interact: "..count.." objetos en este ciclo")
+        end
     end)
+
     createNotification("Auto Interact ON (Touch + Click + Prompt)")
+    updateAutoInteractHUD(true)
 end)
 
-createButton(MainScroll, "Quick Interact (ProximityPrompt cercano)", function()
+-- Quick Interact (mejorado con rango configurable)
+local quickInteractRange = 20
+createButton(MainScroll, "Quick Interact (Prompt cercano)", function()
     local hrp = getHRP()
     if not hrp then return end
     local closestPrompt, closestDist
@@ -384,19 +401,22 @@ createButton(MainScroll, "Quick Interact (ProximityPrompt cercano)", function()
             end
         end
     end
-    if closestPrompt and closestDist < 20 then
+    if closestPrompt and closestDist < quickInteractRange then
         fireproximityprompt(closestPrompt, math.huge)
         createNotification("Quick Interact: " .. closestPrompt.Parent.Name)
     else
-        createNotification("No hay prompt cercano (<20)")
+        createNotification("No hay prompt cercano (<"..quickInteractRange..")")
     end
 end)
 
--- 2. Movilidad
+----------------------------------------------------------
+-- Sección: Movilidad
+----------------------------------------------------------
 createSectionLabel(MainScroll, "Movilidad")
+
+-- Noclip
 local noclipConn
 createButton(MainScroll, "Noclip (toggle)", function()
-    local char = LocalPlayer.Character
     _G.noclipEnabled = not _G.noclipEnabled
     if _G.noclipEnabled and not noclipConn then
         noclipConn = RunService.Stepped:Connect(function()
@@ -409,13 +429,16 @@ createButton(MainScroll, "Noclip (toggle)", function()
             end
         end)
         createNotification("Noclip ON")
+        updateNoclipHUD(true)
     elseif noclipConn then
         noclipConn:Disconnect()
         noclipConn = nil
         createNotification("Noclip OFF")
+        updateNoclipHUD(false)
     end
 end)
 
+-- Infinite Jump
 local infiniteJumpConn
 createButton(MainScroll, "Infinite Jump (toggle)", function()
     _G.infiniteJumpEnabled = not _G.infiniteJumpEnabled
@@ -431,6 +454,24 @@ createButton(MainScroll, "Infinite Jump (toggle)", function()
         createNotification("Infinite Jump OFF")
     end
 end)
+
+----------------------------------------------------------
+-- Sección: Utilidades
+----------------------------------------------------------
+createSectionLabel(MainScroll, "Utilidades")
+
+-- Reset MAIN
+createButton(MainScroll, "Reset MAIN", function()
+    if autoInteractConn then autoInteractConn:Disconnect() autoInteractConn = nil end
+    if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+    if infiniteJumpConn then infiniteJumpConn:Disconnect() infiniteJumpConn = nil end
+    _G.noclipEnabled = false
+    _G.infiniteJumpEnabled = false
+    createNotification("MAIN reseteado (todo OFF)")
+    updateAutoInteractHUD(false)
+    updateNoclipHUD(false)
+end)
+
 
 
 ----------------------------------------------------------
