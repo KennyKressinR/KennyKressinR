@@ -1,2 +1,504 @@
+ 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dani · Links</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text: #e8eaf0;
+    --muted: #5a6080;
+    --glow: #00f5ff;
+  }
 
-Trabajando en la seguridad de la página 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── Starfield ── */
+  .stars {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .stars span {
+    position: absolute;
+    width: 2px; height: 2px;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle var(--d, 3s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    opacity: var(--op, 0.6);
+  }
+
+  @keyframes twinkle {
+    0%,100% { opacity: var(--op,0.6); transform: scale(1); }
+    50%      { opacity: 0.1;           transform: scale(0.5); }
+  }
+
+  /* ── Grid overlay ── */
+  .grid-floor {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 220px;
+    background:
+      linear-gradient(to bottom, transparent, rgba(0,245,255,0.04)),
+      repeating-linear-gradient(90deg, rgba(0,245,255,0.06) 0 1px, transparent 1px 60px),
+      repeating-linear-gradient(0deg,  rgba(0,245,255,0.06) 0 1px, transparent 1px 60px);
+    mask-image: linear-gradient(to top, black 30%, transparent);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── Layout ── */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 60px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ── Avatar ── */
+  .avatar-ring {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: conic-gradient(#00f5ff, #bf5af2, #ff375f, #ff9f0a, #00f5ff);
+    padding: 3px;
+    animation: spin-ring 8s linear infinite;
+    filter: drop-shadow(0 0 16px rgba(0,245,255,0.5));
+    margin-bottom: 8px;
+  }
+  @keyframes spin-ring { to { filter: drop-shadow(0 0 20px rgba(191,90,242,0.7)) hue-rotate(360deg); } }
+  .avatar-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: #111827;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 28px;
+    color: var(--glow);
+    text-shadow: 0 0 20px var(--glow);
+    letter-spacing: -2px;
+    user-select: none;
+  }
+
+  /* ── Name ── */
+  .name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(11px, 3vw, 14px);
+    color: #fff;
+    text-shadow: 0 0 24px rgba(0,245,255,0.6);
+    text-align: center;
+    line-height: 1.8;
+    margin-top: 4px;
+  }
+  .handle {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .bio {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.6;
+    margin-top: 4px;
+    margin-bottom: 12px;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    align-self: flex-start;
+    margin-top: 20px;
+    margin-bottom: 4px;
+    padding-left: 4px;
+  }
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 8px;
+  }
+
+  /* ── Base button ── */
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    backdrop-filter: blur(8px);
+  }
+  .btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--btn-grad, transparent);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: inherit;
+  }
+  .btn:hover { transform: translateY(-3px) scale(1.01); }
+  .btn:hover::before { opacity: 1; }
+  .btn:active  { transform: translateY(0) scale(0.98); }
+
+  .btn-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 22px;
+    background: var(--icon-bg, rgba(255,255,255,0.1));
+    position: relative; z-index: 1;
+    transition: transform 0.2s ease;
+  }
+  .btn:hover .btn-icon { transform: scale(1.12) rotate(-4deg); }
+
+  .btn-text { position: relative; z-index: 1; flex: 1; }
+  .btn-name  { display: block; }
+  .btn-sub   { display: block; font-size: 11px; font-weight: 600; opacity: 0.55; margin-top: 1px; }
+
+  .btn-arrow {
+    position: relative; z-index: 1;
+    font-size: 18px; opacity: 0.3;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .btn:hover .btn-arrow { opacity: 0.8; transform: translateX(4px); }
+
+  /* ── Instagram ── */
+  .btn-ig {
+    --btn-grad: linear-gradient(135deg, rgba(64,93,230,0.15), rgba(193,53,132,0.2), rgba(253,193,104,0.15));
+    --icon-bg: linear-gradient(135deg, #405bde, #c13584, #fd1d1d, #fcb045);
+  }
+  .btn-ig:hover { box-shadow: 0 8px 30px rgba(193,53,132,0.35); border-color: rgba(193,53,132,0.4); }
+
+  /* ── TikTok ── */
+  .btn-tt {
+    --btn-grad: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(37,244,238,0.1));
+    --icon-bg: #010101;
+  }
+  .btn-tt:hover { box-shadow: 0 8px 30px rgba(37,244,238,0.25); border-color: rgba(37,244,238,0.35); }
+
+  /* ── Twitter/X ── */
+  .btn-x {
+    --btn-grad: linear-gradient(135deg, rgba(15,15,15,0.5), rgba(80,80,80,0.15));
+    --icon-bg: #000;
+  }
+  .btn-x:hover { box-shadow: 0 8px 30px rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+  .btn-x .rare-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── Facebook ── */
+  .btn-fb {
+    --btn-grad: linear-gradient(135deg, rgba(24,119,242,0.15), rgba(10,60,140,0.1));
+    --icon-bg: #1877f2;
+  }
+  .btn-fb:hover { box-shadow: 0 8px 30px rgba(24,119,242,0.3); border-color: rgba(24,119,242,0.4); }
+
+  /* ── Minecraft ── */
+  .btn-mc {
+    --btn-grad: linear-gradient(135deg, rgba(100,200,80,0.12), rgba(60,100,40,0.15));
+    --icon-bg: #4c7a34;
+  }
+  .btn-mc:hover { box-shadow: 0 8px 30px rgba(100,200,80,0.3); border-color: rgba(100,200,80,0.4); }
+  .btn-mc .btn-icon { image-rendering: pixelated; font-size: 20px; }
+
+  /* ── Roblox ── */
+  .btn-rb {
+    --btn-grad: linear-gradient(135deg, rgba(226,35,26,0.15), rgba(120,10,5,0.1));
+    --icon-bg: #e2231a;
+  }
+  .btn-rb:hover { box-shadow: 0 8px 30px rgba(226,35,26,0.35); border-color: rgba(226,35,26,0.4); }
+
+  /* ── Pixel corners on game section ── */
+  .game-card-wrapper {
+    width: 100%;
+    position: relative;
+  }
+  .game-card-wrapper::before,
+  .game-card-wrapper::after {
+    content: '';
+    position: absolute;
+    width: 10px; height: 10px;
+    border: 2px solid rgba(0,245,255,0.3);
+  }
+  .game-card-wrapper::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+  .game-card-wrapper::after  { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+  /* ── SVG icons ── */
+  svg { display: block; }
+
+  /* ── Pixel cursor blink ── */
+  .cursor {
+    display: inline-block;
+    width: 10px; height: 14px;
+    background: var(--glow);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── Footer ── */
+  footer {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 40px;
+    line-height: 2.2;
+    opacity: 0.5;
+  }
+
+  /* ── Entrance animation ── */
+  .wrapper > * {
+    animation: fadeUp 0.5s ease both;
+  }
+  .wrapper > *:nth-child(1)  { animation-delay: 0.05s; }
+  .wrapper > *:nth-child(2)  { animation-delay: 0.1s; }
+  .wrapper > *:nth-child(3)  { animation-delay: 0.15s; }
+  .wrapper > *:nth-child(4)  { animation-delay: 0.2s; }
+  .wrapper > *:nth-child(5)  { animation-delay: 0.25s; }
+  .wrapper > *:nth-child(6)  { animation-delay: 0.3s; }
+  .wrapper > *:nth-child(7)  { animation-delay: 0.35s; }
+  .wrapper > *:nth-child(8)  { animation-delay: 0.4s; }
+  .wrapper > *:nth-child(9)  { animation-delay: 0.45s; }
+  .wrapper > *:nth-child(10) { animation-delay: 0.5s; }
+  .wrapper > *:nth-child(11) { animation-delay: 0.55s; }
+  .wrapper > *:nth-child(12) { animation-delay: 0.6s; }
+  .wrapper > *:nth-child(13) { animation-delay: 0.65s; }
+  .wrapper > *:nth-child(14) { animation-delay: 0.7s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div class="stars" id="stars"></div>
+<div class="grid-floor"></div>
+
+<div class="wrapper">
+
+  <!-- Avatar -->
+  <div class="avatar-ring">
+    <div class="avatar-inner">D</div>
+  </div>
+
+  <!-- Name -->
+  <div class="name">Dani<span class="cursor"></span></div>
+  <div class="handle">@ferxu_lo</div>
+  <div class="bio">Game dev · Creator · Player<br>Roblox &amp; más 🎮</div>
+
+  <!-- ── REDES SOCIALES ── -->
+  <div class="section-label">// Redes sociales</div>
+  <div class="divider"></div>
+
+  <!-- Instagram -->
+  <a class="btn btn-ig" href="https://www.instagram.com/ferxu_lo?igsh=MWp0cm41NTI5bzlmag==" target="_blank" rel="noopener">
+    <span class="btn-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="20" height="20" rx="6" stroke="white" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4.5" stroke="white" stroke-width="2"/>
+        <circle cx="17.5" cy="6.5" r="1.2" fill="white"/>
+      </svg>
+    </span>
+    <span class="btn-text">
+      <span class="btn-name">Instagram</span>
+      <span class="btn-sub">@ferxu_lo</span>
+    </span>
+    <span class="btn-arrow">›</span>
+  </a>
+
+  <!-- TikTok -->
+  <a class="btn btn-tt" href="https://www.tiktok.com/@candykennycookie?_r=1&_t=ZS-96i1VEvW2Og" target="_blank" rel="noopener">
+    <span class="btn-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.07a8.16 8.16 0 0 0 4.77 1.52V7.15a4.85 4.85 0 0 1-1-.46z" fill="white"/>
+        <!-- tiktok accent lines -->
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5" stroke="#25f4ee" stroke-width="0.5" fill="none"/>
+      </svg>
+    </span>
+    <span class="btn-text">
+      <span class="btn-name">TikTok</span>
+      <span class="btn-sub">@candykennycookie</span>
+    </span>
+    <span class="btn-arrow">›</span>
+  </a>
+
+  <!-- Facebook -->
+  <a class="btn btn-fb" href="#" target="_blank" rel="noopener">
+    <span class="btn-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 12.073C24 5.404 18.627 0 12 0S0 5.404 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.793-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+      </svg>
+    </span>
+    <span class="btn-text">
+      <span class="btn-name">Facebook</span>
+      <span class="btn-sub">Próximamente el enlace</span>
+    </span>
+    <span class="btn-arrow">›</span>
+  </a>
+
+  <!-- Twitter / X -->
+  <a class="btn btn-x" href="https://x.com/KennyKressinX" target="_blank" rel="noopener">
+    <span class="btn-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.713 5.895zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    </span>
+    <span class="btn-text">
+      <span class="btn-name">X / Twitter <span class="rare-badge">RARE</span></span>
+      <span class="btn-sub">@KennyKressinX · Visita esporádica</span>
+    </span>
+    <span class="btn-arrow">›</span>
+  </a>
+
+  <!-- ── JUEGOS ── -->
+  <div class="section-label">// Perfiles de juegos</div>
+  <div class="divider"></div>
+
+  <!-- Minecraft -->
+  <div class="game-card-wrapper">
+    <a class="btn btn-mc" href="https://launch.minecraft.net/profile/KennyKressin" target="_blank" rel="noopener">
+      <span class="btn-icon">
+        <!-- Pixel creeper face -->
+        <svg width="26" height="26" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+          <rect width="8" height="8" fill="#5c8a3c"/>
+          <rect x="1" y="2" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="5" y="2" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="3" y="4" width="2" height="1" fill="#1a1a1a"/>
+          <rect x="2" y="5" width="4" height="1" fill="#1a1a1a"/>
+          <rect x="2" y="6" width="1" height="1" fill="#1a1a1a"/>
+          <rect x="5" y="6" width="1" height="1" fill="#1a1a1a"/>
+        </svg>
+      </span>
+      <span class="btn-text">
+        <span class="btn-name">Minecraft</span>
+        <span class="btn-sub">KennyKressin</span>
+      </span>
+      <span class="btn-arrow">›</span>
+    </a>
+  </div>
+
+  <!-- Roblox -->
+  <div class="game-card-wrapper">
+    <a class="btn btn-rb" href="https://www.roblox.com/share?code=5ba74769028bcd4a87e5bbd17f13531c&type=Profile&source=ProfileShare&stamp=1779881246833" target="_blank" rel="noopener">
+      <span class="btn-icon">
+        <!-- Roblox logo R -->
+        <svg width="22" height="22" viewBox="0 0 100 100" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.05 17.05L36.9 82.95 82.95 82.95 82.95 17.05ZM47.5 35h18c5 0 8 3 8 7.5 0 3-1.5 5.5-4 6.5l5 10H67l-4.5-9H54v9H47.5V35zm6.5 5.5v7h10.5c1.5 0 2.5-1 2.5-3.5S65.5 40.5 64 40.5H54z"/>
+        </svg>
+      </span>
+      <span class="btn-text">
+        <span class="btn-name">Roblox</span>
+        <span class="btn-sub">Ver perfil</span>
+      </span>
+      <span class="btn-arrow">›</span>
+    </a>
+  </div>
+
+  <footer>
+    DANI · LINKS PAGE<br>
+    MÁS PERFILES PRÓXIMAMENTE...
+  </footer>
+
+</div>
+
+<script>
+  // Generate stars
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('span');
+    s.style.cssText = `
+      left: ${Math.random()*100}%;
+      top: ${Math.random()*100}%;
+      --d: ${2 + Math.random()*4}s;
+      --delay: ${Math.random()*5}s;
+      --op: ${0.2 + Math.random()*0.7};
+      width: ${Math.random() > 0.8 ? 3 : 2}px;
+      height: ${Math.random() > 0.8 ? 3 : 2}px;
+    `;
+    container.appendChild(s);
+  }
+
+  // Ripple on click
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 2;
+      ripple.style.cssText = `
+        position:absolute;
+        width:${size}px; height:${size}px;
+        left:${e.clientX - rect.left - size/2}px;
+        top:${e.clientY - rect.top - size/2}px;
+        background:rgba(255,255,255,0.12);
+        border-radius:50%;
+        pointer-events:none;
+        transform:scale(0);
+        animation:rippleAnim 0.5s ease-out forwards;
+      `;
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 500);
+    });
+  });
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes rippleAnim {
+      to { transform: scale(1); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+</body>
+</html>
